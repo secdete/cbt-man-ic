@@ -15,6 +15,7 @@ import {
   Send,
 } from "lucide-react";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
+import FormattedQuestionText from "@/components/FormattedQuestionText";
 
 interface Question {
   id: string;
@@ -433,8 +434,11 @@ export default function CBTTestInterfacePage({
                 </div>
 
                 {/* Teks Soal */}
-                <div className="mt-5 text-slate-900 font-normal whitespace-pre-line select-none">
-                  <p className={textSizeClass}>{currentQ.questionText}</p>
+                <div className="mt-5 text-slate-900 font-normal select-none">
+                  <FormattedQuestionText
+                    text={currentQ.questionText}
+                    className={textSizeClass}
+                  />
                 </div>
 
                 {/* Opsi Pilihan Ganda A, B, C, D, E */}
@@ -469,15 +473,17 @@ export default function CBTTestInterfacePage({
                         >
                           {opt.key}
                         </span>
-                        <span
-                          className={`pt-0.5 text-xs sm:text-sm ${
-                            isSelected
-                              ? "text-blue-950 font-semibold"
-                              : "text-slate-800 font-normal"
-                          }`}
-                        >
-                          {opt.text}
-                        </span>
+                        <div className="pt-0.5 text-xs sm:text-sm flex-1">
+                          <FormattedQuestionText
+                            text={opt.text}
+                            className={
+                              isSelected
+                                ? "text-blue-950 font-semibold"
+                                : "text-slate-800 font-normal"
+                            }
+                            isOption={true}
+                          />
+                        </div>
                       </button>
                     );
                   })}

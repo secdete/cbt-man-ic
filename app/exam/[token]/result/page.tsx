@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
+import FormattedQuestionText from "@/components/FormattedQuestionText";
 
 export default function ExamResultPage({
   params,
@@ -379,8 +380,8 @@ export default function ExamResultPage({
                     )}
                   </div>
 
-                  <div className="text-xs sm:text-sm text-slate-900 leading-relaxed whitespace-pre-line">
-                    {q.questionText}
+                  <div className="text-xs sm:text-sm text-slate-900 leading-relaxed">
+                    <FormattedQuestionText text={q.questionText} />
                   </div>
 
                   {/* Pilihan Jawaban */}
@@ -418,7 +419,12 @@ export default function ExamResultPage({
                           >
                             {opt.key}
                           </span>
-                          <span className="pt-0.5 flex-1">{opt.text}</span>
+                          <div className="pt-0.5 flex-1">
+                            <FormattedQuestionText
+                              text={opt.text}
+                              isOption={true}
+                            />
+                          </div>
                           {isCorrectKey && (
                             <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded">
                               KUNCI RESMI

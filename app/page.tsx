@@ -44,6 +44,7 @@ export default function StudentHomePage() {
 
   const [activeExams, setActiveExams] = useState<ExamItem[]>([]);
   const [loadingExams, setLoadingExams] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
 
   useEffect(() => {
     async function loadExams() {
@@ -269,15 +270,40 @@ export default function StudentHomePage() {
                 <div className="flex items-center gap-2">
                   <FileCheck2 className="w-4 h-4 text-blue-700" />
                   <h3 className="font-bold text-slate-900 text-sm">
-                    Paket Ujian Aktif
+                    Pilihan Mata Uji / Paket
                   </h3>
                 </div>
-                <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-slate-100 text-slate-600">
-                  {activeExams.length} Paket
+                <span className="text-[11px] px-2 py-0.5 rounded font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                  {activeExams.length} Mata Ujian
                 </span>
               </div>
 
-              <div className="mt-3.5 space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+              {/* Category Filter Tabs */}
+              <div className="mt-3 flex flex-wrap gap-1.5 border-b border-slate-100 pb-2.5">
+                {[
+                  { key: "ALL", label: "Semua" },
+                  { key: "SNPDB 2023", label: "SNPDB 2023 (Per Mapel)" },
+                  { key: "SNPDB 2022", label: "SNPDB 2022" },
+                  { key: "SNPDB 2021", label: "SNPDB 2021" },
+                  { key: "SNPDB 2020", label: "SNPDB 2020" },
+                  { key: "Tryout Mandiri", label: "Mandiri" },
+                ].map((cat) => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.key)}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
+                      selectedCategory === cat.key
+                        ? "bg-blue-700 text-white shadow-2xs"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-3.5 space-y-2.5 max-h-[440px] overflow-y-auto pr-1">
                 {loadingExams ? (
                   <div className="py-6 text-center text-slate-400 text-xs">
                     Memuat daftar paket...
@@ -287,47 +313,53 @@ export default function StudentHomePage() {
                     Belum ada paket ujian aktif saat ini.
                   </div>
                 ) : (
-                  activeExams.map((exam) => (
-                    <div
-                      key={exam.id}
-                      className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h4 className="font-bold text-xs text-slate-900">
-                            {exam.title}
-                          </h4>
-                          <span className="inline-block mt-0.5 text-[10px] font-semibold text-blue-800 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
-                            {exam.category}
-                          </span>
-                        </div>
-                        <span className="font-mono text-xs font-bold px-2 py-0.5 bg-slate-200 text-slate-800 rounded">
-                          {exam.token}
-                        </span>
-                      </div>
-
-                      <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-200/80">
-                        <div className="flex items-center gap-3 text-[11px]">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            {exam.durationMinutes} Menit
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <HelpCircle className="w-3 h-3 text-slate-400" />
-                            {exam._count.questions} Soal
+                  activeExams
+                    .filter(
+                      (e) =>
+                        selectedCategory === "ALL" ||
+                        e.category === selectedCategory,
+                    )
+                    .map((exam) => (
+                      <div
+                        key={exam.id}
+                        className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h4 className="font-bold text-xs text-slate-900">
+                              {exam.title}
+                            </h4>
+                            <span className="inline-block mt-0.5 text-[10px] font-semibold text-blue-800 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                              {exam.category}
+                            </span>
+                          </div>
+                          <span className="font-mono text-xs font-bold px-2 py-0.5 bg-slate-200 text-slate-800 rounded flex-shrink-0">
+                            {exam.token}
                           </span>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleSelectToken(exam.token)}
-                          className="text-xs font-semibold text-blue-700 hover:text-blue-800 hover:underline cursor-pointer"
-                        >
-                          Pilih Token &rarr;
-                        </button>
+                        <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-200/80">
+                          <div className="flex items-center gap-3 text-[11px]">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-slate-400" />
+                              {exam.durationMinutes} Menit
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <HelpCircle className="w-3 h-3 text-slate-400" />
+                              {exam._count.questions} Soal
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSelectToken(exam.token)}
+                            className="text-xs font-semibold text-blue-700 hover:text-blue-800 hover:underline cursor-pointer"
+                          >
+                            Pilih Token &rarr;
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))
                 )}
               </div>
             </div>
