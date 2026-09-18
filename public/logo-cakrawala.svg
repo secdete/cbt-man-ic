@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="cakrawala-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="50%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="glow-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="100%" stop-color="#93C5FD" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer Rounded Shield -->
+  <rect x="15" y="15" width="210" height="210" rx="48" fill="url(#cakrawala-grad)" />
+  
+  <!-- Horizon / Arc representing Cakrawala (Skyline/Horizon) -->
+  <path d="M40 150 C70 110, 170 110, 200 150" stroke="url(#glow-grad)" stroke-width="8" stroke-linecap="round" fill="none" opacity="0.9" />
+  <path d="M55 170 C80 135, 160 135, 185 170" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.4" />
+  
+  <!-- Rising Sun / Guiding Star -->
+  <circle cx="120" cy="95" r="28" fill="#FBBF24" />
+  <circle cx="120" cy="95" r="36" stroke="#FDE68A" stroke-width="3" stroke-dasharray="4 6" opacity="0.7" />
+  
+  <!-- Open Book of Knowledge below Horizon -->
+  <path d="M75 165 C95 155, 115 160, 120 166 C125 160, 145 155, 165 165 L165 185 C145 175, 125 180, 120 186 C115 180, 95 175, 75 185 Z" fill="#FFFFFF" opacity="0.95" />
+  <line x1="120" y1="166" x2="120" y2="186" stroke="#2563EB" stroke-width="2" />
+  
+  <!-- Sparkles -->
+  <polygon points="120,42 123,52 133,55 123,58 120,68 117,58 107,55 117,52" fill="#FFFFFF" />
+  <polygon points="65,70 67,76 73,78 67,80 65,86 63,80 57,78 63,76" fill="#FDE68A" />
+  <polygon points="175,70 177,76 183,78 177,80 175,86 173,80 167,78 173,76" fill="#FDE68A" />
+</svg>

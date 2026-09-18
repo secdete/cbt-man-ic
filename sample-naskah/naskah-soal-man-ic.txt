@@ -1,0 +1,44 @@
+1. Jika setiap siswa MAN Insan Cendekia disiplin dalam belajar dan rajin beribadah, maka prestasi akademik mereka akan cemerlang. Salman adalah siswa MAN Insan Cendekia yang berprestasi cemerlang.
+A. Salman pasti disiplin dalam belajar dan rajin beribadah.
+B. Salman belum tentu rajin beribadah.
+C. Salman hanya disiplin dalam belajar tetapi tidak beribadah.
+D. Disiplin belajar dan rajin ibadah merupakan salah satu faktor prestasi Salman.
+E. Semua siswa yang rajin beribadah pasti berprestasi cemerlang.
+Kunci: D
+Pembahasan: Kekeliruan menafsirkan implikasi (affirming the consequent). Prestasi cemerlang adalah akibat, faktor penyebabnya salah satunya disiplin dan ibadah, namun bukan satu-satunya syarat mutlak.
+
+2. Dalam suatu laboratorium kimia MAN IC, larutan asam konsentrasi 40% sebanyak 6 liter dicampurkan dengan larutan asam konsentrasi 60% sebanyak 4 liter. Berapakah konsentrasi asam pada larutan campuran tersebut?
+A. 46%
+B. 48%
+C. 50%
+D. 52%
+E. 54%
+Kunci: B
+Pembahasan: Total zat murni = (0.4 * 6) + (0.6 * 4) = 2.4 + 2.4 = 4.8 liter. Total volume = 6 + 4 = 10 liter. Konsentrasi = 4.8 / 10 = 48%.
+
+3. Karya monumental dalam bidang kedokteran "Al-Qanun fi at-Tibb" (The Canon of Medicine) yang menjadi rujukan dunia hingga berabad-abad ditulis oleh cendekiawan muslim bernama ...
+A. Ibnu Rusyd (Averroes)
+B. Al-Farabi (Alpharabius)
+C. Ibnu Sina (Avicenna)
+D. Al-Khawarizmi (Algoritmi)
+E. Jabir bin Hayyan (Geber)
+Kunci: C
+Pembahasan: Karya The Canon of Medicine ditulis oleh Abu Ali al-Husain bin Abdullah bin Sina (Ibnu Sina).
+
+4. Nilai dari 125^(2/3) - 27^(1/3) + 16^(3/4) adalah ...
+A. 28
+B. 30
+C. 32
+D. 34
+E. 36
+Kunci: B
+Pembahasan: 125^(2/3) = (5^3)^(2/3) = 25. 27^(1/3) = 3. 16^(3/4) = (2^4)^(3/4) = 8. Maka 25 - 3 + 8 = 30.
+
+5. Sikap toleransi dan saling menghormati perbedaan suku, agama, dan pandangan hidup dalam bingkai Islam rahmatan lil alamin dikenal dengan istilah ...
+A. Tawassuth
+B. Tasamuh
+C. Tawazun
+D. Ta'adul
+E. Ta'aruf
+Kunci: B
+Pembahasan: Tasamuh adalah sikap toleransi dan kelapangan dada dalam menghormati perbedaan di masyarakat.

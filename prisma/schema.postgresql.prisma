@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Exam {
+  id              String         @id @default(uuid())
+  title           String
+  description     String?
+  category        String         @default("SNPDB MAN IC")
+  durationMinutes Int            @default(90)
+  token           String         @unique
+  passingScore    Int            @default(65)
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  questions       Question[]
+  sessions        ExamSession[]
+}
+
+model Question {
+  id             String             @id @default(uuid())
+  examId         String
+  questionNumber Int
+  questionText   String
+  optionA        String
+  optionB        String
+  optionC        String
+  optionD        String
+  optionE        String?
+  correctAnswer  String             @default("A")
+  explanation    String?
+  points         Int                @default(4)
+  subject        String?            @default("Umum")
+  createdAt      DateTime           @default(now())
+  exam           Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
+  submissions    AnswerSubmission[]
+}
+
+model ExamSession {
+  id              String             @id @default(uuid())
+  examId          String
+  studentName     String
+  studentNisn     String?
+  studentSchool   String?
+  startTime       DateTime           @default(now())
+  endTime         DateTime?
+  status          String             @default("IN_PROGRESS") // "IN_PROGRESS", "COMPLETED", "TIMEOUT"
+  totalScore      Float              @default(0)
+  accuracy        Float              @default(0)
+  correctCount    Int                @default(0)
+  incorrectCount  Int                @default(0)
+  unansweredCount Int                @default(0)
+  tabSwitchCount  Int                @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  exam            Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
+  submissions     AnswerSubmission[]
+}
+
+model AnswerSubmission {
+  id             String      @id @default(uuid())
+  sessionId      String
+  questionId     String
+  selectedOption String?
+  isDoubtful     Boolean     @default(false)
+  isCorrect      Boolean?
+  answeredAt     DateTime    @default(now())
+  session        ExamSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question       Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+}
+
