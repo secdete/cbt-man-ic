@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ShieldCheck,
   Plus,
@@ -18,8 +18,8 @@ import {
   FileText,
   AlertCircle,
   LogOut,
-} from 'lucide-react';
-import CakrawalaLogo from '@/components/CakrawalaLogo';
+} from "lucide-react";
+import CakrawalaLogo from "@/components/CakrawalaLogo";
 
 interface Exam {
   id: string;
@@ -45,8 +45,8 @@ export default function AdminDashboardPage() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/admin/auth/logout', { method: 'POST' });
-      router.push('/admin/login');
+      await fetch("/api/admin/auth/logout", { method: "POST" });
+      router.push("/admin/login");
       router.refresh();
     } catch (e) {
       console.error(e);
@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
 
   const loadExams = async () => {
     try {
-      const res = await fetch('/api/exams');
+      const res = await fetch("/api/exams");
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setExams(json.data);
@@ -78,41 +78,54 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteExam = async (id: string, title: string) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus paket tryout "${title}"? Seluruh butir soal dan data sesi siswa akan terhapus permanen.`)) {
+    if (
+      !confirm(
+        `Apakah Anda yakin ingin menghapus paket tryout "${title}"? Seluruh butir soal dan data sesi siswa akan terhapus permanen.`,
+      )
+    ) {
       return;
     }
 
     try {
-      const res = await fetch(`/api/exams/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/exams/${id}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
         setExams((prev) => prev.filter((e) => e.id !== id));
       } else {
-        alert(json.message || 'Gagal menghapus ujian');
+        alert(json.message || "Gagal menghapus ujian");
       }
     } catch (err) {
-      alert('Gagal menghapus paket ujian');
+      alert("Gagal menghapus paket ujian");
     }
   };
 
-  const totalQuestions = exams.reduce((acc, e) => acc + (e._count?.questions || 0), 0);
-  const totalSessions = exams.reduce((acc, e) => acc + (e._count?.sessions || 0), 0);
+  const totalQuestions = exams.reduce(
+    (acc, e) => acc + (e._count?.questions || 0),
+    0,
+  );
+  const totalSessions = exams.reduce(
+    (acc, e) => acc + (e._count?.sessions || 0),
+    0,
+  );
 
   return (
     <div className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-8">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <CakrawalaLogo className="w-12 h-12 shadow-sm ring-2 ring-blue-500/30" size={48} />
+          <CakrawalaLogo height={44} className="h-11 w-auto" />
           <div>
             <div className="flex items-center gap-2">
               <span className="p-1 rounded-md bg-blue-100 text-blue-800">
                 <ShieldCheck className="w-4 h-4 text-blue-700" />
               </span>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900">Panel Administrator Cakrawala</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+                Panel Administrator Cakrawala
+              </h1>
             </div>
             <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-              Kelola naskah soal, upload dokumen PDF, atur token, dan pantau rekapitulasi nilai siswa
+              Kelola naskah soal, upload dokumen PDF, atur token, dan pantau
+              rekapitulasi nilai siswa
             </p>
           </div>
         </div>
@@ -140,53 +153,73 @@ export default function AdminDashboardPage() {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center flex-shrink-0">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center flex-shrink-0">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium">Total Paket Tryout</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{exams.length}</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Total Paket Tryout
+            </p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">
+              {exams.length}
+            </p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-700 flex items-center justify-center flex-shrink-0">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center flex-shrink-0">
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium">Total Butir Soal Terdaftar</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{totalQuestions}</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Total Butir Soal Terdaftar
+            </p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">
+              {totalQuestions}
+            </p>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center flex-shrink-0">
+        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center flex-shrink-0">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium">Total Peserta Mengerjakan</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{totalSessions}</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Total Peserta Mengerjakan
+            </p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">
+              {totalSessions}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Table of Exams */}
-      <div className="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">Daftar Paket Ujian Aktif</h2>
+          <h2 className="text-lg font-bold text-slate-900">
+            Daftar Paket Ujian Aktif
+          </h2>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
             {exams.length} Paket Terdaftar
           </span>
         </div>
 
         {loading ? (
-          <div className="py-16 text-center text-slate-400 text-sm">Memuat daftar ujian...</div>
+          <div className="py-16 text-center text-slate-400 text-sm">
+            Memuat daftar ujian...
+          </div>
         ) : exams.length === 0 ? (
           <div className="py-16 text-center space-y-3">
             <AlertCircle className="w-10 h-10 text-slate-300 mx-auto" />
-            <p className="text-sm font-semibold text-slate-700">Belum ada paket ujian yang dibuat.</p>
-            <p className="text-xs text-slate-400">Klik tombol "Upload PDF / Buat Tryout" di atas untuk memulai.</p>
+            <p className="text-sm font-semibold text-slate-700">
+              Belum ada paket ujian yang dibuat.
+            </p>
+            <p className="text-xs text-slate-400">
+              Klik tombol "Upload PDF / Buat Tryout" di atas untuk memulai.
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -203,9 +236,14 @@ export default function AdminDashboardPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {exams.map((exam) => (
-                  <tr key={exam.id} className="hover:bg-slate-50/70 transition-colors">
+                  <tr
+                    key={exam.id}
+                    className="hover:bg-slate-50/70 transition-colors"
+                  >
                     <td className="py-4 px-6">
-                      <div className="font-bold text-slate-900">{exam.title}</div>
+                      <div className="font-bold text-slate-900">
+                        {exam.title}
+                      </div>
                       <span className="inline-block mt-0.5 text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                         {exam.category}
                       </span>

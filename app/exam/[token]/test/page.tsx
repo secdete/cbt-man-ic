@@ -1,22 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, use } from "react";
+import { useRouter } from "next/navigation";
 import {
   Clock,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
   Flag,
   CheckCircle2,
   Maximize2,
   Minimize2,
   ShieldAlert,
   Send,
-  Type,
-} from 'lucide-react';
-import CakrawalaLogo from '@/components/CakrawalaLogo';
+} from "lucide-react";
+import CakrawalaLogo from "@/components/CakrawalaLogo";
 
 interface Question {
   id: string;
@@ -53,7 +51,9 @@ export default function CBTTestInterfacePage({
   const [remainingSeconds, setRemainingSeconds] = useState(0);
 
   // UI States
-  const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
+  const [fontSize, setFontSize] = useState<"normal" | "large" | "xlarge">(
+    "normal",
+  );
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [tabSwitchAlert, setTabSwitchAlert] = useState(false);
@@ -62,7 +62,7 @@ export default function CBTTestInterfacePage({
 
   // Inisialisasi Sesi Ujian
   useEffect(() => {
-    const rawActive = localStorage.getItem('cbt_active_session');
+    const rawActive = localStorage.getItem("cbt_active_session");
     if (!rawActive) {
       router.push(`/exam/${encodeURIComponent(token)}`);
       return;
@@ -73,7 +73,9 @@ export default function CBTTestInterfacePage({
       setSessionData(active.session);
       setQuestions(active.questions || []);
       setAnswers(active.savedAnswers || {});
-      setRemainingSeconds(active.remainingSeconds || active.exam.durationMinutes * 60);
+      setRemainingSeconds(
+        active.remainingSeconds || active.exam.durationMinutes * 60,
+      );
       setTabSwitchCount(active.session.tabSwitchCount || 0);
     } catch (e) {
       console.error(e);
@@ -101,7 +103,7 @@ export default function CBTTestInterfacePage({
     return () => clearInterval(timer);
   }, [loading, remainingSeconds]);
 
-  // Anti-Cheat: Tab Switch & Visibility Change
+  // Anti-Cheat Proctoring
   useEffect(() => {
     if (!sessionData?.id) return;
 
@@ -112,7 +114,7 @@ export default function CBTTestInterfacePage({
 
         try {
           await fetch(`/api/session/${sessionData.id}/anti-cheat`, {
-            method: 'POST',
+            method: "POST",
           });
         } catch (e) {
           console.error(e);
@@ -120,9 +122,9 @@ export default function CBTTestInterfacePage({
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [sessionData?.id]);
 
@@ -132,8 +134,8 @@ export default function CBTTestInterfacePage({
       if (!sessionData?.id) return;
       try {
         await fetch(`/api/session/${sessionData.id}/answer`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             questionId: qId,
             selectedOption: option,
@@ -141,18 +143,22 @@ export default function CBTTestInterfacePage({
           }),
         });
       } catch (err) {
-        console.error('Failed to auto-save answer:', err);
+        console.error("Failed to auto-save answer:", err);
       }
     },
-    [sessionData?.id]
+    [sessionData?.id],
   );
 
   const handleSelectOption = (optionLetter: string) => {
     const currentQ = questions[currentIndex];
     if (!currentQ) return;
 
-    const existing = answers[currentQ.id] || { selectedOption: null, isDoubtful: false };
-    const newSelected = existing.selectedOption === optionLetter ? null : optionLetter;
+    const existing = answers[currentQ.id] || {
+      selectedOption: null,
+      isDoubtful: false,
+    };
+    const newSelected =
+      existing.selectedOption === optionLetter ? null : optionLetter;
 
     const updated = {
       ...answers,
@@ -170,7 +176,10 @@ export default function CBTTestInterfacePage({
     const currentQ = questions[currentIndex];
     if (!currentQ) return;
 
-    const existing = answers[currentQ.id] || { selectedOption: null, isDoubtful: false };
+    const existing = answers[currentQ.id] || {
+      selectedOption: null,
+      isDoubtful: false,
+    };
     const newDoubtful = !existing.isDoubtful;
 
     const updated = {
@@ -191,30 +200,31 @@ export default function CBTTestInterfacePage({
       if (showSubmitModal || tabSwitchAlert) return;
 
       const key = e.key.toUpperCase();
-      if (['A', 'B', 'C', 'D', 'E'].includes(key)) {
+      if (["A", "B", "C", "D", "E"].includes(key)) {
         handleSelectOption(key);
-      } else if (key >= '1' && key <= '5') {
-        const letters = ['A', 'B', 'C', 'D', 'E'];
+      } else if (key >= "1" && key <= "5") {
+        const letters = ["A", "B", "C", "D", "E"];
         const opt = letters[parseInt(key, 10) - 1];
         if (opt) handleSelectOption(opt);
-      } else if (e.key === 'ArrowRight') {
-        if (currentIndex < questions.length - 1) setCurrentIndex(currentIndex + 1);
-      } else if (e.key === 'ArrowLeft') {
+      } else if (e.key === "ArrowRight") {
+        if (currentIndex < questions.length - 1)
+          setCurrentIndex(currentIndex + 1);
+      } else if (e.key === "ArrowLeft") {
         if (currentIndex > 0) setCurrentIndex(currentIndex - 1);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentIndex, questions, answers, showSubmitModal, tabSwitchAlert]);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s
       .toString()
-      .padStart(2, '0')}`;
+      .padStart(2, "0")}`;
   };
 
   const handleConfirmSubmit = async () => {
@@ -223,19 +233,21 @@ export default function CBTTestInterfacePage({
 
     try {
       const res = await fetch(`/api/session/${sessionData.id}/submit`, {
-        method: 'POST',
+        method: "POST",
       });
       const json = await res.json();
 
       if (json.success) {
-        localStorage.removeItem('cbt_active_session');
-        router.push(`/exam/${encodeURIComponent(token)}/result?sessionId=${sessionData.id}`);
+        localStorage.removeItem("cbt_active_session");
+        router.push(
+          `/exam/${encodeURIComponent(token)}/result?sessionId=${sessionData.id}`,
+        );
       } else {
-        alert(json.message || 'Gagal mengirim jawaban.');
+        alert(json.message || "Gagal mengirim lembar jawaban.");
         setSubmitting(false);
       }
     } catch (err) {
-      alert('Terjadi kendala jaringan saat mengumpulkan lembar jawaban.');
+      alert("Terjadi kendala jaringan saat mengumpulkan lembar jawaban.");
       setSubmitting(false);
     }
   };
@@ -257,9 +269,11 @@ export default function CBTTestInterfacePage({
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[80vh]">
-        <div className="text-center space-y-3">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-700">Mempersiapkan Lembar Ujian CBT...</p>
+        <div className="text-center space-y-2">
+          <div className="w-8 h-8 border-3 border-blue-700 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-semibold text-slate-700">
+            Mempersiapkan Lembar Ujian CBT...
+          </p>
         </div>
       </div>
     );
@@ -267,156 +281,172 @@ export default function CBTTestInterfacePage({
 
   const currentQ = questions[currentIndex];
   if (!currentQ) {
-    return <div className="p-8 text-center">Soal tidak ditemukan.</div>;
+    return <div className="p-8 text-center text-xs">Soal tidak ditemukan.</div>;
   }
 
-  const currentAnswer = answers[currentQ.id] || { selectedOption: null, isDoubtful: false };
+  const currentAnswer = answers[currentQ.id] || {
+    selectedOption: null,
+    isDoubtful: false,
+  };
 
-  const answeredCount = Object.values(answers).filter((a) => a.selectedOption !== null).length;
-  const doubtfulCount = Object.values(answers).filter((a) => a.isDoubtful).length;
+  const answeredCount = Object.values(answers).filter(
+    (a) => a.selectedOption !== null,
+  ).length;
+  const doubtfulCount = Object.values(answers).filter(
+    (a) => a.isDoubtful,
+  ).length;
   const unansweredCount = questions.length - answeredCount;
 
   const textSizeClass =
-    fontSize === 'large'
-      ? 'text-lg leading-relaxed'
-      : fontSize === 'xlarge'
-      ? 'text-xl leading-loose'
-      : 'text-base leading-normal';
+    fontSize === "large"
+      ? "text-base leading-relaxed"
+      : fontSize === "xlarge"
+        ? "text-lg leading-loose"
+        : "text-sm leading-normal";
 
   const isTimerCritical = remainingSeconds <= 300;
   const isTimerWarning = remainingSeconds <= 900 && remainingSeconds > 300;
 
   return (
     <div className="flex-1 flex flex-col bg-slate-100 min-h-screen">
-      {/* Top Floating CBT Bar - Blue Accent */}
-      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm px-4 py-2.5 sm:px-6">
+      {/* Top Professional CBT Bar */}
+      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-2xs px-4 py-2 sm:px-6">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          {/* Info Peserta */}
+          {/* Identitas Peserta */}
           <div className="flex items-center gap-3">
-            <CakrawalaLogo className="w-8 h-8 rounded-lg" size={32} />
-            <div>
-              <p className="font-bold text-xs sm:text-sm text-slate-800 truncate max-w-[200px] sm:max-w-xs">
+            <CakrawalaLogo className="h-8 w-auto" height={32} />
+            <div className="border-l border-slate-200 pl-3">
+              <p className="font-bold text-xs sm:text-sm text-slate-900 truncate max-w-[180px] sm:max-w-xs">
                 {sessionData?.studentName}
               </p>
               <p className="text-[11px] text-slate-500">
-                {sessionData?.studentNisn ? `NISN: ${sessionData.studentNisn}` : 'Peserta CBT Cakrawala'}
+                {sessionData?.studentNisn
+                  ? `NISN: ${sessionData.studentNisn}`
+                  : "Peserta CBT"}{" "}
+                • {sessionData?.studentSchool || "SNPDB MAN IC"}
               </p>
             </div>
           </div>
 
-          {/* Real-time Countdown Timer */}
+          {/* Sisa Waktu Ujian (Countdown) */}
           <div className="flex items-center gap-2">
             <div
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-xl font-mono font-bold text-sm sm:text-base border shadow-sm transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-mono font-bold text-sm border ${
                 isTimerCritical
-                  ? 'bg-rose-50 border-rose-300 text-rose-700 animate-pulse'
+                  ? "bg-rose-50 border-rose-300 text-rose-700 animate-pulse"
                   : isTimerWarning
-                  ? 'bg-amber-50 border-amber-300 text-amber-700'
-                  : 'bg-blue-50 border-blue-200 text-blue-900'
+                    ? "bg-amber-50 border-amber-300 text-amber-800"
+                    : "bg-slate-100 border-slate-300 text-slate-900"
               }`}
             >
-              <Clock className="w-4 h-4 flex-shrink-0" />
-              <span>{formatTime(remainingSeconds)}</span>
+              <Clock className="w-4 h-4 text-slate-500" />
+              <span>Sisa Waktu: {formatTime(remainingSeconds)}</span>
             </div>
           </div>
 
-          {/* Tools & Tombol Selesai */}
+          {/* Tools & Submit */}
           <div className="flex items-center gap-2">
-            {/* Font Size Selector */}
-            <div className="hidden md:flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+            {/* Font Size Adjuster */}
+            <div className="hidden md:flex items-center bg-slate-100 p-0.5 rounded border border-slate-200 text-[11px]">
               <button
                 type="button"
-                onClick={() => setFontSize('normal')}
-                className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${
-                  fontSize === 'normal' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500'
+                onClick={() => setFontSize("normal")}
+                className={`px-2 py-0.5 rounded font-bold cursor-pointer ${
+                  fontSize === "normal"
+                    ? "bg-white text-slate-900 shadow-2xs"
+                    : "text-slate-500"
                 }`}
-                title="Font Normal"
               >
                 A
               </button>
               <button
                 type="button"
-                onClick={() => setFontSize('large')}
-                className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${
-                  fontSize === 'large' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500'
+                onClick={() => setFontSize("large")}
+                className={`px-2 py-0.5 rounded font-bold cursor-pointer ${
+                  fontSize === "large"
+                    ? "bg-white text-slate-900 shadow-2xs"
+                    : "text-slate-500"
                 }`}
-                title="Font Sedang"
               >
                 A+
               </button>
               <button
                 type="button"
-                onClick={() => setFontSize('xlarge')}
-                className={`px-2 py-0.5 rounded font-semibold cursor-pointer ${
-                  fontSize === 'xlarge' ? 'bg-white text-blue-700 shadow-xs' : 'text-slate-500'
+                onClick={() => setFontSize("xlarge")}
+                className={`px-2 py-0.5 rounded font-bold cursor-pointer ${
+                  fontSize === "xlarge"
+                    ? "bg-white text-slate-900 shadow-2xs"
+                    : "text-slate-500"
                 }`}
-                title="Font Besar"
               >
                 A++
               </button>
             </div>
 
-            {/* Fullscreen Toggle */}
             <button
               type="button"
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer hidden sm:inline-flex"
+              className="p-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer hidden sm:inline-flex"
               title="Layar Penuh"
             >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              {isFullscreen ? (
+                <Minimize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
             </button>
 
-            {/* Tombol Selesai Ujian */}
             <button
               type="button"
               onClick={() => setShowSubmitModal(true)}
-              className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 rounded bg-rose-700 hover:bg-rose-800 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <Send className="w-4 h-4" />
-              <span>Selesai Ujian</span>
+              <Send className="w-3.5 h-3.5" />
+              <span>Selesai Tes</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Examination Grid */}
-      <div className="max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex-1 flex flex-col">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
-          
-          {/* Main Question Canvas (Left / 8 cols) */}
-          <div className="lg:col-span-8 flex flex-col space-y-4">
-            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 flex-1 flex flex-col justify-between">
+      {/* Main CBT Workspace */}
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-6 flex-1 flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-start">
+          {/* Main Question Pane (8 cols) */}
+          <div className="lg:col-span-8 flex flex-col space-y-3">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 sm:p-7 flex-1 flex flex-col justify-between">
               <div>
                 {/* Header Soal */}
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100 gap-3">
+                <div className="flex items-center justify-between pb-3.5 border-b border-slate-200 gap-3">
                   <div className="flex items-center gap-2">
-                    <span className="px-3.5 py-1 rounded-xl bg-blue-800 text-white font-extrabold text-sm tracking-wide">
+                    <span className="px-3 py-1 rounded bg-slate-900 text-white font-bold text-xs tracking-wider">
                       SOAL NO. {currentQ.questionNumber}
                     </span>
                     {currentQ.subject && (
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-900 border border-blue-200">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200">
                         {currentQ.subject}
                       </span>
                     )}
                   </div>
-                  <span className="text-xs font-semibold text-slate-400">
-                    Bobot: +{currentQ.points} Poin
+                  <span className="text-xs text-slate-400 font-medium">
+                    Bobot: +{currentQ.points}
                   </span>
                 </div>
 
-                {/* Teks Pertanyaan */}
-                <div className="mt-6 text-slate-900 font-medium whitespace-pre-line select-none">
+                {/* Teks Soal */}
+                <div className="mt-5 text-slate-900 font-normal whitespace-pre-line select-none">
                   <p className={textSizeClass}>{currentQ.questionText}</p>
                 </div>
 
-                {/* Pilihan Jawaban A, B, C, D, E */}
-                <div className="mt-8 space-y-3">
+                {/* Opsi Pilihan Ganda A, B, C, D, E */}
+                <div className="mt-6 space-y-2.5">
                   {[
-                    { key: 'A', text: currentQ.optionA },
-                    { key: 'B', text: currentQ.optionB },
-                    { key: 'C', text: currentQ.optionC },
-                    { key: 'D', text: currentQ.optionD },
-                    ...(currentQ.optionE ? [{ key: 'E', text: currentQ.optionE }] : []),
+                    { key: "A", text: currentQ.optionA },
+                    { key: "B", text: currentQ.optionB },
+                    { key: "C", text: currentQ.optionC },
+                    { key: "D", text: currentQ.optionD },
+                    ...(currentQ.optionE
+                      ? [{ key: "E", text: currentQ.optionE }]
+                      : []),
                   ].map((opt) => {
                     const isSelected = currentAnswer.selectedOption === opt.key;
                     return (
@@ -424,122 +454,135 @@ export default function CBTTestInterfacePage({
                         key={opt.key}
                         type="button"
                         onClick={() => handleSelectOption(opt.key)}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-start gap-4 cursor-pointer group ${
+                        className={`w-full text-left p-3.5 rounded-lg border transition-all flex items-start gap-3.5 cursor-pointer ${
                           isSelected
-                            ? 'bg-blue-50/80 border-blue-600 shadow-sm'
-                            : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-slate-50/70'
+                            ? "bg-blue-50/90 border-blue-600 shadow-2xs"
+                            : "bg-white border-slate-200 hover:bg-slate-50"
                         }`}
                       >
-                        <div
-                          className={`w-8 h-8 rounded-xl font-bold text-sm flex items-center justify-center flex-shrink-0 transition-colors ${
+                        <span
+                          className={`w-6 h-6 rounded-full font-bold text-xs flex items-center justify-center flex-shrink-0 transition-colors ${
                             isSelected
-                              ? 'bg-blue-600 text-white shadow-xs'
-                              : 'bg-slate-100 text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-800'
+                              ? "bg-blue-700 text-white"
+                              : "border border-slate-300 text-slate-600"
                           }`}
                         >
                           {opt.key}
-                        </div>
-                        <div
-                          className={`pt-1 text-sm sm:text-base font-normal ${
-                            isSelected ? 'text-blue-950 font-semibold' : 'text-slate-800'
+                        </span>
+                        <span
+                          className={`pt-0.5 text-xs sm:text-sm ${
+                            isSelected
+                              ? "text-blue-950 font-semibold"
+                              : "text-slate-800 font-normal"
                           }`}
                         >
                           {opt.text}
-                        </div>
+                        </span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Action Bar */}
-              <div className="mt-10 pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              {/* Bottom Action Bar */}
+              <div className="mt-8 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                 <button
                   type="button"
                   disabled={currentIndex === 0}
-                  onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-                  className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition-colors disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1.5 cursor-pointer"
+                  onClick={() =>
+                    setCurrentIndex((prev) => Math.max(0, prev - 1))
+                  }
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 cursor-pointer"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3.5 h-3.5" />
                   <span>Sebelumnya</span>
                 </button>
 
-                {/* Tombol Ragu-ragu */}
+                {/* Ragu-Ragu Button */}
                 <button
                   type="button"
                   onClick={handleToggleDoubtful}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-sm border transition-all flex items-center gap-2 cursor-pointer ${
+                  className={`px-4 py-2 rounded-lg font-bold text-xs border transition-all flex items-center gap-1.5 cursor-pointer ${
                     currentAnswer.isDoubtful
-                      ? 'bg-amber-400 text-amber-950 border-amber-500 shadow-sm'
-                      : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+                      ? "bg-amber-400 text-amber-950 border-amber-500"
+                      : "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
                   }`}
                 >
-                  <Flag className="w-4 h-4 fill-current" />
-                  <span>{currentAnswer.isDoubtful ? 'Telah Ditandai Ragu' : 'Ragu-Ragu'}</span>
+                  <Flag className="w-3.5 h-3.5 fill-current" />
+                  <span>
+                    {currentAnswer.isDoubtful
+                      ? "Tandai Ragu (Aktif)"
+                      : "Ragu-Ragu"}
+                  </span>
                 </button>
 
-                {/* Tombol Selanjutnya */}
+                {/* Selanjutnya Button */}
                 {currentIndex < questions.length - 1 ? (
                   <button
                     type="button"
                     onClick={() => setCurrentIndex((prev) => prev + 1)}
-                    className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+                    className="px-5 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <span>Simpan & Lanjut</span>
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setShowSubmitModal(true)}
-                    className="px-6 py-2.5 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-sm shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer"
+                    className="px-5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <span>Selesai & Kumpulkan</span>
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right Sidebar: Grid Navigasi Soal (4 cols) */}
-          <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 space-y-6">
+          {/* Right Sidebar: Grid Nomor Soal (4 cols) */}
+          <div className="lg:col-span-4 bg-white rounded-xl border border-slate-200 shadow-xs p-5 space-y-4">
             <div>
-              <h3 className="font-bold text-slate-900 text-base flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center justify-between pb-2.5 border-b border-slate-100">
                 <span>Daftar Nomor Soal</span>
-                <span className="text-xs font-normal text-slate-400">Total: {questions.length}</span>
+                <span className="font-mono text-slate-500">
+                  {questions.length} Soal
+                </span>
               </h3>
 
-              {/* Legend Status Soal */}
-              <div className="grid grid-cols-3 gap-2 mt-4 text-[11px] font-semibold text-center">
-                <div className="p-2 rounded-xl bg-blue-50 text-blue-900 border border-blue-200">
-                  <p className="text-sm font-extrabold">{answeredCount}</p>
-                  <p className="text-[10px] uppercase font-bold text-blue-700">Dijawab</p>
+              {/* Status Rangkuman */}
+              <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                <div className="p-2 rounded border border-blue-200 bg-blue-50 text-blue-900">
+                  <p className="font-bold text-xs">{answeredCount}</p>
+                  <p className="text-[10px] text-blue-700">Dijawab</p>
                 </div>
-                <div className="p-2 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">
-                  <p className="text-sm font-extrabold">{doubtfulCount}</p>
-                  <p className="text-[10px] uppercase font-bold text-amber-600">Ragu-Ragu</p>
+                <div className="p-2 rounded border border-amber-200 bg-amber-50 text-amber-900">
+                  <p className="font-bold text-xs">{doubtfulCount}</p>
+                  <p className="text-[10px] text-amber-700">Ragu</p>
                 </div>
-                <div className="p-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
-                  <p className="text-sm font-extrabold">{unansweredCount}</p>
-                  <p className="text-[10px] uppercase font-bold text-slate-500">Belum</p>
+                <div className="p-2 rounded border border-slate-200 bg-slate-50 text-slate-700">
+                  <p className="font-bold text-xs">{unansweredCount}</p>
+                  <p className="text-[10px] text-slate-500">Belum</p>
                 </div>
               </div>
             </div>
 
             {/* Grid Butir Soal */}
-            <div className="grid grid-cols-5 gap-2.5 max-h-[380px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-5 gap-2 max-h-[360px] overflow-y-auto pr-0.5">
               {questions.map((q, idx) => {
                 const ans = answers[q.id];
                 const isCurrent = idx === currentIndex;
                 const isAnswered = ans && ans.selectedOption !== null;
                 const isDoubtful = ans && ans.isDoubtful;
 
-                let colorClasses = 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200';
+                let colorClasses =
+                  "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100";
                 if (isDoubtful) {
-                  colorClasses = 'bg-amber-400 text-amber-950 font-bold border-amber-500 shadow-xs';
+                  colorClasses =
+                    "bg-amber-400 text-amber-950 font-bold border-amber-500";
                 } else if (isAnswered) {
-                  colorClasses = 'bg-blue-600 text-white font-bold border-blue-700 shadow-xs';
+                  colorClasses =
+                    "bg-blue-700 text-white font-bold border-blue-800";
                 }
 
                 return (
@@ -547,13 +590,15 @@ export default function CBTTestInterfacePage({
                     key={q.id}
                     type="button"
                     onClick={() => setCurrentIndex(idx)}
-                    className={`h-11 rounded-xl text-xs font-bold border-2 transition-all flex flex-col items-center justify-center relative cursor-pointer ${colorClasses} ${
-                      isCurrent ? 'ring-3 ring-indigo-500 ring-offset-2 scale-105 z-10' : ''
+                    className={`h-10 rounded text-xs font-bold border transition-all flex flex-col items-center justify-center cursor-pointer ${colorClasses} ${
+                      isCurrent
+                        ? "ring-2 ring-blue-600 ring-offset-1 font-black z-10"
+                        : ""
                     }`}
                   >
                     <span>{q.questionNumber}</span>
                     {isAnswered && (
-                      <span className="text-[9px] font-extrabold leading-none opacity-90">
+                      <span className="text-[9px] leading-none opacity-90">
                         {ans.selectedOption}
                       </span>
                     )}
@@ -562,37 +607,49 @@ export default function CBTTestInterfacePage({
               })}
             </div>
 
-            {/* Petunjuk Pintas Keyboard */}
-            <div className="pt-4 border-t border-slate-100 text-[11px] text-slate-400 space-y-1">
+            <div className="pt-3 border-t border-slate-100 text-[10px] text-slate-400 space-y-0.5">
               <p className="font-semibold text-slate-600">Pintasan Keyboard:</p>
-              <p>• Tekan <kbd className="px-1.5 py-0.5 bg-slate-100 rounded border font-mono">A</kbd> - <kbd className="px-1.5 py-0.5 bg-slate-100 rounded border font-mono">E</kbd> untuk memilih opsi</p>
-              <p>• Tekan <kbd className="px-1.5 py-0.5 bg-slate-100 rounded border font-mono">&larr;</kbd> dan <kbd className="px-1.5 py-0.5 bg-slate-100 rounded border font-mono">&rarr;</kbd> untuk pindah nomor</p>
+              <p>
+                • Tekan{" "}
+                <kbd className="px-1 bg-slate-100 rounded border">A</kbd>–
+                <kbd className="px-1 bg-slate-100 rounded border">E</kbd> untuk
+                memilih jawaban
+              </p>
+              <p>
+                • Tekan{" "}
+                <kbd className="px-1 bg-slate-100 rounded border">&larr;</kbd>{" "}
+                dan{" "}
+                <kbd className="px-1 bg-slate-100 rounded border">&rarr;</kbd>{" "}
+                untuk navigasi nomor
+              </p>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* Modal Anti-Cheat Alert */}
+      {/* Modal Anti-Cheat Proctoring */}
       {tabSwitchAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-rose-200 text-center space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-              <ShieldAlert className="w-8 h-8" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-xl border border-rose-200 text-center space-y-3">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <ShieldAlert className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900">Peringatan Pengawas CBT!</h3>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Anda terdeteksi berpindah tab atau meninggalkan jendela ujian. Aktivitas ini telah dicatat dalam log ujian.
+            <h3 className="text-base font-bold text-slate-900">
+              Peringatan Pengawas CBT
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Anda terdeteksi berpindah tab atau meninggalkan jendela tes.
+              Seluruh aktivitas tercatat dalam sistem evaluasi.
             </p>
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-700">
-              Total Peringatan: {tabSwitchCount} kali
+            <div className="p-2 bg-rose-50 border border-rose-200 rounded text-xs font-bold text-rose-700">
+              Pelanggaran Tercatat: {tabSwitchCount} kali
             </div>
             <button
               type="button"
               onClick={() => setTabSwitchAlert(false)}
-              className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm cursor-pointer"
+              className="w-full py-2.5 rounded bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs cursor-pointer"
             >
-              Saya Mengerti & Kembali ke Soal
+              Kembali ke Soal Ujian
             </button>
           </div>
         </div>
@@ -600,60 +657,71 @@ export default function CBTTestInterfacePage({
 
       {/* Modal Konfirmasi Selesai Ujian */}
       {showSubmitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-xl border border-slate-200 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-6 h-6 text-blue-700" />
+              <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Konfirmasi Kumpulkan Ujian</h3>
-                <p className="text-xs text-slate-500">Pastikan seluruh lembar jawaban sudah terisi</p>
+                <h3 className="text-sm font-bold text-slate-900">
+                  Konfirmasi Kumpulkan Ujian
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Periksa lembar jawaban sebelum mengakhiri
+                </p>
               </div>
             </div>
 
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1.5 text-xs">
               <div className="flex justify-between text-slate-600">
-                <span>Soal Sudah Dijawab:</span>
-                <span className="font-bold text-blue-700">{answeredCount} Soal</span>
+                <span>Soal Terjawab:</span>
+                <span className="font-bold text-blue-800">
+                  {answeredCount} Soal
+                </span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Soal Masih Ragu-ragu:</span>
-                <span className="font-bold text-amber-600">{doubtfulCount} Soal</span>
+                <span>Masih Ragu-ragu:</span>
+                <span className="font-bold text-amber-700">
+                  {doubtfulCount} Soal
+                </span>
               </div>
               <div className="flex justify-between text-slate-600">
-                <span>Soal Belum Dijawab:</span>
-                <span className="font-bold text-rose-600">{unansweredCount} Soal</span>
+                <span>Belum Dijawab:</span>
+                <span className="font-bold text-rose-700">
+                  {unansweredCount} Soal
+                </span>
               </div>
             </div>
 
             {unansweredCount > 0 && (
-              <p className="text-xs text-amber-800 bg-amber-50 p-3 rounded-xl border border-amber-200">
-                ⚠️ Anda masih memiliki {unansweredCount} soal yang belum dijawab. Nilai untuk soal kosong adalah 0.
+              <p className="text-xs text-amber-800 bg-amber-50 p-2.5 rounded border border-amber-200 leading-relaxed">
+                Terdapat {unansweredCount} butir soal yang belum dijawab.
+                Pilihan yang kosong tidak memperoleh poin.
               </p>
             )}
 
-            <div className="flex items-center gap-3 pt-2">
+            <div className="flex items-center gap-2 pt-1">
               <button
                 type="button"
                 disabled={submitting}
                 onClick={() => setShowSubmitModal(false)}
-                className="flex-1 py-3 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors cursor-pointer"
+                className="flex-1 py-2 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer"
               >
-                Batal, Lanjut Kerjakan
+                Batal
               </button>
               <button
                 type="button"
                 disabled={submitting}
                 onClick={handleConfirmSubmit}
-                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-xs shadow-xs transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
               >
                 {submitting ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <span>Ya, Kumpulkan</span>
-                    <CheckCircle2 className="w-4 h-4" />
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                   </>
                 )}
               </button>

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, use } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, use } from "react";
+import Link from "next/link";
 import {
   ArrowLeft,
   Users,
@@ -15,7 +15,7 @@ import {
   Search,
   Sparkles,
   School,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function AdminExamResultsPage({
   params,
@@ -27,8 +27,8 @@ export default function AdminExamResultsPage({
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     async function fetchResults() {
@@ -38,10 +38,10 @@ export default function AdminExamResultsPage({
         if (json.success) {
           setData(json.data);
         } else {
-          setErrorMessage(json.message || 'Gagal memuat rekap nilai.');
+          setErrorMessage(json.message || "Gagal memuat rekap nilai.");
         }
       } catch (err) {
-        setErrorMessage('Gagal menghubungi server.');
+        setErrorMessage("Gagal menghubungi server.");
       } finally {
         setLoading(false);
       }
@@ -55,7 +55,9 @@ export default function AdminExamResultsPage({
       <div className="flex-1 flex items-center justify-center min-h-[70vh]">
         <div className="text-center space-y-3">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-700">Memuat Rekapitulasi Nilai Peserta...</p>
+          <p className="text-sm font-semibold text-slate-700">
+            Memuat Rekapitulasi Nilai Peserta...
+          </p>
         </div>
       </div>
     );
@@ -64,7 +66,7 @@ export default function AdminExamResultsPage({
   if (errorMessage || !data) {
     return (
       <div className="flex-1 max-w-lg mx-auto p-8 text-center space-y-4">
-        <div className="w-16 h-16 rounded-3xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+        <div className="w-16 h-16 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
           <XCircle className="w-8 h-8" />
         </div>
         <h2 className="text-xl font-bold text-slate-900">Gagal Memuat Rekap</h2>
@@ -104,13 +106,16 @@ export default function AdminExamResultsPage({
             Kembali ke Panel Admin
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{exam.title}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+              {exam.title}
+            </h1>
             <span className="font-mono text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-md">
               TOKEN: {exam.token}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Rekap hasil pengerjaan CBT, peringkat siswa, dan analisis kelulusan passing grade
+            Rekap hasil pengerjaan CBT, peringkat siswa, dan analisis kelulusan
+            passing grade
           </p>
         </div>
 
@@ -131,8 +136,12 @@ export default function AdminExamResultsPage({
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium">Total Peserta Ujian</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{analytics.totalParticipants}</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Total Peserta Ujian
+            </p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">
+              {analytics.totalParticipants}
+            </p>
           </div>
         </div>
 
@@ -142,7 +151,9 @@ export default function AdminExamResultsPage({
           </div>
           <div>
             <p className="text-xs text-slate-500 font-medium">Rata-Rata Skor</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{analytics.averageScore}</p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">
+              {analytics.averageScore}
+            </p>
           </div>
         </div>
 
@@ -152,7 +163,9 @@ export default function AdminExamResultsPage({
           </div>
           <div>
             <p className="text-xs text-slate-500 font-medium">Skor Tertinggi</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">{analytics.highestScore}</p>
+            <p className="text-2xl font-black text-slate-900 mt-0.5">
+              {analytics.highestScore}
+            </p>
           </div>
         </div>
 
@@ -161,21 +174,29 @@ export default function AdminExamResultsPage({
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs text-slate-500 font-medium">Lulus Passing Grade</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Lulus Passing Grade
+            </p>
             <p className="text-2xl font-black text-slate-900 mt-0.5">
-              {analytics.passedCount}{' '}
-              <span className="text-xs font-normal text-slate-400">({analytics.passPercentage}%)</span>
+              {analytics.passedCount}{" "}
+              <span className="text-xs font-normal text-slate-400">
+                ({analytics.passPercentage}%)
+              </span>
             </p>
           </div>
         </div>
       </div>
 
       {/* Leaderboard Table */}
-      <div className="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden space-y-4 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Peringkat & Hasil Peserta (Leaderboard)</h2>
-            <p className="text-xs text-slate-500">Passing Grade: {exam.passingScore} Poin</p>
+            <h2 className="text-lg font-bold text-slate-900">
+              Peringkat & Hasil Peserta (Leaderboard)
+            </h2>
+            <p className="text-xs text-slate-500">
+              Passing Grade: {exam.passingScore} Poin
+            </p>
           </div>
 
           <div className="relative w-full sm:w-72">
@@ -193,8 +214,8 @@ export default function AdminExamResultsPage({
         {filteredLeaderboard.length === 0 ? (
           <div className="py-16 text-center text-slate-400 text-sm">
             {leaderboard.length === 0
-              ? 'Belum ada siswa yang mengerjakan tryout ini.'
-              : 'Tidak ditemukan peserta dengan kata kunci tersebut.'}
+              ? "Belum ada siswa yang mengerjakan tryout ini."
+              : "Tidak ditemukan peserta dengan kata kunci tersebut."}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -206,14 +227,19 @@ export default function AdminExamResultsPage({
                   <th className="py-3.5 px-4">Asal Sekolah</th>
                   <th className="py-3.5 px-4 text-center">Skor Akhir</th>
                   <th className="py-3.5 px-4 text-center">Akurasi</th>
-                  <th className="py-3.5 px-4 text-center">Benar/Salah/Kosong</th>
+                  <th className="py-3.5 px-4 text-center">
+                    Benar/Salah/Kosong
+                  </th>
                   <th className="py-3.5 px-4 text-center">Tab Switch</th>
                   <th className="py-3.5 px-4 text-center">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
                 {filteredLeaderboard.map((student: any) => (
-                  <tr key={student.id} className="hover:bg-slate-50/70 transition-colors">
+                  <tr
+                    key={student.id}
+                    className="hover:bg-slate-50/70 transition-colors"
+                  >
                     <td className="py-3.5 px-4 text-center font-extrabold text-slate-800">
                       {student.rank === 1 ? (
                         <span className="inline-block p-1 rounded-md bg-amber-100 text-amber-800">
@@ -242,7 +268,7 @@ export default function AdminExamResultsPage({
                     </td>
 
                     <td className="py-3.5 px-4 text-slate-600">
-                      {student.studentSchool || '-'}
+                      {student.studentSchool || "-"}
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
@@ -256,9 +282,17 @@ export default function AdminExamResultsPage({
                     </td>
 
                     <td className="py-3.5 px-4 text-center font-medium">
-                      <span className="text-blue-600 font-bold">{student.correctCount}</span> /{' '}
-                      <span className="text-rose-600 font-bold">{student.incorrectCount}</span> /{' '}
-                      <span className="text-slate-400">{student.unansweredCount}</span>
+                      <span className="text-blue-600 font-bold">
+                        {student.correctCount}
+                      </span>{" "}
+                      /{" "}
+                      <span className="text-rose-600 font-bold">
+                        {student.incorrectCount}
+                      </span>{" "}
+                      /{" "}
+                      <span className="text-slate-400">
+                        {student.unansweredCount}
+                      </span>
                     </td>
 
                     <td className="py-3.5 px-4 text-center">
@@ -276,11 +310,11 @@ export default function AdminExamResultsPage({
                       <span
                         className={`inline-block px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider ${
                           student.isPassed
-                            ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                            : 'bg-rose-100 text-rose-800 border border-rose-300'
+                            ? "bg-blue-100 text-blue-800 border border-blue-300"
+                            : "bg-rose-100 text-rose-800 border border-rose-300"
                         }`}
                       >
-                        {student.isPassed ? 'LULUS' : 'TIDAK LULUS'}
+                        {student.isPassed ? "LULUS" : "TIDAK LULUS"}
                       </span>
                     </td>
                   </tr>
@@ -293,4 +327,3 @@ export default function AdminExamResultsPage({
     </div>
   );
 }
-

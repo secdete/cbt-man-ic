@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Upload,
   FileText,
@@ -18,7 +18,7 @@ import {
   KeyRound,
   FileUp,
   Check,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface EditableQuestion {
   questionNumber: number;
@@ -38,19 +38,22 @@ export default function CreateExamPage() {
   const router = useRouter();
 
   // Step 1: Info Ujian
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('SNPDB MAN IC');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("SNPDB MAN IC");
   const [durationMinutes, setDurationMinutes] = useState(90);
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState("");
   const [passingScore, setPassingScore] = useState(65);
 
   // Tab Ekstraksi
-  const [inputMode, setInputMode] = useState<'PDF' | 'TEXT'>('PDF');
+  const [inputMode, setInputMode] = useState<"PDF" | "TEXT">("PDF");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [rawText, setRawText] = useState('');
+  const [rawText, setRawText] = useState("");
   const [parsing, setParsing] = useState(false);
-  const [parseMessage, setParseMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [parseMessage, setParseMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // Step 2: Butir Soal
   const [questions, setQuestions] = useState<EditableQuestion[]>([]);
@@ -58,8 +61,8 @@ export default function CreateExamPage() {
 
   // Generate acak token unik
   const generateRandomToken = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let res = 'IC';
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let res = "IC";
     for (let i = 0; i < 4; i++) {
       res += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -69,7 +72,10 @@ export default function CreateExamPage() {
   // Handle Upload & Ekstraksi PDF
   const handleParsePDF = async () => {
     if (!selectedFile) {
-      setParseMessage({ type: 'error', text: 'Silakan pilih berkas PDF terlebih dahulu.' });
+      setParseMessage({
+        type: "error",
+        text: "Silakan pilih berkas PDF terlebih dahulu.",
+      });
       return;
     }
 
@@ -78,10 +84,10 @@ export default function CreateExamPage() {
 
     try {
       const formData = new FormData();
-      formData.append('file', selectedFile);
+      formData.append("file", selectedFile);
 
-      const res = await fetch('/api/exams/parse-pdf', {
-        method: 'POST',
+      const res = await fetch("/api/exams/parse-pdf", {
+        method: "POST",
         body: formData,
       });
 
@@ -90,18 +96,20 @@ export default function CreateExamPage() {
       if (json.success && Array.isArray(json.questions)) {
         if (json.questions.length === 0) {
           setParseMessage({
-            type: 'error',
-            text: 'Tidak ada pola butir soal yang terdeteksi secara otomatis. Silakan cek teks atau gunakan tab Paste Teks.',
+            type: "error",
+            text: "Tidak ada pola butir soal yang terdeteksi secara otomatis. Silakan cek teks atau gunakan tab Paste Teks.",
           });
         } else {
           setQuestions(json.questions);
           setParseMessage({
-            type: 'success',
+            type: "success",
             text: `Berhasil mengekstrak ${json.questions.length} butir soal dari berkas "${selectedFile.name}"! Silakan tinjau dan perbaiki di bawah.`,
           });
           // Set judul default jika masih kosong
           if (!title) {
-            const cleanName = selectedFile.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+            const cleanName = selectedFile.name
+              .replace(/\.[^/.]+$/, "")
+              .replace(/[-_]/g, " ");
             setTitle(`Tryout SNPDB - ${cleanName}`);
           }
           if (!token) {
@@ -109,10 +117,16 @@ export default function CreateExamPage() {
           }
         }
       } else {
-        setParseMessage({ type: 'error', text: json.message || 'Gagal memproses berkas PDF.' });
+        setParseMessage({
+          type: "error",
+          text: json.message || "Gagal memproses berkas PDF.",
+        });
       }
     } catch (err: any) {
-      setParseMessage({ type: 'error', text: 'Terjadi kesalahan saat mengunggah dan membaca PDF.' });
+      setParseMessage({
+        type: "error",
+        text: "Terjadi kesalahan saat mengunggah dan membaca PDF.",
+      });
     } finally {
       setParsing(false);
     }
@@ -121,7 +135,10 @@ export default function CreateExamPage() {
   // Handle Ekstraksi dari Raw Text
   const handleParseText = async () => {
     if (!rawText.trim()) {
-      setParseMessage({ type: 'error', text: 'Silakan tempel teks naskah soal terlebih dahulu.' });
+      setParseMessage({
+        type: "error",
+        text: "Silakan tempel teks naskah soal terlebih dahulu.",
+      });
       return;
     }
 
@@ -129,9 +146,9 @@ export default function CreateExamPage() {
     setParseMessage(null);
 
     try {
-      const res = await fetch('/api/exams/parse-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/exams/parse-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rawText }),
       });
 
@@ -140,15 +157,18 @@ export default function CreateExamPage() {
       if (json.success && Array.isArray(json.questions)) {
         setQuestions(json.questions);
         setParseMessage({
-          type: 'success',
+          type: "success",
           text: `Berhasil mengekstrak ${json.questions.length} butir soal dari teks!`,
         });
         if (!token) generateRandomToken();
       } else {
-        setParseMessage({ type: 'error', text: json.message || 'Gagal mengekstrak soal dari teks.' });
+        setParseMessage({
+          type: "error",
+          text: json.message || "Gagal mengekstrak soal dari teks.",
+        });
       }
     } catch (err) {
-      setParseMessage({ type: 'error', text: 'Gagal memproses teks.' });
+      setParseMessage({ type: "error", text: "Gagal memproses teks." });
     } finally {
       setParsing(false);
     }
@@ -159,15 +179,15 @@ export default function CreateExamPage() {
     const nextNum = questions.length + 1;
     const newQ: EditableQuestion = {
       questionNumber: nextNum,
-      questionText: '',
-      optionA: '',
-      optionB: '',
-      optionC: '',
-      optionD: '',
-      optionE: '',
-      correctAnswer: 'A',
-      explanation: '',
-      subject: 'Penalaran Logika',
+      questionText: "",
+      optionA: "",
+      optionB: "",
+      optionC: "",
+      optionD: "",
+      optionE: "",
+      correctAnswer: "A",
+      explanation: "",
+      subject: "Penalaran Logika",
       points: 4,
     };
     setQuestions([...questions, newQ]);
@@ -175,15 +195,21 @@ export default function CreateExamPage() {
 
   // Menghapus butir soal
   const handleDeleteQuestion = (idx: number) => {
-    const updated = questions.filter((_, i) => i !== idx).map((q, i) => ({
-      ...q,
-      questionNumber: i + 1,
-    }));
+    const updated = questions
+      .filter((_, i) => i !== idx)
+      .map((q, i) => ({
+        ...q,
+        questionNumber: i + 1,
+      }));
     setQuestions(updated);
   };
 
   // Mengubah butir soal
-  const handleUpdateQuestion = (idx: number, field: keyof EditableQuestion, val: any) => {
+  const handleUpdateQuestion = (
+    idx: number,
+    field: keyof EditableQuestion,
+    val: any,
+  ) => {
     const updated = [...questions];
     updated[idx] = { ...updated[idx], [field]: val };
     setQuestions(updated);
@@ -192,17 +218,19 @@ export default function CreateExamPage() {
   // Simpan dan Terbitkan Tryout ke Database
   const handleSaveExam = async () => {
     if (!title.trim()) {
-      alert('Judul tryout wajib diisi.');
+      alert("Judul tryout wajib diisi.");
       return;
     }
 
     if (!token.trim()) {
-      alert('Token ujian wajib diisi.');
+      alert("Token ujian wajib diisi.");
       return;
     }
 
     if (questions.length === 0) {
-      alert('Harap masukkan atau ekstrak minimal 1 butir soal sebelum menerbitkan tryout.');
+      alert(
+        "Harap masukkan atau ekstrak minimal 1 butir soal sebelum menerbitkan tryout.",
+      );
       return;
     }
 
@@ -219,23 +247,25 @@ export default function CreateExamPage() {
         questions,
       };
 
-      const res = await fetch('/api/exams', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/exams", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       const json = await res.json();
 
       if (json.success) {
-        alert(`Paket ujian "${title}" berhasil diterbitkan dengan Token: ${token.trim().toUpperCase()}!`);
-        router.push('/admin');
+        alert(
+          `Paket ujian "${title}" berhasil diterbitkan dengan Token: ${token.trim().toUpperCase()}!`,
+        );
+        router.push("/admin");
       } else {
-        alert(json.message || 'Gagal menyimpan ujian');
+        alert(json.message || "Gagal menyimpan ujian");
         setSaving(false);
       }
     } catch (err) {
-      alert('Terjadi kendala jaringan saat menerbitkan ujian.');
+      alert("Terjadi kendala jaringan saat menerbitkan ujian.");
       setSaving(false);
     }
   };
@@ -256,7 +286,8 @@ export default function CreateExamPage() {
             Unggah PDF & Buat Paket Tryout
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Ekstraksi naskah soal PDF otomatis menjadi butir soal interaktif siap kerjakan untuk siswa
+            Ekstraksi naskah soal PDF otomatis menjadi butir soal interaktif
+            siap kerjakan untuk siswa
           </p>
         </div>
 
@@ -279,10 +310,9 @@ export default function CreateExamPage() {
 
       {/* Grid: Form Setting Ujian & Ekstraksi PDF */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
         {/* Kolom Kiri: Metadata Ujian (4 cols) */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <h2 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100 flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-blue-700" />
               <span>Pengaturan Paket Tryout</span>
@@ -337,10 +367,18 @@ export default function CreateExamPage() {
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="SNPDB MAN IC">SNPDB MAN IC (Umum)</option>
-                <option value="Tes Potensi Skolastik (TPS)">Tes Potensi Skolastik (TPS)</option>
-                <option value="Kemampuan Akademik (Sains & Matematika)">Kemampuan Akademik (Sains & Matematika)</option>
-                <option value="Literasi Keagamaan (PAI)">Literasi Keagamaan (PAI)</option>
-                <option value="Literasi Membaca (Bahasa)">Literasi Membaca (Bahasa)</option>
+                <option value="Tes Potensi Skolastik (TPS)">
+                  Tes Potensi Skolastik (TPS)
+                </option>
+                <option value="Kemampuan Akademik (Sains & Matematika)">
+                  Kemampuan Akademik (Sains & Matematika)
+                </option>
+                <option value="Literasi Keagamaan (PAI)">
+                  Literasi Keagamaan (PAI)
+                </option>
+                <option value="Literasi Membaca (Bahasa)">
+                  Literasi Membaca (Bahasa)
+                </option>
               </select>
             </div>
 
@@ -356,7 +394,9 @@ export default function CreateExamPage() {
                     min={5}
                     max={360}
                     value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(parseInt(e.target.value, 10) || 60)}
+                    onChange={(e) =>
+                      setDurationMinutes(parseInt(e.target.value, 10) || 60)
+                    }
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -370,7 +410,9 @@ export default function CreateExamPage() {
                   type="number"
                   min={0}
                   value={passingScore}
-                  onChange={(e) => setPassingScore(parseInt(e.target.value, 10) || 60)}
+                  onChange={(e) =>
+                    setPassingScore(parseInt(e.target.value, 10) || 60)
+                  }
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -394,29 +436,35 @@ export default function CreateExamPage() {
 
         {/* Kolom Kanan: Modul Ekstraksi Soal (PDF / Teks) (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-5">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
             {/* Tabs Mode */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <FileUp className="w-5 h-5 text-blue-600" />
-                <h2 className="font-bold text-slate-900 text-base">Modul Ekstraksi Soal</h2>
+                <h2 className="font-bold text-slate-900 text-base">
+                  Modul Ekstraksi Soal
+                </h2>
               </div>
 
               <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold">
                 <button
                   type="button"
-                  onClick={() => setInputMode('PDF')}
+                  onClick={() => setInputMode("PDF")}
                   className={`px-3 py-1.5 rounded-lg cursor-pointer ${
-                    inputMode === 'PDF' ? 'bg-white text-blue-800 shadow-2xs' : 'text-slate-500'
+                    inputMode === "PDF"
+                      ? "bg-white text-blue-800 shadow-2xs"
+                      : "text-slate-500"
                   }`}
                 >
                   Unggah Berkas PDF
                 </button>
                 <button
                   type="button"
-                  onClick={() => setInputMode('TEXT')}
+                  onClick={() => setInputMode("TEXT")}
                   className={`px-3 py-1.5 rounded-lg cursor-pointer ${
-                    inputMode === 'TEXT' ? 'bg-white text-blue-800 shadow-2xs' : 'text-slate-500'
+                    inputMode === "TEXT"
+                      ? "bg-white text-blue-800 shadow-2xs"
+                      : "text-slate-500"
                   }`}
                 >
                   Tempel Teks Soal
@@ -427,12 +475,12 @@ export default function CreateExamPage() {
             {parseMessage && (
               <div
                 className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start gap-3 ${
-                  parseMessage.type === 'success'
-                    ? 'bg-blue-50 border-blue-300 text-blue-900'
-                    : 'bg-rose-50 border-rose-300 text-rose-900'
+                  parseMessage.type === "success"
+                    ? "bg-blue-50 border-blue-300 text-blue-900"
+                    : "bg-rose-50 border-rose-300 text-rose-900"
                 }`}
               >
-                {parseMessage.type === 'success' ? (
+                {parseMessage.type === "success" ? (
                   <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-blue-600 mt-0.5" />
                 ) : (
                   <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 mt-0.5" />
@@ -442,15 +490,16 @@ export default function CreateExamPage() {
             )}
 
             {/* TAB 1: UPLOAD PDF */}
-            {inputMode === 'PDF' && (
+            {inputMode === "PDF" && (
               <div className="space-y-4">
-                <div className="border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/40 rounded-3xl p-8 text-center transition-colors">
+                <div className="border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/40 rounded-xl p-8 text-center transition-colors">
                   <Upload className="w-12 h-12 text-blue-600 mx-auto mb-3" />
                   <p className="text-sm font-bold text-slate-800">
                     Pilih atau Geser (Drag & Drop) Berkas PDF Naskah Soal
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    Mendukung dokumen PDF naskah tryout SNPDB MAN IC lengkap dengan opsi A-E dan kunci jawaban
+                    Mendukung dokumen PDF naskah tryout SNPDB MAN IC lengkap
+                    dengan opsi A-E dan kunci jawaban
                   </p>
 
                   <input
@@ -475,7 +524,8 @@ export default function CreateExamPage() {
 
                     {selectedFile && (
                       <span className="text-xs font-semibold text-blue-800 bg-blue-100 px-3 py-2 rounded-xl">
-                        📄 {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                        📄 {selectedFile.name} (
+                        {(selectedFile.size / 1024).toFixed(1)} KB)
                       </span>
                     )}
                   </div>
@@ -503,7 +553,7 @@ export default function CreateExamPage() {
             )}
 
             {/* TAB 2: PASTE RAW TEXT */}
-            {inputMode === 'TEXT' && (
+            {inputMode === "TEXT" && (
               <div className="space-y-4">
                 <textarea
                   rows={8}
@@ -535,18 +585,18 @@ export default function CreateExamPage() {
             )}
           </div>
         </div>
-
       </div>
 
       {/* Section: Editor & Review Butir Soal */}
-      <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+      <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-bold text-slate-900">
               Editor & Tinjau Butir Soal ({questions.length} Butir Soal)
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Periksa pertanyaan, perbaiki teks bila perlu, tentukan kunci jawaban resmi, dan tambahkan pembahasan.
+              Periksa pertanyaan, perbaiki teks bila perlu, tentukan kunci
+              jawaban resmi, dan tambahkan pembahasan.
             </p>
           </div>
 
@@ -563,9 +613,12 @@ export default function CreateExamPage() {
         {questions.length === 0 ? (
           <div className="py-16 text-center space-y-3">
             <FileText className="w-12 h-12 text-slate-300 mx-auto" />
-            <p className="text-sm font-semibold text-slate-700">Belum ada butir soal pada paket ini.</p>
+            <p className="text-sm font-semibold text-slate-700">
+              Belum ada butir soal pada paket ini.
+            </p>
             <p className="text-xs text-slate-400">
-              Unggah file PDF atau tempelkan teks naskah soal di modul atas untuk mengekstrak secara otomatis.
+              Unggah file PDF atau tempelkan teks naskah soal di modul atas
+              untuk mengekstrak secara otomatis.
             </p>
           </div>
         ) : (
@@ -583,8 +636,10 @@ export default function CreateExamPage() {
                     </span>
                     <input
                       type="text"
-                      value={q.subject || ''}
-                      onChange={(e) => handleUpdateQuestion(qIndex, 'subject', e.target.value)}
+                      value={q.subject || ""}
+                      onChange={(e) =>
+                        handleUpdateQuestion(qIndex, "subject", e.target.value)
+                      }
                       placeholder="Subtes (Contoh: Penalaran Logika)"
                       className="px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 w-48 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
@@ -598,7 +653,11 @@ export default function CreateExamPage() {
                         min={1}
                         value={q.points}
                         onChange={(e) =>
-                          handleUpdateQuestion(qIndex, 'points', parseInt(e.target.value, 10) || 4)
+                          handleUpdateQuestion(
+                            qIndex,
+                            "points",
+                            parseInt(e.target.value, 10) || 4,
+                          )
                         }
                         className="w-14 px-2 py-1 bg-white border border-slate-300 rounded-md text-center font-bold text-xs"
                       />
@@ -623,7 +682,13 @@ export default function CreateExamPage() {
                   <textarea
                     rows={3}
                     value={q.questionText}
-                    onChange={(e) => handleUpdateQuestion(qIndex, 'questionText', e.target.value)}
+                    onChange={(e) =>
+                      handleUpdateQuestion(
+                        qIndex,
+                        "questionText",
+                        e.target.value,
+                      )
+                    }
                     className="w-full p-3.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
                   />
                 </div>
@@ -632,16 +697,18 @@ export default function CreateExamPage() {
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <label className="block text-[11px] font-bold uppercase text-slate-500">
-                      Pilihan Jawaban (Klik lingkaran untuk memilih Kunci Resmi):
+                      Pilihan Jawaban (Klik lingkaran untuk memilih Kunci
+                      Resmi):
                     </label>
                     <span className="text-[11px] font-extrabold text-blue-800 bg-blue-100 px-2.5 py-0.5 rounded-full">
                       Kunci Saat Ini: {q.correctAnswer}
                     </span>
                   </div>
 
-                  {(['A', 'B', 'C', 'D', 'E'] as const).map((letter) => {
-                    const fieldKey = `option${letter}` as keyof EditableQuestion;
-                    const val = (q[fieldKey] as string) || '';
+                  {(["A", "B", "C", "D", "E"] as const).map((letter) => {
+                    const fieldKey =
+                      `option${letter}` as keyof EditableQuestion;
+                    const val = (q[fieldKey] as string) || "";
                     const isCorrect = q.correctAnswer === letter;
 
                     return (
@@ -649,17 +716,23 @@ export default function CreateExamPage() {
                         key={letter}
                         className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${
                           isCorrect
-                            ? 'bg-blue-50/80 border-blue-500'
-                            : 'bg-white border-slate-200'
+                            ? "bg-blue-50/80 border-blue-500"
+                            : "bg-white border-slate-200"
                         }`}
                       >
                         <button
                           type="button"
-                          onClick={() => handleUpdateQuestion(qIndex, 'correctAnswer', letter)}
+                          onClick={() =>
+                            handleUpdateQuestion(
+                              qIndex,
+                              "correctAnswer",
+                              letter,
+                            )
+                          }
                           className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-all cursor-pointer ${
                             isCorrect
-                              ? 'bg-blue-600 text-white shadow-xs scale-105'
-                              : 'bg-slate-100 text-slate-600 hover:bg-blue-100'
+                              ? "bg-blue-600 text-white shadow-xs scale-105"
+                              : "bg-slate-100 text-slate-600 hover:bg-blue-100"
                           }`}
                           title={`Jadikan pilihan ${letter} sebagai Kunci Jawaban`}
                         >
@@ -669,7 +742,13 @@ export default function CreateExamPage() {
                         <input
                           type="text"
                           value={val}
-                          onChange={(e) => handleUpdateQuestion(qIndex, fieldKey, e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateQuestion(
+                              qIndex,
+                              fieldKey,
+                              e.target.value,
+                            )
+                          }
                           placeholder={`Teks pilihan ${letter}...`}
                           className="flex-1 bg-transparent border-0 text-xs sm:text-sm text-slate-800 focus:outline-none"
                         />
@@ -691,8 +770,14 @@ export default function CreateExamPage() {
                   </label>
                   <textarea
                     rows={2}
-                    value={q.explanation || ''}
-                    onChange={(e) => handleUpdateQuestion(qIndex, 'explanation', e.target.value)}
+                    value={q.explanation || ""}
+                    onChange={(e) =>
+                      handleUpdateQuestion(
+                        qIndex,
+                        "explanation",
+                        e.target.value,
+                      )
+                    }
                     placeholder="Tuliskan alasan atau cara penyelesaian soal untuk ditampilkan kepada siswa..."
                     className="w-full p-3 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
@@ -735,4 +820,3 @@ export default function CreateExamPage() {
     </div>
   );
 }
-

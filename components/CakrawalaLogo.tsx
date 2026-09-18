@@ -1,32 +1,35 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useState } from "react";
 
 interface CakrawalaLogoProps {
   className?: string;
+  height?: number;
   size?: number;
 }
 
-export default function CakrawalaLogo({ className = 'w-10 h-10', size = 40 }: CakrawalaLogoProps) {
-  const [src, setSrc] = useState('/logo-cakrawala.png');
+export default function CakrawalaLogo({
+  className = "h-9 w-auto",
+  height,
+  size = 36,
+}: CakrawalaLogoProps) {
+  const [src, setSrc] = useState("/logo-cakrawala.png");
+  const actualHeight = height ?? size;
 
   return (
-    <div className={`relative flex items-center justify-center flex-shrink-0 overflow-hidden rounded-xl ${className}`}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt="Logo Cakrawala"
-        width={size}
-        height={size}
-        className="w-full h-full object-contain rounded-xl"
-        onError={() => {
-          // Jika logo-cakrawala.png belum ditaruh user, otomatis beralih ke logo-cakrawala.svg
-          if (src !== '/logo-cakrawala.svg') {
-            setSrc('/logo-cakrawala.svg');
-          }
-        }}
-      />
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt="Logo Cakrawala"
+      style={{ maxHeight: `${actualHeight}px`, width: "auto" }}
+      className={`object-contain block ${className}`}
+      onError={() => {
+        if (src === "/logo-cakrawala.png") {
+          setSrc("/Logo Cakra.png");
+        } else if (src !== "/logo-cakrawala.svg") {
+          setSrc("/logo-cakrawala.svg");
+        }
+      }}
+    />
   );
 }
