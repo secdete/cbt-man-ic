@@ -84,3 +84,4 @@ export default function FormattedQuestionText({
 
   return <div className={className}>{elements}</div>;
 }
+

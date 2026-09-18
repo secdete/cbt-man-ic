@@ -29,7 +29,7 @@
     },
     {
       "questionNumber": 2,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p1_x26_699x278.png)\n\nAdi, Ali, dan Imron adalah ketua kelompok regu pramuka. Mereka sedang mengikuti kegiatan jelah alam dan mencari jejak. Masing-masing ketua regu mendapatkan tantangan untuk mencari benda yang telah disiapkan oleh Kakak Pembina. Berikut adalah instruksi yang harus dilaksanakan untuk mencari benda tersebut.\n\n1. Pada posisi awal yang telah ditentukan, mereka bertiga harus menghadap ke utara.\n\n2. Adi harus berjalan lurus sejauh 30 m, kemudian berbelok ke barat sejauh 50 m, kemudian ke utara lagi sejauh 60 m.\n\n3. Ali harus berbalik badan dan berjalan lurus ke depan sejauh 80 m, lalu ke arah timur sejauh 30 meter, kemudian berbelok ke arah utara sejauh 20 meter.\n\n4. Imron harus berjalan ke arah timur sejauh 50 m, lalu berbelok ke selatan sejauh 70 m, kemudian berbelok ke barat sejauh 10 m.\n\nSetelah menyelesaikan tantangan tersebut, kakak Pembina meminta masing-masing ketua untuk menentukan hasil translasi perjalanan yang telah ditempuh. Bantulah mereka untuk menyelesaikan tugas tersebut dengan cara menjodohkan pernyataan di bagian kiri dengan jawaban di bagian kanan.\n\n1 Translasi perjalanan yang dilalui Adi\n\n2 Translasi perjalanan yang dilalui oleh Ali\n\n3 Translasi perjalanan yang dilalui oleh Imron",
+      "questionText": "Adi, Ali, dan Imron adalah ketua kelompok regu pramuka. Mereka sedang mengikuti kegiatan jelah alam dan mencari jejak. Masing-masing ketua regu mendapatkan tantangan untuk mencari benda yang telah disiapkan oleh Kakak Pembina. Berikut adalah instruksi yang harus dilaksanakan untuk mencari benda tersebut.\n\n1. Pada posisi awal yang telah ditentukan, mereka bertiga harus menghadap ke utara.\n\n2. Adi harus berjalan lurus sejauh 30 m, kemudian berbelok ke barat sejauh 50 m, kemudian ke utara lagi sejauh 60 m.\n\n3. Ali harus berbalik badan dan berjalan lurus ke depan sejauh 80 m, lalu ke arah timur sejauh 30 meter, kemudian berbelok ke arah utara sejauh 20 meter.\n\n4. Imron harus berjalan ke arah timur sejauh 50 m, lalu berbelok ke selatan sejauh 70 m, kemudian berbelok ke barat sejauh 10 m.\n\nSetelah menyelesaikan tantangan tersebut, kakak Pembina meminta masing-masing ketua untuk menentukan hasil translasi perjalanan yang telah ditempuh. Bantulah mereka untuk menyelesaikan tugas tersebut dengan cara menjodohkan pernyataan di bagian kiri dengan jawaban di bagian kanan.\n\n1 Translasi perjalanan yang dilalui Adi\n\n2 Translasi perjalanan yang dilalui oleh Ali\n\n3 Translasi perjalanan yang dilalui oleh Imron",
       "optionA": "[40 -70]",
       "optionB": "[30 -60]",
       "optionC": "[-50 90]",
@@ -55,7 +55,7 @@
     },
     {
       "questionNumber": 4,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p2_x35_747x532.jpeg)\n\nPak Imron bermaksud mewakafkan sebagian tanah yang dimilikinya untuk pendirian masjid dengan ilustrasi berikut:\n\n1 5\n\nDiketahui AB = ⁄ AG, AD//BE//FG, panjang AD = 21 m dan GF = 14 m. Jika lebar jalan dianggap nol maka dua pernyataan berikut yang bernilai\n\nbenar adalah …",
+      "questionText": "Pak Imron bermaksud mewakafkan sebagian tanah yang dimilikinya untuk pendirian masjid dengan ilustrasi berikut:\n\n1 5\n\nDiketahui AB = ⁄ AG, AD//BE//FG, panjang AD = 21 m dan GF = 14 m. Jika lebar jalan dianggap nol maka dua pernyataan berikut yang bernilai\n\nbenar adalah …",
       "optionA": "tanah ACD dan tanah untuk rumah tidak sebangun.",
       "optionB": "tanah ACD dan tanah untuk toko sebangun.",
       "optionC": "tanah untuk toko dan tanah untuk rumah kongruen.",
@@ -81,7 +81,7 @@
     },
     {
       "questionNumber": 6,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p3_x44_496x205.jpeg)\n\n![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p3_x43_606x529.jpeg)\n\nBangun-bangun di bawah ini dibuat dari batang korek api. Jika kita memiliki 2021 batang korek api, berapa banyak kotak persegi yang terbentuk?",
+      "questionText": "Bangun-bangun di bawah ini dibuat dari batang korek api. Jika kita memiliki 2021 batang korek api, berapa banyak kotak persegi yang terbentuk?",
       "optionA": "671",
       "optionB": "672",
       "optionC": "673",
@@ -107,7 +107,7 @@
     },
     {
       "questionNumber": 8,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p4_x51_625x169.jpeg)\n\n2\n\nLapangan untuk latihan berkuda berbentuk lingkaran dengan luas 15.400 m dan sekelilingnya akan diberi patok kayu. Jika jarak antara 2 patok kayu adalah 0,5 m maka banyaknya patok kayu yang dibutuhkan adalah ….",
+      "questionText": "2\n\nLapangan untuk latihan berkuda berbentuk lingkaran dengan luas 15.400 m dan sekelilingnya akan diberi patok kayu. Jika jarak antara 2 patok kayu adalah 0,5 m maka banyaknya patok kayu yang dibutuhkan adalah ….",
       "optionA": "890",
       "optionB": "881",
       "optionC": "880",
@@ -120,7 +120,7 @@
     },
     {
       "questionNumber": 9,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p4_x51_625x169.jpeg)\n\nDi MTs Insan, terdapat 3 kelas VII yang masing-masing terdiri dari 20 siswa. Berdasarkan hasil survey, siswa perempuan yang menyukai\n\nekstrakurikuler panahan atau berkuda sebanyak 20 orang dan siswa laki-laki yang menyukai ekstrakurikuler panahan atau berkuda sebanyak 25 orang. Jika banyak siswa perempuan adalah 31 orang maka banyak siswa laki-laki yang tidak menyukai ekstrakurikuler panahan dan tidak menyukai ekstrakurikuler berkuda adalah … orang.",
+      "questionText": "Di MTs Insan, terdapat 3 kelas VII yang masing-masing terdiri dari 20 siswa. Berdasarkan hasil survey, siswa perempuan yang menyukai\n\nekstrakurikuler panahan atau berkuda sebanyak 20 orang dan siswa laki-laki yang menyukai ekstrakurikuler panahan atau berkuda sebanyak 25 orang. Jika banyak siswa perempuan adalah 31 orang maka banyak siswa laki-laki yang tidak menyukai ekstrakurikuler panahan dan tidak menyukai ekstrakurikuler berkuda adalah … orang.",
       "optionA": "4",
       "optionB": "5",
       "optionC": "6",
@@ -133,7 +133,7 @@
     },
     {
       "questionNumber": 10,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p4_x51_625x169.jpeg)\n\n3\n\nBerdasarkan Standar Nasional Indonesia (SNI), untuk membuat 1 m beton mutu diperlukan campuran semen 253 kg, pasir 869 kg dan kerikil 1.001 kg. Diketahui harga material adalah sebagai berikut:\n\nJika harga 1 sak semen berukuran 50 kg adalah Rp80.000,00 dengan diskon 5% maka biaya untuk membuat 1 m beton mutu adalah .... 3",
+      "questionText": "3\n\nBerdasarkan Standar Nasional Indonesia (SNI), untuk membuat 1 m beton mutu diperlukan campuran semen 253 kg, pasir 869 kg dan kerikil 1.001 kg. Diketahui harga material adalah sebagai berikut:\n\nJika harga 1 sak semen berukuran 50 kg adalah Rp80.000,00 dengan diskon 5% maka biaya untuk membuat 1 m beton mutu adalah .... 3",
       "optionA": "Rp739.860,00",
       "optionB": "Rp749.850,00",
       "optionC": "Rp765.780,00",
@@ -159,7 +159,7 @@
     },
     {
       "questionNumber": 12,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p5_x58_669x133.jpeg)\n\n1 3\n\nAhmad menyetir mobil dari kantor ke rumah ibunya selama 3 jam dengan kecepatan konstan. Setelah menempuh ⁄ perjalanan, di depan POM bensin Mubarok mobilnya mengalami gangguan mesin sehingga kecepatan mobilnya berkurang sebesar 20 km/jam. Jika total waktu tempuh sampai ke rumah ibunya adalah 276 menit maka dua pernyataan berikut yang benar adalah ...",
+      "questionText": "1 3\n\nAhmad menyetir mobil dari kantor ke rumah ibunya selama 3 jam dengan kecepatan konstan. Setelah menempuh ⁄ perjalanan, di depan POM bensin Mubarok mobilnya mengalami gangguan mesin sehingga kecepatan mobilnya berkurang sebesar 20 km/jam. Jika total waktu tempuh sampai ke rumah ibunya adalah 276 menit maka dua pernyataan berikut yang benar adalah ...",
       "optionA": "Jarak antara kantor Ahmad ke rumah ibunya adalah 135 km.",
       "optionB": "Jarak antara kantor Ahmad ke rumah ibunya adalah 150 km.",
       "optionC": "Jarak antara POM bensin Mubarok ke rumah ibunya adalah 90 km.",
@@ -172,7 +172,7 @@
     },
     {
       "questionNumber": 13,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p5_x58_669x133.jpeg)\n\nRelasi berikut yang termasuk fungsi adalah ….\n\n2 2\n\n2\n\n2 2\n\n2 2",
+      "questionText": "Relasi berikut yang termasuk fungsi adalah ….\n\n2 2\n\n2\n\n2 2\n\n2 2",
       "optionA": "f = {(x, y) | x + y = 25, -6 ≤ x ≤ 0, y ≥ 0}",
       "optionB": "g = {(x, y) | x = y , x > 0}",
       "optionC": "h = {(x, y) | x = y , x < 0, x < y}",
@@ -185,7 +185,7 @@
     },
     {
       "questionNumber": 14,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p5_x58_669x133.jpeg)\n\nBerikut adalah grafik kasus Covid-19 di sejumlah negara di Asia:\n\nBerdasarkan grafik di atas, nyatakanlah persetujuan Anda terhadap pernyataan-pernyataan berikut:\n\n1 Tingkat kesembuhan penderita Covid-19 di Malaysia tidak lebih tinggi dibandingkan dengan tingkat kesembuhan di Thailand.\n\n2 Tingkat kesembuhan penderita Covid-19 di Singapura lebih tinggi dibandingkan dengan tingkat kesembuhan di Arab Saudi.",
+      "questionText": "Berikut adalah grafik kasus Covid-19 di sejumlah negara di Asia:\n\nBerdasarkan grafik di atas, nyatakanlah persetujuan Anda terhadap pernyataan-pernyataan berikut:\n\n1 Tingkat kesembuhan penderita Covid-19 di Malaysia tidak lebih tinggi dibandingkan dengan tingkat kesembuhan di Thailand.\n\n2 Tingkat kesembuhan penderita Covid-19 di Singapura lebih tinggi dibandingkan dengan tingkat kesembuhan di Arab Saudi.",
       "optionA": "Setuju",
       "optionB": "Tidak Setuju",
       "optionC": "Pilihan C",
@@ -211,7 +211,7 @@
     },
     {
       "questionNumber": 16,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p6_x72_478x562.jpeg)\n\nRead this dialog carefully.\n\nSarah: Hey. I was thinking of heading to the mountain\n\nthis weekend. Do you wanna go?\n\nZainab: Sorry, I don’t like mountain.\n\nSarah: I was thinking um, Seaside.\n\nZainab: That would be cool.\n\nSarah: They have really cool games that\n\nwe could play. And we could play volleyball.\n\nZainab: Can we eat cotton candy, too?\n\nSarah: Totally. We can eat hot dogs and cotton candy,\n\ncaramel apples and popcorn.\n\nZainab: What about elephant ears?\n\nSarah: Yeah. We can definitely have elephant ears.\n\nZainab: Totally.\n\nSarah: And this weekend supposed to be really nice, so\n\nit’s gonna be a perfect weekend.\n\nZainab: All right!\n\nSarah: Cool.\n\nZainab: Let’s check it out.\n\nFrom the dialogue, we could conclude that ….",
+      "questionText": "Read this dialog carefully.\n\nSarah: Hey. I was thinking of heading to the mountain\n\nthis weekend. Do you wanna go?\n\nZainab: Sorry, I don’t like mountain.\n\nSarah: I was thinking um, Seaside.\n\nZainab: That would be cool.\n\nSarah: They have really cool games that\n\nwe could play. And we could play volleyball.\n\nZainab: Can we eat cotton candy, too?\n\nSarah: Totally. We can eat hot dogs and cotton candy,\n\ncaramel apples and popcorn.\n\nZainab: What about elephant ears?\n\nSarah: Yeah. We can definitely have elephant ears.\n\nZainab: Totally.\n\nSarah: And this weekend supposed to be really nice, so\n\nit’s gonna be a perfect weekend.\n\nZainab: All right!\n\nSarah: Cool.\n\nZainab: Let’s check it out.\n\nFrom the dialogue, we could conclude that ….",
       "optionA": "Sarah and Zainab are going to have hot dogs and cotton candy.",
       "optionB": "Sarah and Zainab are going to see elephants.",
       "optionC": "Sarah and Zainab are going to the beach.",
@@ -250,7 +250,7 @@
     },
     {
       "questionNumber": 19,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p8_x84_600x398.jpeg)\n\nPlease read the text carefully.\n\nThe Hagia Sophia is an enormous architectural marvel in Istanbul, Turkey, that was originally built as a Christian basilica nearly 1,500 years ago. The\n\nHagia Sophia is a long-enduring symbol of the cosmopolitan city. The Hagia Sophia anchors the Old City of Istanbul and has served for centuries as a landmark for both Orthodox Christians and Muslims, as its significance has shifted with that of the dominant culture in the Turkish city. In subsequent centuries it became a mosque, a museum, and a mosque again.\n\n(https://www.history.com/topics/ancient-greece/hagia-sophia)\n\nPlease choose two statements below which are true about Hagia Sophia.",
+      "questionText": "Please read the text carefully.\n\nThe Hagia Sophia is an enormous architectural marvel in Istanbul, Turkey, that was originally built as a Christian basilica nearly 1,500 years ago. The\n\nHagia Sophia is a long-enduring symbol of the cosmopolitan city. The Hagia Sophia anchors the Old City of Istanbul and has served for centuries as a landmark for both Orthodox Christians and Muslims, as its significance has shifted with that of the dominant culture in the Turkish city. In subsequent centuries it became a mosque, a museum, and a mosque again.\n\n(https://www.history.com/topics/ancient-greece/hagia-sophia)\n\nPlease choose two statements below which are true about Hagia Sophia.",
       "optionA": "The building was built as a Christian cathedral.",
       "optionB": "It is actively used as a Mosque at present time.",
       "optionC": "It shows subsequent changes of religion and culture.",
@@ -276,7 +276,7 @@
     },
     {
       "questionNumber": 21,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p9_x93_600x415.jpeg)\n\nRead the text carefully.\n\nWalt Disney or Walter Elias Disney was born on December 5th, 1901 at Chicagos Hermosa Community Area. He is the co-founder of The Walt Disney Company and cultural icon that hardly matched by others. He was the animator who created Mickey Mouse and many others Disney famous characters. He was also successful film producer, voice actor, and entrepreneur. His voice acting works include the original voice of Mickey Mouse.\n\nDisneyland and Disney resort were started from his innovation. His works in American animation and entertainment industry brought him 59 nominations in Academy Awards that he won 22 of them and 4 honorary Academy Awards. He also won 7 Emmy Awards and much more awards. Walt Disney died on December 15, 1966 after long fight with lung cancer, leaving myriad legacy.\n\n(https://www.getenglishnow.org)\n\nFrom the above text, we could conclude that the writer…",
+      "questionText": "Read the text carefully.\n\nWalt Disney or Walter Elias Disney was born on December 5th, 1901 at Chicagos Hermosa Community Area. He is the co-founder of The Walt Disney Company and cultural icon that hardly matched by others. He was the animator who created Mickey Mouse and many others Disney famous characters. He was also successful film producer, voice actor, and entrepreneur. His voice acting works include the original voice of Mickey Mouse.\n\nDisneyland and Disney resort were started from his innovation. His works in American animation and entertainment industry brought him 59 nominations in Academy Awards that he won 22 of them and 4 honorary Academy Awards. He also won 7 Emmy Awards and much more awards. Walt Disney died on December 15, 1966 after long fight with lung cancer, leaving myriad legacy.\n\n(https://www.getenglishnow.org)\n\nFrom the above text, we could conclude that the writer…",
       "optionA": "tells us about how Walt Disney failed to fight for his legacy due to lung cancer.",
       "optionB": "tells us how Walt Disney created and acted as his legendary character: Mickey Mouse",
       "optionC": "would inform the reader that Walt Disney is the most successful artist in the entertainment career",
@@ -328,7 +328,7 @@
     },
     {
       "questionNumber": 25,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p11_x111_600x226.jpeg)\n\nBusiness voyagers generally carve out they have little opportunity to exercise, particularly when their timetables are unexpectedly different by late meetings or late flights. In any case, everybody needs to get some exercise. There are ways of making exercise a piece of your day, in any event, when you cannot come to the hotel’s exercise room. Specialists recommend that stretching your neck, arms, back, and shoulders while sitting in your airplane seat is truly possible to do. At your hotel, you can stretch your legs and abdominal muscles. Then, you can run in place for a good aerobic workout.\n\nExercise is not just for your body; it is for your brain as well. The mind-body connection has long been established by proficient clinical affiliations. Individuals who exercise routinely perform all the more productively working and perform more successfully than their colleagues who don’t work out. Thus, to stretch out beyond every other person, attempt to exercise consistently, even when voyaging.\n\nChoose two descriptions that represent the passage.",
+      "questionText": "Business voyagers generally carve out they have little opportunity to exercise, particularly when their timetables are unexpectedly different by late meetings or late flights. In any case, everybody needs to get some exercise. There are ways of making exercise a piece of your day, in any event, when you cannot come to the hotel’s exercise room. Specialists recommend that stretching your neck, arms, back, and shoulders while sitting in your airplane seat is truly possible to do. At your hotel, you can stretch your legs and abdominal muscles. Then, you can run in place for a good aerobic workout.\n\nExercise is not just for your body; it is for your brain as well. The mind-body connection has long been established by proficient clinical affiliations. Individuals who exercise routinely perform all the more productively working and perform more successfully than their colleagues who don’t work out. Thus, to stretch out beyond every other person, attempt to exercise consistently, even when voyaging.\n\nChoose two descriptions that represent the passage.",
       "optionA": "Paragraph one displays some tips of doing exercise in rushing time.",
       "optionB": "Paragraph two tells about the importance of our body to do regular exercise.",
       "optionC": "Paragraph two depicts some benefits people may get if doing regular exercise.",
@@ -471,7 +471,7 @@
     },
     {
       "questionNumber": 36,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p15_x133_301x231.png)\n\n.ٌِس َع َلى ا ْل َم ْق َع ِد، وال ُم َع ِّل ُم ... َأ َما َم ال ُّط ل َّا ال َّط ا ِل ُب َجا ِل\n\n…ٌِس \" ِم ْن ه ِذ ِه ال ُج ْم َل ِض ُّد ال َك ِل َم ُة \" َجا ِل",
+      "questionText": ".ٌِس َع َلى ا ْل َم ْق َع ِد، وال ُم َع ِّل ُم ... َأ َما َم ال ُّط ل َّا ال َّط ا ِل ُب َجا ِل\n\n…ٌِس \" ِم ْن ه ِذ ِه ال ُج ْم َل ِض ُّد ال َك ِل َم ُة \" َجا ِل",
       "optionA": "وا ِق",
       "optionB": "ما ِه",
       "optionC": "ن ِش ْي",
@@ -484,7 +484,7 @@
     },
     {
       "questionNumber": 37,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p15_x133_301x231.png)\n\n.ٌِب ِفي الـ َم ْل َع ال َأ ْط َفا ُل ل َا ِع\n\n… َِّص ِح ْي ُح ِم َن ال ُج ْم َل ِة ال ِا ْس ِم َّي ِة ال َّسا ِب َق ال َّت ْر ِك ْي ُب ال",
+      "questionText": ".ٌِب ِفي الـ َم ْل َع ال َأ ْط َفا ُل ل َا ِع\n\n… َِّص ِح ْي ُح ِم َن ال ُج ْم َل ِة ال ِا ْس ِم َّي ِة ال َّسا ِب َق ال َّت ْر ِك ْي ُب ال",
       "optionA": "ال َأ ْط َفا ُل ل َا ِع َبا ِن ِفي الـ َم ْل َع",
       "optionB": "ال َأ ْط َفا ُل ل َا ِع َبا ٌت ِفي الـ َم ْل َع",
       "optionC": "ال َأ ْط َفا ُل ل َا ِع ِب ْي َن ِفي الـ َم ْل َع",
@@ -601,7 +601,7 @@
     },
     {
       "questionNumber": 46,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p18_x151_304x254.png)\n\n![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p18_x150_370x248.png)\n\nيحتفلوا- بذكرى- في المص ّلى- مولد الرسول ﷺ- أن- أراد- الطل ّاب\n\n…أص ّح الترتيب من الكلمات السابقة",
+      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p18_x150_370x248.png)\n\nيحتفلوا- بذكرى- في المص ّلى- مولد الرسول ﷺ- أن- أراد- الطل ّاب\n\n…أص ّح الترتيب من الكلمات السابقة",
       "optionA": "أراد أن يحتفلوا الطل ّاب بذكرى مولد الرسول ﷺ في المص ّلى",
       "optionB": "الطل ّاب أراد أن يحتفلوا بذكرى مولد الرسول ﷺ في المص ّلى",
       "optionC": "أراد الطل ّاب أن يحتفلوا بذكرى مولد الرسول ﷺ في المص ّلى",
@@ -614,7 +614,7 @@
     },
     {
       "questionNumber": 47,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p18_x151_304x254.png)\n\n![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p18_x150_370x248.png)\n\n[img]",
+      "questionText": "[img]",
       "optionA": "2 – 1 – 3 - 4",
       "optionB": "2 – 4 – 1 - 3",
       "optionC": "2 – 4 – 3 – 1",
@@ -627,7 +627,7 @@
     },
     {
       "questionNumber": 48,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p18_x151_304x254.png)\n\n![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p18_x150_370x248.png)",
+      "questionText": "",
       "optionA": "3 – 4 – 2 - 1",
       "optionB": "2 – 4 – 1 - 3",
       "optionC": "2 – 4 – 3 – 1",
@@ -640,7 +640,7 @@
     },
     {
       "questionNumber": 49,
-      "questionText": ".َِأ ْن َب َت ُهللا ِفي ا ْل َأ ْر ِض ال َّن َبا َتا\n\n...\"ِموقع إعراب كلمة \"ال َّن َبا َتا",
+      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p18_x151_304x254.png)\n\n.َِأ ْن َب َت ُهللا ِفي ا ْل َأ ْر ِض ال َّن َبا َتا\n\n...\"ِموقع إعراب كلمة \"ال َّن َبا َتا",
       "optionA": "الفاعل",
       "optionB": "المفعول به",
       "optionC": "نائب الفاعل",
@@ -705,7 +705,7 @@
     },
     {
       "questionNumber": 54,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p20_x163_611x246.png)\n\nPasangkan tiap penggalan ayat dari QS. Al-Qashash: 77 dengan pernyataan yang sesuai!\n\n1ِص ْي َب َك ِم َن ال ُّد ْن َيا َس َن َو َلا َت ْن 2َِسا َد ِفى ا ْل َا ْر َو َلا َت ْب ِغ ا ْل َف",
+      "questionText": "Pasangkan tiap penggalan ayat dari QS. Al-Qashash: 77 dengan pernyataan yang sesuai!\n\n1ِص ْي َب َك ِم َن ال ُّد ْن َيا َس َن َو َلا َت ْن 2َِسا َد ِفى ا ْل َا ْر َو َلا َت ْب ِغ ا ْل َف",
       "optionA": "Merawat lingkungan",
       "optionB": "Tekun beribadah",
       "optionC": "Tekun bekerja",
@@ -718,7 +718,7 @@
     },
     {
       "questionNumber": 55,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p20_x163_611x246.png)\n\nKegelisahan di Sudut Kelas\n\nDalam sebuah pembelajaran di kelas, guru menerangkan tentang pentingnya sifat jujur. Andi yang duduk di sudut kelas terlihat gelisah saat guru menyampaikan materi hadis tersebut. Ia ingat suatu saat pernah berbohong saat ditanya ayahnya pulang kemalaman. Saat berbohong ia gelisah, dan kini saat guru menjelaskan kembali hadis tersebut kegelisahan itu kembali muncul.\n\nHadis apakah yang dijelaskan pak guru di kelas Andi?",
+      "questionText": "Kegelisahan di Sudut Kelas\n\nDalam sebuah pembelajaran di kelas, guru menerangkan tentang pentingnya sifat jujur. Andi yang duduk di sudut kelas terlihat gelisah saat guru menyampaikan materi hadis tersebut. Ia ingat suatu saat pernah berbohong saat ditanya ayahnya pulang kemalaman. Saat berbohong ia gelisah, dan kini saat guru menjelaskan kembali hadis tersebut kegelisahan itu kembali muncul.\n\nHadis apakah yang dijelaskan pak guru di kelas Andi?",
       "optionA": "س ِن ِإ ْس َلا ِم ا ْل َم ْر ِء َت ْر ُك ُه َما َلا َي ْع ِني ِم ْن ُح",
       "optionB": "ب ِري َب َم ْأ ِني َن ٌة َو ِإ َّن ا ْل َك ِذ َد ْع َما َي ِري ُب َك ِإ َلى َما ل َا َي ِري ُب َك َف ِإ َّن ال ِّص ْد َق ُط",
       "optionC": "ع َل ْي ُك ْم ِبال ِّص ْد ِق َف ِإ َّن ال ِّص ْد َق َي ْه ِدي ِإ َلى ا ْل ِب ِّر َو ِإ َّن ا ْل ِب َّر َي ْه ِدي ِإ َلى ا ْل َج َّن",
@@ -835,7 +835,7 @@
     },
     {
       "questionNumber": 64,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p23_x180_308x282.jpeg)\n\nPada mulanya, Nabi Muhammad SAW memulai kegiatan dakwahnya secara sembunyi-sembunyi dengan menyeru kepada keluarga inti dan juga beberapa kaum kerabat dekatnya. Pada tahap ini, Nabi Muhammad SAW hanya menyampaikan beberapa ajaran dasar Islam. Ajaran dasar Islam yang dimaksud pada intinya mencakup tiga hal. Pertama, ajaran tentang keesaan Tuhan. Kedua, ajaran tentang penghapusan patung-patung berhala. Ketiga, ajaran tentang kewajiban manusia untuk beribadah mencari keridaan Allah SWT semata.\n\nNilai yang diambil dari strategi dakwah Nabi Muhammad di atas dalam sikap keseharian kita adalah ….",
+      "questionText": "Pada mulanya, Nabi Muhammad SAW memulai kegiatan dakwahnya secara sembunyi-sembunyi dengan menyeru kepada keluarga inti dan juga beberapa kaum kerabat dekatnya. Pada tahap ini, Nabi Muhammad SAW hanya menyampaikan beberapa ajaran dasar Islam. Ajaran dasar Islam yang dimaksud pada intinya mencakup tiga hal. Pertama, ajaran tentang keesaan Tuhan. Kedua, ajaran tentang penghapusan patung-patung berhala. Ketiga, ajaran tentang kewajiban manusia untuk beribadah mencari keridaan Allah SWT semata.\n\nNilai yang diambil dari strategi dakwah Nabi Muhammad di atas dalam sikap keseharian kita adalah ….",
       "optionA": "mengajak orang lain berubah menjadi baik dengan sembunyi sembunyi.",
       "optionB": "menyeru kebaikan hanya kepada keluarga inti dan kerabat dekat saja.",
       "optionC": "menghindari kecurigaan orang lain ketika hendak berbuat baik.",
@@ -848,7 +848,7 @@
     },
     {
       "questionNumber": 65,
-      "questionText": "![Ilustrasi](/soal-images/snpdb_2022_keislaman/snpdb_2022_keislaman_p23_x180_308x282.jpeg)\n\nMenurut teori Mekah, Islam masuk ke Indonesia abad pertama Hijriyah atau abad ketujuh Masehi dibawa oleh para pedagang Arab. Mereka memiliki misi dagang dan misi dakwah sekaligus. Kehadiran mereka di nusantara lebih dimotivasi oleh kepentingan dakwah. Kebanyakan mereka dari keturunan Nabi Muhammad SAW yang menggunakan gelar “Sayid” atau “Syarif”.\n\nDua nilai paling tepat yang bisa diambil dari proses masuknya Islam ke nusantara pada teks di atas sebagai sikap moderasi beragama adalah ….",
+      "questionText": "Menurut teori Mekah, Islam masuk ke Indonesia abad pertama Hijriyah atau abad ketujuh Masehi dibawa oleh para pedagang Arab. Mereka memiliki misi dagang dan misi dakwah sekaligus. Kehadiran mereka di nusantara lebih dimotivasi oleh kepentingan dakwah. Kebanyakan mereka dari keturunan Nabi Muhammad SAW yang menggunakan gelar “Sayid” atau “Syarif”.\n\nDua nilai paling tepat yang bisa diambil dari proses masuknya Islam ke nusantara pada teks di atas sebagai sikap moderasi beragama adalah ….",
       "optionA": "menyeru kepada kebenaran agama dengan berbagai cara.",
       "optionB": "memiliki sifat terbuka tanpa menanggalkan identitas.",
       "optionC": "mengedepankan keanekaragaman dalam beragama.",

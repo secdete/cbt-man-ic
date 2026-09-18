@@ -16,7 +16,7 @@
   "questions": [
     {
       "questionNumber": 1,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p1_x26_714x267.png)\n\nSoal nomor 1-2 berdasarkan informasi dibawah ini\n\nSebuah kelas privat kelompok bimbingan belajar terdiri atas lima orang anak. Hari ini mereka ada jadwal belajar Bersama. Hilman datang sebelum Marni, Marni datang sesudah Kaka tetapi sebelum Udin. Kaka datang sesudah Hilman. Ririn datang sesudah Udin.\n\nAnak yang pertama kali datang adalah …",
+      "questionText": "Soal nomor 1-2 berdasarkan informasi dibawah ini\n\nSebuah kelas privat kelompok bimbingan belajar terdiri atas lima orang anak. Hari ini mereka ada jadwal belajar Bersama. Hilman datang sebelum Marni, Marni datang sesudah Kaka tetapi sebelum Udin. Kaka datang sesudah Hilman. Ririn datang sesudah Udin.\n\nAnak yang pertama kali datang adalah …",
       "optionA": "Hilman",
       "optionB": "Marni",
       "optionC": "Udin",
@@ -29,7 +29,7 @@
     },
     {
       "questionNumber": 2,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p1_x26_714x267.png)\n\nAnak yang terakhir datang adalah …\n\nPada sebuah olimpiade Kimia, lima peserta berkompetisi untuk mendapatkan nilai tertinggi. Nilai Amar melebihi nilai Yoga, tetapi tidak melebihi nilai Oskar. Sedangkan nilai Bahar di bawah Rio tetapi di atas Oskar",
+      "questionText": "Anak yang terakhir datang adalah …\n\nPada sebuah olimpiade Kimia, lima peserta berkompetisi untuk mendapatkan nilai tertinggi. Nilai Amar melebihi nilai Yoga, tetapi tidak melebihi nilai Oskar. Sedangkan nilai Bahar di bawah Rio tetapi di atas Oskar",
       "optionA": "Hilman",
       "optionB": "Marni",
       "optionC": "Udin",
@@ -42,7 +42,7 @@
     },
     {
       "questionNumber": 3,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p1_x26_714x267.png)\n\nSoal nomor 3-6 berdasarkan informasi dibawah ini\n\nPeserta yang berada di urutan ketiga adalah …",
+      "questionText": "Soal nomor 3-6 berdasarkan informasi dibawah ini\n\nPeserta yang berada di urutan ketiga adalah …",
       "optionA": "Oskar",
       "optionB": "Rio",
       "optionC": "Bahar",
@@ -55,7 +55,7 @@
     },
     {
       "questionNumber": 4,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p1_x26_714x267.png)\n\nPeserta yang berada diurutan keempat adalah …",
+      "questionText": "Peserta yang berada diurutan keempat adalah …",
       "optionA": "Oskar",
       "optionB": "Rio",
       "optionC": "Bahar",
@@ -68,7 +68,7 @@
     },
     {
       "questionNumber": 5,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p2_x23_995x210.png)\n\nPeserta yang berada diurutan paling akhir adalah …",
+      "questionText": "Peserta yang berada diurutan paling akhir adalah …",
       "optionA": "Oskar",
       "optionB": "Rio",
       "optionC": "Bahar",
@@ -81,7 +81,7 @@
     },
     {
       "questionNumber": 6,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p2_x23_995x210.png)\n\nPeserta yang menjadi pemenang dalam perlombaan tersebut adalah …\n\nAngga, Riza dan Dita berada di sebuah took buah. Mereka sepakat untuk membeli buah Mangga, Durian, Jeruk dan Apel\n\n- Angga tidak membeli buah Mangga - Jika Riza membeli buah Apel maka Dita memilih buah Jeruk - Jika ada yang membeli buah Durian maka tidak ada yang memilih buah Jeruk",
+      "questionText": "Peserta yang menjadi pemenang dalam perlombaan tersebut adalah …\n\nAngga, Riza dan Dita berada di sebuah took buah. Mereka sepakat untuk membeli buah Mangga, Durian, Jeruk dan Apel\n\n- Angga tidak membeli buah Mangga - Jika Riza membeli buah Apel maka Dita memilih buah Jeruk - Jika ada yang membeli buah Durian maka tidak ada yang memilih buah Jeruk",
       "optionA": "Oskar",
       "optionB": "Rio",
       "optionC": "Bahar",
@@ -94,7 +94,7 @@
     },
     {
       "questionNumber": 7,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p2_x23_995x210.png)\n\nSoal nomor 7-10 berdasarkan informasi dibawah ini\n\nPada pernyataan di atas, jika Angga membeli buah Jeruk, dan Riza membeli buah Mangga maka pernyataan yang benar adalah …\n\nmembeli Mangga",
+      "questionText": "Soal nomor 7-10 berdasarkan informasi dibawah ini\n\nPada pernyataan di atas, jika Angga membeli buah Jeruk, dan Riza membeli buah Mangga maka pernyataan yang benar adalah …\n\nmembeli Mangga",
       "optionA": "Angga bisa juga membeli",
       "optionB": "Riza dan Dita sama-sama",
       "optionC": "Angga dan Dita bisa",
@@ -107,7 +107,7 @@
     },
     {
       "questionNumber": 8,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p2_x23_995x210.png)\n\nBerdasarkan kondisi pada nomor sebelumnya maka buah yang bisa dibeli Dita adalah …",
+      "questionText": "Berdasarkan kondisi pada nomor sebelumnya maka buah yang bisa dibeli Dita adalah …",
       "optionA": "Mangga dan Apel",
       "optionB": "Durian dan Jeruk",
       "optionC": "Apel dan Jeruk",
@@ -120,7 +120,7 @@
     },
     {
       "questionNumber": 9,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p2_x23_995x210.png)\n\nJika tidak ada yang membeli Durian dan Apel maka pernyataan yang benar adalah …\n\nmembeli Mangga saja",
+      "questionText": "Jika tidak ada yang membeli Durian dan Apel maka pernyataan yang benar adalah …\n\nmembeli Mangga saja",
       "optionA": "Dita bisa membeli Jeruk",
       "optionB": "Angga hanya bisa",
       "optionC": "Angga bisa membeli",
@@ -133,7 +133,7 @@
     },
     {
       "questionNumber": 10,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p3_x23_995x210.png)\n\nBerdasarkan kondisi pada nomor sebelumnya maka buah yang bisa dibeli oleh Angga adalah …\n\nEnam jenis buku pelajaran yang disusun berderet dalam suatu rak khusus. Buku tersebut adalah buku IPA, IPS, Pendidikan Agama, Bahasa Indonesia, Matematika, dan Penjaskes. Rak buku tersebut memiliki penataan jenis buku pelajaran sebagai berikut :\n\n- Buku Penjaskes berada di sebelah kanan buku Bahasa Indonesia - Buku Bahasa Indonesia berada di antara buku Pendidikan Agama dan buku Penjaskes - Buku Pendidikan Agama berada paling kiri rak - Buku IPS terletak di ujung kanan rak - Buku IPA berada disebelah kanan buku Matematika",
+      "questionText": "Berdasarkan kondisi pada nomor sebelumnya maka buah yang bisa dibeli oleh Angga adalah …\n\nEnam jenis buku pelajaran yang disusun berderet dalam suatu rak khusus. Buku tersebut adalah buku IPA, IPS, Pendidikan Agama, Bahasa Indonesia, Matematika, dan Penjaskes. Rak buku tersebut memiliki penataan jenis buku pelajaran sebagai berikut :\n\n- Buku Penjaskes berada di sebelah kanan buku Bahasa Indonesia - Buku Bahasa Indonesia berada di antara buku Pendidikan Agama dan buku Penjaskes - Buku Pendidikan Agama berada paling kiri rak - Buku IPS terletak di ujung kanan rak - Buku IPA berada disebelah kanan buku Matematika",
       "optionA": "Jeruk saja",
       "optionB": "Mangga saja",
       "optionC": "Durian saja",
@@ -146,7 +146,7 @@
     },
     {
       "questionNumber": 11,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p3_x23_995x210.png)\n\nSoal no 11-16 berdasarkan informasi di bawah ini\n\nUrutan jenis buku pelajaran pad arak tersebut dari kiri ke kanan adalah …\n\nIndonesia, Penjaskes, IPA, Matematika dan Pendidikan Agama",
+      "questionText": "Soal no 11-16 berdasarkan informasi di bawah ini\n\nUrutan jenis buku pelajaran pad arak tersebut dari kiri ke kanan adalah …\n\nIndonesia, Penjaskes, IPA, Matematika dan Pendidikan Agama",
       "optionA": "Buku Pendidikan",
       "optionB": "Buku IPS, Penjaskes,",
       "optionC": "Buku Pendidikan",
@@ -159,7 +159,7 @@
     },
     {
       "questionNumber": 12,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p4_x23_995x210.png)\n\nJika buku Penjaskes dipindah di ujung kiri rak buku maka urutannya menjadi :\n\nPendidikan Agama, Bahasa Indonesia, Matematika, IPA dan IPS",
+      "questionText": "Jika buku Penjaskes dipindah di ujung kiri rak buku maka urutannya menjadi :\n\nPendidikan Agama, Bahasa Indonesia, Matematika, IPA dan IPS",
       "optionA": "Buku Penjaskes,",
       "optionB": "Buku Penjaskes, IPS,",
       "optionC": "Buku Penjaskes, IPS,",
@@ -172,7 +172,7 @@
     },
     {
       "questionNumber": 13,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p4_x23_995x210.png)\n\nJika posisi urutan letak buku pelajaran pada soal nomor sebelumnya, buku Pendidikan Agama berada di antara :\n\ndan Matematika",
+      "questionText": "Jika posisi urutan letak buku pelajaran pada soal nomor sebelumnya, buku Pendidikan Agama berada di antara :\n\ndan Matematika",
       "optionA": "Buku Penjaskes dan",
       "optionB": "Buku Penjaskes dan",
       "optionC": "Buku IPS dan Penjaskes",
@@ -185,7 +185,7 @@
     },
     {
       "questionNumber": 14,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p4_x23_995x210.png)\n\nJika pada susunan semula, buku Matematika bertukar posisi dengan buka IPA dan buku Bahasa Indonesia bertukar posisi dengan buku Penjaskes maka pernyataan yang benar adalah …\n\nantara buku Pendidikan Agama dan buku Matematika",
+      "questionText": "Jika pada susunan semula, buku Matematika bertukar posisi dengan buka IPA dan buku Bahasa Indonesia bertukar posisi dengan buku Penjaskes maka pernyataan yang benar adalah …\n\nantara buku Pendidikan Agama dan buku Matematika",
       "optionA": "Buku Matematika",
       "optionB": "Buku IPA berada di",
       "optionC": "Buku Matematika",
@@ -198,7 +198,7 @@
     },
     {
       "questionNumber": 15,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p4_x23_995x210.png)\n\nJika pada susunan semula, buku Matematika dipindah di ujung kiri rak buku dan buku Pendidikan Agama dipindah di sebelah kanan buku IPA maka susunannya menjadi …\n\nBahasa Indonesia, IPA, Pendidikan Agama,\n\nPendidikan Agama, Bahasa Indonesia, Penjaskes dan IPS",
+      "questionText": "Jika pada susunan semula, buku Matematika dipindah di ujung kiri rak buku dan buku Pendidikan Agama dipindah di sebelah kanan buku IPA maka susunannya menjadi …\n\nBahasa Indonesia, IPA, Pendidikan Agama,\n\nPendidikan Agama, Bahasa Indonesia, Penjaskes dan IPS",
       "optionA": "Buku Matematika,",
       "optionB": "Buku Matematika,",
       "optionC": "Buku Matematika,",
@@ -211,7 +211,7 @@
     },
     {
       "questionNumber": 16,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p5_x23_995x210.png)\n\nBerdasarkan soal nomor sebelumnya, letak buku Bahasa Indonesia adalah …\n\nPenjaskes dan buku Pendidikan Agama\n\nLima orang anak yaitu Anjar, Erwin, Pandu, Hendri dan Siska memiliki sepatu dengan jumlah yang berbeda.\n\n- Sepatu milik Siska lebih banyak dari milik Hendri dan Pandu - Sepatu milik Anjar sama banyaknya dengan sepatu milik\n\nPandu - Sepatu milik Erwin lebih banyak dari sepatu milik Pandu, tetapi tidak lebih banyak dari sepatu Siska - Sepatu milik Hendri lebih banyak dari sepatu milik Anjar",
+      "questionText": "Berdasarkan soal nomor sebelumnya, letak buku Bahasa Indonesia adalah …\n\nPenjaskes dan buku Pendidikan Agama\n\nLima orang anak yaitu Anjar, Erwin, Pandu, Hendri dan Siska memiliki sepatu dengan jumlah yang berbeda.\n\n- Sepatu milik Siska lebih banyak dari milik Hendri dan Pandu - Sepatu milik Anjar sama banyaknya dengan sepatu milik\n\nPandu - Sepatu milik Erwin lebih banyak dari sepatu milik Pandu, tetapi tidak lebih banyak dari sepatu Siska - Sepatu milik Hendri lebih banyak dari sepatu milik Anjar",
       "optionA": "Di sebelah kanan buku",
       "optionB": "Di sebelah kanan buku",
       "optionC": "Di sebelah kiri buku IPS",
@@ -224,7 +224,7 @@
     },
     {
       "questionNumber": 17,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p5_x23_995x210.png)\n\nSoal nomor 17-20 berdasarkan informasi di bawah ini\n\nSepatu yang paling banyak adalah sepatu milik …",
+      "questionText": "Soal nomor 17-20 berdasarkan informasi di bawah ini\n\nSepatu yang paling banyak adalah sepatu milik …",
       "optionA": "Hendri",
       "optionB": "Siska",
       "optionC": "Anjar",
@@ -237,7 +237,7 @@
     },
     {
       "questionNumber": 18,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p5_x23_995x210.png)\n\nPernyataan yang salah adalah …\n\nadalah sepatu milik Pandu dan Anjar",
+      "questionText": "Pernyataan yang salah adalah …\n\nadalah sepatu milik Pandu dan Anjar",
       "optionA": "Sepatu milik Pandu",
       "optionB": "Sepatu paling sedikit",
       "optionC": "Sepatu milik Siska lebih",
@@ -250,7 +250,7 @@
     },
     {
       "questionNumber": 19,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p6_x23_995x210.png)\n\nJika sepatu Erwin lebih banyak dari sepatu milik Hendri maka pernyataan yang benar adalah …\n\nPandu dan milik Hendri lebih banyak dari sepatu milik Erwin",
+      "questionText": "Jika sepatu Erwin lebih banyak dari sepatu milik Hendri maka pernyataan yang benar adalah …\n\nPandu dan milik Hendri lebih banyak dari sepatu milik Erwin",
       "optionA": "Sepatu milik Anjar lebih",
       "optionB": "Sepatu milik Erwin",
       "optionC": "Sepatu milik Anjar dan",
@@ -263,7 +263,7 @@
     },
     {
       "questionNumber": 20,
-      "questionText": "![Ilustrasi](/soal-images/kemampuan_analitik/kemampuan_analitik_p6_x23_995x210.png)\n\nPernyataan yang benar berdasarkan informasi tambahan pada nomor sebelumnya adalah …\n\nlebih banyak dari sepatu milik Pandu",
+      "questionText": "Pernyataan yang benar berdasarkan informasi tambahan pada nomor sebelumnya adalah …\n\nlebih banyak dari sepatu milik Pandu",
       "optionA": "Sepatu milik Hendri",
       "optionB": "Sepatu milik Erwin lebih",
       "optionC": "Sepatu milik Erwin",

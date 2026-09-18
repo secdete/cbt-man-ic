@@ -242,16 +242,26 @@ def clean_spacing(s):
         return ""
     return re.sub(r'\s+', ' ', s).strip()
 
+def is_header_or_watermark(slug, pno, bimg, r):
+    w, h = bimg['width'], bimg['height']
+    # Watermark background
+    if w == 559 and h == 447:
+        return True
+    # First page header logos (UIN Sunan Ampel, Kemenag, Cakrawala)
+    if pno == 0 and r.y1 <= 170:
+        return True
+    # Kemampuan Analitik: strictly pure text, all images are header letterheads or logos
+    if slug == 'kemampuan_analitik':
+        return True
+    # General page header letterhead across exams (e.g. PT Indo Prestasi Utama banner)
+    if r.y1 <= 125 and w > 500 and h < 250:
+        return True
+    return False
+
 def extract_options_smart(text, page_images, block_y0):
-    """
-    Extracts options A-E from text and matches option images if text is empty or block is just (A).
-    """
     options = {}
-    
-    # Check if text is just (A), (B), (C), (D) or has options delimiter
     pattern = re.compile(r'(?:^|\n|\s+)(?:\(([A-E])\)|([A-E])\.)[\.\s\u064B-\u065F\u0670]*([^\n]+(?:\n(?!(?:\(([A-E])\)|([A-E])\.)[\.\s\u064B-\u065F\u0670]*)(?!\d+[\.\)])[^\n]+)*)?')
     matches = list(pattern.finditer(text))
-    
     if matches:
         for m in matches:
             k = m.group(1) or m.group(2)
@@ -259,14 +269,14 @@ def extract_options_smart(text, page_images, block_y0):
                 val = m.group(3) if m.group(3) else ""
                 options[k.upper()] = clean_spacing(val)
                 
-    # If option text is empty, check for an image next to it
+    # If option text is empty, check for an image directly aligned with this option
     for k, v in list(options.items()):
         if not v or len(v) == 0:
             for im in page_images:
-                if abs(im['rect'].y0 - block_y0) < 35 and im['rect'].x0 > 25:
+                if abs(im['y0'] - block_y0) < 35 and im['x0'] > 25:
                     options[k] = f"![Pilihan {k}]({im['src']})"
+                    im['is_option'] = True
                     break
-                    
     return options
 
 def parse_exam_master(cfg):
@@ -285,7 +295,7 @@ def parse_exam_master(cfg):
     img_dir = f"public/soal-images/{slug}"
     os.makedirs(img_dir, exist_ok=True)
     
-    # 1. Pre-extract all valid images per page
+    # 1. Extract valid images per page with deduplication
     pages_images = {}
     for pno in range(len(doc)):
         page = doc[pno]
@@ -297,13 +307,18 @@ def parse_exam_master(cfg):
             if not rects:
                 continue
             r = rects[0]
-            # Ignore background watermark (559x447)
-            if bimg['width'] == 559 and bimg['height'] == 447:
-                continue
-            # Ignore header logos at the top of first page (y1 < 170 and width < 400)
-            if pno == 0 and r.y1 <= 170:
+            if is_header_or_watermark(slug, pno, bimg, r):
                 continue
             if bimg['width'] < 30 or bimg['height'] < 20:
+                continue
+                
+            # Deduplicate duplicate image xrefs on same page
+            is_dup = False
+            for existing in pages_images[pno]:
+                if abs(existing['w'] - bimg['width']) < 2 and abs(existing['h'] - bimg['height']) < 2 and abs(existing['y0'] - r.y0) < 5:
+                    is_dup = True
+                    break
+            if is_dup:
                 continue
                 
             fname = f"{slug}_p{pno+1}_x{xref}_{bimg['width']}x{bimg['height']}.{bimg['ext']}"
@@ -317,7 +332,12 @@ def parse_exam_master(cfg):
                 'rect': r,
                 'src': f"/soal-images/{slug}/{fname}",
                 'w': bimg['width'],
-                'h': bimg['height']
+                'h': bimg['height'],
+                'y0': r.y0,
+                'y1': r.y1,
+                'x0': r.x0,
+                'x1': r.x1,
+                'is_option': False
             })
             
     # 2. Process text blocks per page
@@ -365,20 +385,21 @@ def parse_exam_master(cfg):
             parts = re.split(r'(?:^|\n|\s{2,})(\d+[\.\)]\s+)', txt)
             if len(parts) > 2:
                 if parts[0].strip():
-                    expanded.append({'pno': it['pno'], 'x0': it['x0'], 'y0': it['y0'], 'text': parts[0].strip()})
+                    expanded.append({'pno': it['pno'], 'x0': it['x0'], 'y0': it['y0'], 'y1': it['y1'], 'text': parts[0].strip()})
                 i = 1
                 while i < len(parts):
-                    expanded.append({'pno': it['pno'], 'x0': it['x0'], 'y0': it['y0'], 'text': parts[i] + parts[i+1].strip()})
+                    expanded.append({'pno': it['pno'], 'x0': it['x0'], 'y0': it['y0'], 'y1': it['y1'], 'text': parts[i] + parts[i+1].strip()})
                     i += 2
             else:
                 expanded.append(it)
         stream_items = expanded
-        
+
     # 3. Sequential question parsing
     questions = []
     curr_q = None
     expected_num = 1
     buffer_passages = []
+    buffer_passages_y0 = None
     
     for item in stream_items:
         txt = item['text']
@@ -386,22 +407,22 @@ def parse_exam_master(cfg):
         lines = txt.split('\n')
         first_line = lines[0].strip()
         
-        # Check if line is an introductory passage range like "Soal nomor 1-2 berdasarkan..."
+        # Check passage intro
         if re.match(r'^Soal\s+(?:nomor|no)\s+\d+\s*-\s*\d+', first_line, re.I):
             buffer_passages.append(txt)
+            if buffer_passages_y0 is None:
+                buffer_passages_y0 = item['y0']
             continue
             
         is_new_q = False
         q_stem = ""
         
         if use_standalone:
-            # Standalone question number on its own line: e.g. "1." or "2."
             cleaned_standalone = re.sub(r'[\u200e\u200f\u200b\xa0\ufeff\u064B-\u065F\u0670]', '', txt).strip()
             m_num = re.match(r'^(\d+)[\.\)]\s*$', cleaned_standalone)
             if m_num and int(m_num.group(1)) == expected_num:
                 is_new_q = True
         else:
-            # Non-standalone: question number followed by dot or paren
             m = re.match(r'^(\d+)[\.\)]\s*(.*)', first_line, re.DOTALL)
             if m and int(m.group(1)) == expected_num:
                 is_new_q = True
@@ -411,6 +432,7 @@ def parse_exam_master(cfg):
                     
         if is_new_q:
             if curr_q:
+                curr_q['y1_end'] = item['y0']
                 questions.append(curr_q)
                 
             q_num = expected_num
@@ -423,13 +445,18 @@ def parse_exam_master(cfg):
             if q_stem:
                 full_text_parts.append(q_stem)
                 
+            start_y = buffer_passages_y0 if buffer_passages_y0 is not None else item['y0']
+            buffer_passages_y0 = None
+            
             curr_q = {
                 'number': q_num,
                 'page': pno,
                 'text_parts': full_text_parts,
                 'options': {},
-                'y0': item['y0'],
-                'pno_idx': pno - 1
+                'y0': start_y,
+                'y1_end': item['y1'],
+                'pno_idx': pno - 1,
+                'x0': item['x0']
             }
         else:
             p_idx = pno - 1
@@ -440,29 +467,99 @@ def parse_exam_master(cfg):
                 for k, v in opts.items():
                     if v:
                         curr_q['options'][k] = v
+                curr_q['y1_end'] = max(curr_q['y1_end'], item['y1'])
             elif curr_q and not curr_q['options']:
                 curr_q['text_parts'].append(txt)
+                curr_q['y1_end'] = max(curr_q['y1_end'], item['y1'])
             else:
                 is_intro = bool(re.match(r'^(?:Soal|Berdasarkan|Perhatikan|Bacalah|Teks|Informasi|Untuk\s+soal)\b', first_line, re.I))
                 if is_intro or not curr_q:
                     buffer_passages.append(txt)
+                    if buffer_passages_y0 is None:
+                        buffer_passages_y0 = item['y0']
                 elif curr_q:
                     curr_q['text_parts'].append(txt)
+                    curr_q['y1_end'] = max(curr_q['y1_end'], item['y1'])
                     
     if curr_q:
         questions.append(curr_q)
         
-    # 4. Associate Stimulus Images to Questions
-    for q in questions:
-        p_idx = q['pno_idx']
-        page_imgs = pages_images.get(p_idx, [])
+    # 4. Filter out any option images across all pages
+    for p_idx, page_imgs in pages_images.items():
         for im in page_imgs:
-            im_used_as_opt = any(im['src'] in opt_val for opt_val in q['options'].values())
-            if not im_used_as_opt and not any(im['src'] in t for t in q['text_parts']):
-                if im['w'] > 120 and im['h'] > 50:
-                    q['text_parts'].insert(0, f"![Ilustrasi]({im['src']})")
+            for q in questions:
+                if any(im['src'] in opt_val for opt_val in q['options'].values()):
+                    im['is_option'] = True
+                    break
+
+    # 5. Associate Stimulus Images to Questions with Strict Spatial Intervals
+    page_to_questions = {}
+    for q in questions:
+        p = q['pno_idx']
+        page_to_questions.setdefault(p, []).append(q)
+        
+    for p_idx, q_list in page_to_questions.items():
+        page_imgs = pages_images.get(p_idx, [])
+        content_imgs = [im for im in page_imgs if not im['is_option'] and im['w'] > 60 and im['h'] > 30]
+        if not content_imgs:
+            continue
+            
+        q_list_sorted = sorted(q_list, key=lambda q: q['y0'])
+        
+        for im in content_imgs:
+            im_y0 = im['y0']
+            im_y1 = im['y1']
+            
+            # Rule 1: Above first question on the page
+            if im_y1 <= q_list_sorted[0]['y0'] + 30:
+                target_q = q_list_sorted[0]
+            else:
+                target_q = None
+                for i in range(len(q_list_sorted)):
+                    q_cur = q_list_sorted[i]
+                    q_next = q_list_sorted[i+1] if i + 1 < len(q_list_sorted) else None
                     
-    # 5. Inject External Reading Wacana
+                    if q_next is None:
+                        # After last question start
+                        if im_y0 > q_cur['y1_end'] + 20:
+                            next_num = q_cur['number'] + 1
+                            cand = [q for q in questions if q['number'] == next_num]
+                            target_q = cand[0] if cand else q_cur
+                        else:
+                            target_q = q_cur
+                        break
+                    else:
+                        if im_y0 < q_next['y0']:
+                            # Image sits between q_cur and q_next.
+                            # If it ends right before or at q_next, it's the stimulus for q_next!
+                            if im_y1 >= q_next['y0'] - 15:
+                                target_q = q_next
+                            elif im_y0 >= q_cur['y1_end'] - 20:
+                                target_q = q_next
+                            else:
+                                target_q = q_cur
+                            break
+                            
+            if target_q:
+                # Check for passage range "Soal nomor X - Y"
+                range_match = None
+                for t in target_q['text_parts']:
+                    m_rng = re.search(r'Soal\s+(?:nomor|no)\s+(\d+)\s*-\s*(\d+)', t, re.I)
+                    if m_rng:
+                        range_match = (int(m_rng.group(1)), int(m_rng.group(2)))
+                        break
+                        
+                if range_match:
+                    start_rng, end_rng = range_match
+                    for q_cand in q_list_sorted:
+                        if start_rng <= q_cand['number'] <= end_rng:
+                            if not any(im['src'] in t for t in q_cand['text_parts']):
+                                q_cand['text_parts'].insert(0, f"![Ilustrasi]({im['src']})")
+                else:
+                    if not any(im['src'] in t for t in target_q['text_parts']):
+                        target_q['text_parts'].insert(0, f"![Ilustrasi]({im['src']})")
+
+    # 6. Inject External Reading Wacana for Indo & Ingg
     if token == 'IC-INDO':
         for q in questions:
             num = q['number']
@@ -474,21 +571,22 @@ def parse_exam_master(cfg):
             if num in INGG_PASSAGES:
                 q['text_parts'].insert(0, INGG_PASSAGES[num])
                 
-    # 6. Final cleanup & fallback options check
+    # 7. Final cleanup & fallback options check
     final_questions = []
     for q in questions:
         q_text = "\n\n".join([clean_spacing(t) if not t.startswith('![') else t for t in q['text_parts'] if t.strip()])
         opts = q['options']
         
-        # If options are still empty, check if remaining images on page are options
+        # If options are still empty for visual questions (e.g. geometric diagrams)
         if not opts.get('A'):
             p_idx = q['pno_idx']
             page_imgs = pages_images.get(p_idx, [])
-            if len(page_imgs) >= 4:
-                opts['A'] = f"![Pilihan A]({page_imgs[0]['src']})"
-                opts['B'] = f"![Pilihan B]({page_imgs[1]['src']})"
-                opts['C'] = f"![Pilihan C]({page_imgs[2]['src']})"
-                opts['D'] = f"![Pilihan D]({page_imgs[3]['src']})"
+            opt_cand = [im for im in page_imgs if im['is_option']]
+            if len(opt_cand) >= 4:
+                opts['A'] = f"![Pilihan A]({opt_cand[0]['src']})"
+                opts['B'] = f"![Pilihan B]({opt_cand[1]['src']})"
+                opts['C'] = f"![Pilihan C]({opt_cand[2]['src']})"
+                opts['D'] = f"![Pilihan D]({opt_cand[3]['src']})"
                 
         opt_a = opts.get('A', 'Pilihan A')
         opt_b = opts.get('B', 'Pilihan B')
@@ -526,7 +624,7 @@ def parse_exam_master(cfg):
     return result
 
 if __name__ == '__main__':
-    print("Building full extracted dataset for all 16 exams...\n")
+    print("Building full extracted dataset with rigorous spatial image alignment...\n")
     for c in CONFIGS:
         parse_exam_master(c)
-    print("\nExtraction finished!")
+    print("\nDataset extraction finished!")
