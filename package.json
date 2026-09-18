@@ -10,7 +10,8 @@
     "postinstall": "prisma generate",
     "db:sqlite": "node scripts/switch-db.js sqlite && npx prisma generate",
     "db:supabase": "node scripts/switch-db.js supabase && npx prisma generate",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "import:pdf": "npx tsx scripts/import-pdf.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
