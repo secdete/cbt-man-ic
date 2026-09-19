@@ -81,6 +81,19 @@ export async function PATCH(
           ? parseInt(body.passingScore, 10)
           : undefined,
         isActive: body.isActive !== undefined ? body.isActive : undefined,
+        isLocked: body.isLocked !== undefined ? body.isLocked : undefined,
+        openTime:
+          body.openTime !== undefined
+            ? body.openTime
+              ? new Date(body.openTime)
+              : null
+            : undefined,
+        closeTime:
+          body.closeTime !== undefined
+            ? body.closeTime
+              ? new Date(body.closeTime)
+              : null
+            : undefined,
       },
     });
 

@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, BookOpen } from "lucide-react";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
-import HeaderStudentStatus from "@/components/HeaderStudentStatus";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -48,15 +47,20 @@ export default function RootLayout({
             </Link>
 
             {/* Navigation Links */}
-            <nav className="flex items-center gap-2.5 sm:gap-3">
-              <HeaderStudentStatus />
+            <nav className="flex items-center gap-3">
+              <Link
+                href="/"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-slate-100 transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-slate-500" />
+                <span>Ruang Ujian</span>
+              </Link>
               <Link
                 href="/admin"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-colors"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-slate-300" />
-                <span className="hidden sm:inline">Panel Panitia</span>
-                <span className="sm:hidden">Panitia</span>
+                <span>Panel Panitia</span>
               </Link>
             </nav>
           </div>
@@ -69,13 +73,13 @@ export default function RootLayout({
         <footer className="border-t border-slate-200 bg-white py-5 text-xs text-slate-500">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p className="font-medium">
-              © {new Date().getFullYear()} Cakrawala • Sistem CBT Simulasi SNPDB
-              MAN Insan Cendekia
+              © {new Date().getFullYear()} Cakrawala Learning • Platform
+              Simulasi Resmi SNPDB MAN Insan Cendekia
             </p>
             <div className="flex items-center gap-3 text-slate-400 font-medium">
-              <span>Platform Simulasi Ujian Mandiri</span>
+              <span>Sistem Ujian Terstandar</span>
               <span>•</span>
-              <span>Versi 1.0</span>
+              <span>Anti-Curang Real-time</span>
             </div>
           </div>
         </footer>

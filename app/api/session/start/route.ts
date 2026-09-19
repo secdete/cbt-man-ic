@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getStudentFromRequest } from "@/lib/student-auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function POST(req: NextRequest) {
   try {
-    const { token, studentName, studentNisn, studentSchool } = await req.json();
+    const { token, studentName, studentSchool, studentWhatsapp, studentNisn } =
+      await req.json();
 
     if (!token || !studentName) {
       return NextResponse.json(
@@ -17,10 +17,6 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanToken = token.trim().toUpperCase();
-
-    // Cek apakah ada sesi akun siswa yang login
-    const studentSession = await getStudentFromRequest(req);
-    const studentId = studentSession?.id || null;
 
     // Cari ujian berdasarkan token
     const exam = await prisma.exam.findUnique({
@@ -42,12 +38,49 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!exam.isActive) {
+    // 1. Cek status aktif & kunci ujian dari panitia
+    if (!exam.isActive || exam.isLocked) {
       return NextResponse.json(
         {
           success: false,
           message:
-            "Ujian ini sedang tidak aktif atau telah ditutup oleh panitia.",
+            "Ujian ini sedang ditutup atau belum diaktifkan oleh panitia.",
+        },
+        { status: 403 },
+      );
+    }
+
+    // 2. Cek jadwal jam buka dan jam tutup ujian
+    const now = new Date();
+    if (exam.openTime && new Date(exam.openTime) > now) {
+      const formattedOpen = new Date(exam.openTime).toLocaleString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Ujian belum dibuka. Jadwal pelaksanaan baru dimulai pada: ${formattedOpen}.`,
+        },
+        { status: 403 },
+      );
+    }
+
+    if (exam.closeTime && new Date(exam.closeTime) < now) {
+      const formattedClose = new Date(exam.closeTime).toLocaleString("id-ID", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Waktu pelaksanaan ujian ini telah berakhir pada: ${formattedClose}.`,
         },
         { status: 403 },
       );
@@ -68,10 +101,6 @@ export async function POST(req: NextRequest) {
       where: {
         examId: exam.id,
         studentName: studentName.trim(),
-        OR: [
-          ...(studentId ? [{ studentId }] : []),
-          { studentName: studentName.trim() },
-        ],
         status: "IN_PROGRESS",
       },
       include: {
@@ -80,14 +109,19 @@ export async function POST(req: NextRequest) {
     });
 
     if (!session) {
+      // Buat nomor sertifikat unik untuk siswa ini
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const certNumber = `CERT-SNPDB/${new Date().getFullYear()}/${cleanToken.replace(/[^A-Z0-9]/g, "")}-${randomSuffix}`;
+
       // Buat sesi ujian baru
       session = await prisma.examSession.create({
         data: {
           examId: exam.id,
-          studentId: studentId,
           studentName: studentName.trim(),
-          studentNisn: studentNisn ? studentNisn.trim() : null,
           studentSchool: studentSchool ? studentSchool.trim() : null,
+          studentWhatsapp: studentWhatsapp ? studentWhatsapp.trim() : null,
+          studentNisn: studentNisn ? studentNisn.trim() : null,
+          certificateNumber: certNumber,
           status: "IN_PROGRESS",
           startTime: new Date(),
         },
@@ -99,7 +133,6 @@ export async function POST(req: NextRequest) {
 
     // Hitung sisa waktu ujian (dalam detik)
     const startTimeMs = new Date(session.startTime).getTime();
-    const durationMs = exam.durationMinutes * 60 * 1000;
     const nowMs = Date.now();
     const elapsedSeconds = Math.floor((nowMs - startTimeMs) / 1000);
     const totalDurationSeconds = exam.durationMinutes * 60;
@@ -155,8 +188,9 @@ export async function POST(req: NextRequest) {
         session: {
           id: session.id,
           studentName: session.studentName,
-          studentNisn: session.studentNisn,
           studentSchool: session.studentSchool,
+          studentWhatsapp: session.studentWhatsapp,
+          certificateNumber: session.certificateNumber,
           startTime: session.startTime,
           tabSwitchCount: session.tabSwitchCount,
         },

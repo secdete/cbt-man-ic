@@ -17,6 +17,9 @@ model Exam {
   token           String         @unique
   passingScore    Int            @default(65)
   isActive        Boolean        @default(true)
+  isLocked        Boolean        @default(false)
+  openTime        DateTime?
+  closeTime       DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   questions       Question[]
@@ -55,26 +58,28 @@ model Student {
 }
 
 model ExamSession {
-  id              String             @id @default(uuid())
-  examId          String
-  studentId       String?
-  studentName     String
-  studentNisn     String?
-  studentSchool   String?
-  startTime       DateTime           @default(now())
-  endTime         DateTime?
-  status          String             @default("IN_PROGRESS") // "IN_PROGRESS", "COMPLETED", "TIMEOUT"
-  totalScore      Float              @default(0)
-  accuracy        Float              @default(0)
-  correctCount    Int                @default(0)
-  incorrectCount  Int                @default(0)
-  unansweredCount Int                @default(0)
-  tabSwitchCount  Int                @default(0)
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  exam            Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
-  student         Student?           @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  submissions     AnswerSubmission[]
+  id                String             @id @default(uuid())
+  examId            String
+  studentId         String?
+  studentName       String
+  studentNisn       String?
+  studentSchool     String?
+  studentWhatsapp   String?
+  certificateNumber String?
+  startTime         DateTime           @default(now())
+  endTime           DateTime?
+  status            String             @default("IN_PROGRESS") // "IN_PROGRESS", "COMPLETED", "TIMEOUT"
+  totalScore        Float              @default(0)
+  accuracy          Float              @default(0)
+  correctCount      Int                @default(0)
+  incorrectCount    Int                @default(0)
+  unansweredCount   Int                @default(0)
+  tabSwitchCount    Int                @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  exam              Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student           Student?           @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  submissions       AnswerSubmission[]
 }
 
 model AnswerSubmission {
@@ -90,4 +95,3 @@ model AnswerSubmission {
 
   @@unique([sessionId, questionId])
 }
-

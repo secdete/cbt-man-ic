@@ -9,9 +9,11 @@ import {
   AlertTriangle,
   Play,
   ArrowLeft,
-  ArrowRight,
   User,
+  School,
+  Phone,
   ShieldAlert,
+  Maximize,
 } from "lucide-react";
 import Link from "next/link";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
@@ -28,64 +30,28 @@ export default function ExamConfirmationPage({
   const [studentData, setStudentData] = useState<{
     token: string;
     studentName: string;
-    studentNisn: string;
     studentSchool: string;
+    studentWhatsapp?: string | null;
   } | null>(null);
 
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    async function loadData() {
-      // 1. Cek dari sessionStorage
-      let currentStudent: {
-        token: string;
-        studentName: string;
-        studentNisn: string;
-        studentSchool: string;
-      } | null = null;
-
-      const stored = sessionStorage.getItem("cbt_student_data");
-      if (stored) {
-        try {
-          currentStudent = JSON.parse(stored);
-          setStudentData(currentStudent);
-          setIsAuthenticated(true);
-        } catch (e) {
-          console.error(e);
-        }
+    // Ambil data identitas peserta dari sessionStorage
+    const stored = sessionStorage.getItem("cbt_student_data");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setStudentData(parsed);
+      } catch (e) {
+        console.error(e);
       }
+    }
 
-      // 2. Jika belum ada di sessionStorage, cek sesi login dari server
-      if (!currentStudent?.studentName) {
-        try {
-          const authRes = await fetch("/api/student/me");
-          const authJson = await authRes.json();
-          if (authJson.success && authJson.student) {
-            const studentInfo = {
-              token,
-              studentName: authJson.student.name,
-              studentNisn: authJson.student.nisn,
-              studentSchool: authJson.student.school || "",
-            };
-            setStudentData(studentInfo);
-            sessionStorage.setItem(
-              "cbt_student_data",
-              JSON.stringify(studentInfo),
-            );
-            setIsAuthenticated(true);
-          } else {
-            setIsAuthenticated(false);
-          }
-        } catch {
-          setIsAuthenticated(false);
-        }
-      }
-
-      // 3. Fetch exam details
+    async function fetchExamDetails() {
       try {
         const res = await fetch("/api/exams");
         const json = await res.json();
@@ -93,6 +59,44 @@ export default function ExamConfirmationPage({
           const found = json.data.find((e: any) => e.token === token);
           if (found) {
             setExam(found);
+
+            // Cek jika ujian ditutup atau di luar jam buka
+            if (!found.isActive || found.isLocked) {
+              setErrorMessage(
+                "Ujian ini sedang ditutup atau belum diaktifkan oleh panitia/admin.",
+              );
+            }
+            const now = new Date();
+            if (found.openTime && new Date(found.openTime) > now) {
+              const formattedOpen = new Date(found.openTime).toLocaleString(
+                "id-ID",
+                {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                },
+              );
+              setErrorMessage(
+                `Ujian belum dibuka. Jadwal buka: ${formattedOpen}`,
+              );
+            }
+            if (found.closeTime && new Date(found.closeTime) < now) {
+              const formattedClose = new Date(found.closeTime).toLocaleString(
+                "id-ID",
+                {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                },
+              );
+              setErrorMessage(
+                `Waktu pengerjaan ujian telah ditutup pada: ${formattedClose}`,
+              );
+            }
           } else {
             setErrorMessage(
               `Paket ujian dengan token "${token}" tidak ditemukan.`,
@@ -100,19 +104,19 @@ export default function ExamConfirmationPage({
           }
         }
       } catch (err) {
-        setErrorMessage("Gagal memuat informasi ujian.");
+        setErrorMessage("Gagal memuat informasi naskah ujian.");
       } finally {
         setLoading(false);
       }
     }
 
-    loadData();
+    fetchExamDetails();
   }, [token]);
 
   const handleStartExam = async () => {
-    if (!studentData?.studentName) {
+    if (!studentData?.studentName || !studentData?.studentSchool) {
       setErrorMessage(
-        "Data identitas peserta tidak lengkap. Silakan kembali ke beranda.",
+        "Data identitas peserta tidak lengkap. Silakan kembali ke halaman utama untuk melengkapi data.",
       );
       return;
     }
@@ -121,14 +125,23 @@ export default function ExamConfirmationPage({
     setErrorMessage("");
 
     try {
+      // Masuk ke mode fullscreen jika didukung browser
+      try {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        }
+      } catch (fsErr) {
+        console.warn("Fullscreen request bypassed or denied:", fsErr);
+      }
+
       const res = await fetch("/api/session/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token,
           studentName: studentData.studentName,
-          studentNisn: studentData.studentNisn,
           studentSchool: studentData.studentSchool,
+          studentWhatsapp: studentData.studentWhatsapp || null,
         }),
       });
 
@@ -154,14 +167,15 @@ export default function ExamConfirmationPage({
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-3 border-blue-700 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs font-medium text-slate-600">
-            Memeriksa token &amp; naskah ujian...
+            Memeriksa token &amp; jadwal ujian...
           </p>
         </div>
       </div>
     );
   }
 
-  if (isAuthenticated === false && !studentData?.studentName) {
+  // Jika siswa belum mengisi identitas di beranda
+  if (!studentData?.studentName) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh] px-4">
         <div className="max-w-md w-full bg-white rounded-xl shadow-xs border border-slate-200 p-6 text-center space-y-4">
@@ -170,19 +184,19 @@ export default function ExamConfirmationPage({
           </div>
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              Wajib Masuk Akun Siswa
+              Identitas Peserta Belum Diisi
             </h2>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Anda harus masuk atau mendaftar akun siswa terlebih dahulu sebelum
-              dapat mengakses lembar konfirmasi ujian <b>{token}</b>.
+              Silakan kembali ke halaman utama untuk mengisi Nama Lengkap dan
+              Asal Sekolah Anda terlebih dahulu sebelum memulai ujian.
             </p>
           </div>
           <Link
             href="/"
             className="w-full py-2.5 px-4 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>Masuk / Daftar Akun Siswa</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke Halaman Masuk</span>
           </Link>
         </div>
       </div>
@@ -220,17 +234,17 @@ export default function ExamConfirmationPage({
                   {exam.title}
                 </h1>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Konfirmasi Data Peserta Sebelum Memulai Ujian
+                  Lembar Konfirmasi Peserta Sebelum Memulai Ujian
                 </p>
               </div>
             </div>
 
             <div className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-right">
               <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                Token Ujian
+                Status Naskah
               </p>
-              <p className="font-mono font-bold text-sm text-blue-300">
-                {exam.token}
+              <p className="font-mono font-bold text-sm text-emerald-400">
+                TERVERIFIKASI
               </p>
             </div>
           </div>
@@ -239,35 +253,44 @@ export default function ExamConfirmationPage({
             {/* Tabel Konfirmasi Identitas Siswa */}
             <div>
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                1. Data Identitas Peserta
+                1. Data Identitas Peserta Ujian
               </h2>
               <div className="border border-slate-200 rounded-lg overflow-hidden">
                 <table className="w-full text-xs text-left">
                   <tbody className="divide-y divide-slate-200">
                     <tr className="bg-slate-50/60">
-                      <td className="w-1/3 py-2.5 px-4 font-semibold text-slate-600">
-                        Nama Lengkap
+                      <td className="w-1/3 py-2.5 px-4 font-semibold text-slate-600 flex items-center gap-1.5">
+                        <User className="w-3.5 h-3.5 text-slate-400" />
+                        Nama Lengkap Peserta
                       </td>
                       <td className="py-2.5 px-4 font-bold text-slate-900">
-                        {studentData?.studentName || "-"}
+                        {studentData?.studentName}
                       </td>
                     </tr>
                     <tr>
                       <td className="py-2.5 px-4 font-semibold text-slate-600">
-                        NISN / Nomor Ujian
+                        <span className="flex items-center gap-1.5">
+                          <School className="w-3.5 h-3.5 text-slate-400" />
+                          Asal Madrasah / Sekolah
+                        </span>
                       </td>
                       <td className="py-2.5 px-4 text-slate-800">
-                        {studentData?.studentNisn || "Tidak diisi"}
+                        {studentData?.studentSchool}
                       </td>
                     </tr>
-                    <tr className="bg-slate-50/60">
-                      <td className="py-2.5 px-4 font-semibold text-slate-600">
-                        Asal Madrasah / Sekolah
-                      </td>
-                      <td className="py-2.5 px-4 text-slate-800">
-                        {studentData?.studentSchool || "Tidak diisi"}
-                      </td>
-                    </tr>
+                    {studentData?.studentWhatsapp && (
+                      <tr className="bg-slate-50/60">
+                        <td className="py-2.5 px-4 font-semibold text-slate-600">
+                          <span className="flex items-center gap-1.5">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" />
+                            No. WhatsApp
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 text-slate-800 font-mono">
+                          {studentData.studentWhatsapp}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -323,14 +346,30 @@ export default function ExamConfirmationPage({
               </div>
             </div>
 
-            {/* Peringatan Pengawasan */}
-            <div className="p-3.5 rounded-lg bg-amber-50/80 border border-amber-200 flex items-start gap-2.5">
-              <ShieldAlert className="w-4 h-4 text-amber-700 flex-shrink-0 mt-0.5" />
-              <div className="text-xs text-amber-900 leading-relaxed">
-                <span className="font-bold">Pengawasan CBT:</span> Pastikan
-                koneksi internet stabil. Dilarang berpindah window atau tab
-                browser. Jawaban Anda akan tersimpan otomatis secara real-time.
+            {/* Peringatan Pengawasan & Anti-Curang */}
+            <div className="p-4 rounded-lg bg-amber-50/90 border border-amber-200 space-y-2">
+              <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                <ShieldAlert className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                <span>Ketentuan Pengawasan Anti-Curang (CBT Proctoring)</span>
               </div>
+              <ul className="text-xs text-amber-900/90 space-y-1.5 pl-6 list-disc leading-relaxed">
+                <li>
+                  Saat menekan tombol mulai, sistem akan mengaktifkan{" "}
+                  <b>Mode Layar Penuh (Fullscreen)</b>.
+                </li>
+                <li>
+                  <b>Dilarang berpindah tab atau meminimalkan browser</b>.
+                  Setiap aktivitas keluar dicatat pengawas.
+                </li>
+                <li>
+                  <b>Batas maksimal pelanggaran adalah 3 kali</b>. Pelanggaran
+                  ke-3 akan menyebabkan ujian dikumpulkan otomatis!
+                </li>
+                <li>
+                  Klik kanan, copy-paste, dan fungsi inspect element dimatikan
+                  selama pengerjaan.
+                </li>
+              </ul>
             </div>
 
             {/* Action Buttons */}
@@ -339,7 +378,7 @@ export default function ExamConfirmationPage({
                 href="/"
                 className="w-full sm:w-auto px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 text-center transition-colors"
               >
-                Koreksi Data / Ganti Token
+                Koreksi Data / Token
               </Link>
 
               <button
@@ -352,8 +391,8 @@ export default function ExamConfirmationPage({
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Mulai Pengerjaan Ujian</span>
+                    <Maximize className="w-3.5 h-3.5" />
+                    <span>Mulai Pengerjaan Ujian (Fullscreen)</span>
                   </>
                 )}
               </button>

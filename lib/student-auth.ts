@@ -22,7 +22,7 @@ export function hashPassword(password: string): { hash: string; salt: string } {
 export function verifyPassword(
   password: string,
   storedHash: string,
-  salt: string
+  salt: string,
 ): boolean {
   try {
     const computedHash = crypto.scryptSync(password, salt, 64).toString("hex");
@@ -69,7 +69,7 @@ export function createStudentToken(payload: {
  * Verifies and decodes the HMAC-SHA256 signed student session token.
  */
 export function verifyStudentToken(
-  token: string | undefined | null
+  token: string | undefined | null,
 ): StudentSessionPayload | null {
   if (!token) return null;
   try {
@@ -98,7 +98,7 @@ export function verifyStudentToken(
  * Helper to retrieve student session payload from incoming NextRequest or Next.js cookies()
  */
 export async function getStudentFromRequest(
-  req?: NextRequest
+  req?: NextRequest,
 ): Promise<StudentSessionPayload | null> {
   let token: string | undefined;
 
@@ -115,4 +115,3 @@ export async function getStudentFromRequest(
 
   return verifyStudentToken(token);
 }
-

@@ -14,10 +14,14 @@ import {
   Check,
   X,
   FileText,
+  Lock,
+  MessageCircle,
+  Sparkles,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
 import FormattedQuestionText from "@/components/FormattedQuestionText";
+import ExamCertificate from "@/components/ExamCertificate";
 
 export default function ExamResultPage({
   params,
@@ -32,6 +36,7 @@ export default function ExamResultPage({
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showCertificate, setShowCertificate] = useState(false);
   const [activeFilter, setActiveFilter] = useState<
     "ALL" | "CORRECT" | "INCORRECT" | "UNANSWERED"
   >("ALL");
@@ -76,7 +81,7 @@ export default function ExamResultPage({
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-3 border-blue-700 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs font-semibold text-slate-700">
-            Mengkalkulasi Lembar Jawaban & Pembahasan...
+            Mengkalkulasi Lembar Jawaban &amp; Sertifikat...
           </p>
         </div>
       </div>
@@ -97,7 +102,7 @@ export default function ExamResultPage({
         </p>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-700 text-white font-semibold text-xs"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-700 text-white font-semibold text-xs cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Kembali ke Beranda
@@ -116,6 +121,10 @@ export default function ExamResultPage({
     return true;
   });
 
+  const waMessage = encodeURIComponent(
+    `Halo Admin Cakrawala Learning, saya *${session.studentName}* (${session.studentSchool}).\n\nSaya telah selesai mengerjakan simulasi *${exam.title}* di CBT SNPDB MAN IC dengan Skor: *${session.totalScore}* (Akurasi: ${session.accuracy}%).\n\nSaya ingin berkonsultasi dan mendaftar *Kelas Online Pembahasan Lengkap & Trik Lolos SNPDB MAN IC*. Terima kasih!`,
+  );
+
   return (
     <div className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full space-y-6">
       {/* Top Action Bar */}
@@ -128,14 +137,25 @@ export default function ExamResultPage({
           Kembali ke Beranda
         </Link>
 
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          <span>Cetak Lembar Hasil</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowCertificate(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+          >
+            <Award className="w-4 h-4" />
+            <span>Unduh Sertifikat Resmi</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Cetak Hasil</span>
+          </button>
+        </div>
       </div>
 
       {/* Official Result Banner */}
@@ -155,7 +175,6 @@ export default function ExamResultPage({
                 <span className="font-bold text-slate-200">
                   {session.studentName}
                 </span>
-                {session.studentNisn && ` (NISN: ${session.studentNisn})`}
                 {session.studentSchool && ` • ${session.studentSchool}`}
               </p>
             </div>
@@ -171,7 +190,7 @@ export default function ExamResultPage({
             >
               {session.isPassed
                 ? "LULUS (MEMENUHI PASSING GRADE)"
-                : "BELUM MEMENUHI PASSING GRADE"}
+                : "SELESAI MENGIKUTI SIMULASI"}
             </span>
             <p className="text-[11px] text-slate-400 mt-1">
               Passing Grade: {session.passingScore} Poin
@@ -218,65 +237,64 @@ export default function ExamResultPage({
 
           <div className="p-3 bg-white rounded-lg border border-slate-200">
             <p className="text-[11px] font-semibold text-slate-500 uppercase">
-              Salah / Kosong
+              Catatan Pengawas
             </p>
-            <p className="text-2xl font-black text-slate-700 mt-0.5">
-              <span className="text-rose-600">{session.incorrectCount}</span> /{" "}
-              {session.unansweredCount}
+            <p
+              className={`text-sm font-bold mt-1.5 ${
+                session.tabSwitchCount > 0
+                  ? "text-amber-700"
+                  : "text-emerald-700"
+              }`}
+            >
+              {session.tabSwitchCount > 0
+                ? `${session.tabSwitchCount}x Pindah Tab`
+                : "Tertib (0 Pelanggaran)"}
             </p>
           </div>
         </div>
 
-        {/* Breakdown Subtes */}
-        {subjectBreakdown.length > 0 && (
-          <div className="p-6">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3 flex items-center gap-1.5">
-              <BarChart3 className="w-3.5 h-3.5 text-blue-700" />
-              <span>Analisis Perolehan Nilai Per Subtes</span>
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {subjectBreakdown.map((s: any) => (
-                <div
-                  key={s.subject}
-                  className="bg-white p-3 rounded-lg border border-slate-200"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-xs text-slate-800 truncate">
-                      {s.subject}
-                    </p>
-                    <span className="text-xs font-bold text-blue-800">
-                      {s.percentage}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
-                    <div
-                      className="bg-blue-700 h-full rounded-full"
-                      style={{ width: `${s.percentage}%` }}
-                    />
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    {s.correct} dari {s.total} soal benar ({s.points} Poin)
-                  </p>
-                </div>
-              ))}
+        {/* Banner CTA Kelas Online & Pembahasan Intensif */}
+        <div className="p-6 bg-linear-to-r from-blue-900 via-indigo-900 to-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-5 border-t border-slate-800">
+          <div className="space-y-1.5 text-center md:text-left">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-blue-800 text-blue-200 text-xs font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Program Bimbingan Intensif SNPDB MAN IC</span>
             </div>
+            <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+              Ingin Bahas Tuntas Soal &amp; Kuasai Trik Cepat Lolos MAN IC?
+            </h3>
+            <p className="text-xs text-slate-300 max-w-xl leading-relaxed font-normal">
+              Dapatkan bedah materi lengkap, kupas trik jawaban cepat, dan
+              bimbingan langsung dari Master Tutor Cakrawala Learning.
+            </p>
           </div>
-        )}
+
+          <a
+            href={`https://wa.me/6281234567890?text=${waMessage}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full md:w-auto px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs tracking-wide uppercase transition-all shadow-md flex items-center justify-center gap-2 flex-shrink-0"
+          >
+            <MessageCircle className="w-4 h-4 fill-current" />
+            <span>Ikut Kelas Online &amp; Buka Pembahasan</span>
+          </a>
+        </div>
       </div>
 
-      {/* Lembar Pembahasan Soal */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-5">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-blue-700" />
+      {/* Rincian Butir Soal */}
+      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
             <h2 className="text-base font-bold text-slate-900">
-              Lembar Pembahasan Soal
+              Evaluasi Lembar Jawaban
             </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Tinjau jawaban yang telah Anda pilih pada setiap butir soal
+            </p>
           </div>
 
-          {/* Filter Status */}
-          <div className="flex items-center bg-slate-100 p-0.5 rounded border border-slate-200 text-xs font-medium">
+          {/* Filter Buttons */}
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs">
             <button
               type="button"
               onClick={() => setActiveFilter("ALL")}
@@ -440,24 +458,67 @@ export default function ExamResultPage({
                     })}
                   </div>
 
-                  {/* Pembahasan */}
-                  {q.explanation && (
-                    <div className="p-3 rounded bg-blue-50/70 border border-blue-200 text-xs text-blue-950 space-y-1">
-                      <p className="font-bold text-blue-900 flex items-center gap-1">
-                        <FileText className="w-3.5 h-3.5 text-blue-700" />
-                        Pembahasan & Kunci Analisis:
-                      </p>
-                      <p className="leading-relaxed whitespace-pre-line text-slate-800 font-normal">
-                        {q.explanation}
-                      </p>
+                  {/* Pembahasan Terkunci / Lock Banner (Sesuai Arahan Pengguna) */}
+                  <div className="p-3.5 rounded-lg bg-blue-50/70 border border-blue-200/80 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded bg-blue-200 text-blue-900">
+                        <Lock className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-blue-950 text-xs">
+                          Pembahasan Analisis &amp; Trik Cepat Butir Soal #
+                          {q.questionNumber}
+                        </p>
+                        <p className="text-[11px] text-slate-600">
+                          Buka langkah penyelesaian runtut &amp; trik cepat di
+                          kelas online bimbel Cakrawala.
+                        </p>
+                      </div>
                     </div>
-                  )}
+
+                    <a
+                      href={`https://wa.me/6281234567890?text=${waMessage}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-[11px] transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-end sm:self-center"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>Buka Pembahasan</span>
+                    </a>
+                  </div>
                 </div>
               );
             })
           )}
         </div>
       </div>
+
+      {/* Modal Sertifikat Otomatis */}
+      {showCertificate && (
+        <ExamCertificate
+          studentName={session.studentName}
+          studentSchool={session.studentSchool || "Siswa Mandiri"}
+          examTitle={exam.title}
+          examCategory={exam.category}
+          totalScore={session.totalScore}
+          passingScore={session.passingScore}
+          accuracy={session.accuracy}
+          correctCount={session.correctCount}
+          totalQuestions={questions.length}
+          completedDate={new Date(
+            session.endTime || session.createdAt,
+          ).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+          certificateNumber={
+            session.certificateNumber ||
+            `CERT-SNPDB/${new Date().getFullYear()}/${token}-001`
+          }
+          onClose={() => setShowCertificate(false)}
+        />
+      )}
     </div>
   );
 }
