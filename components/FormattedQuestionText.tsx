@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
 interface FormattedQuestionTextProps {
   text: string;
@@ -10,17 +10,29 @@ interface FormattedQuestionTextProps {
 
 export default function FormattedQuestionText({
   text,
-  className = '',
+  className = "",
   isOption = false,
 }: FormattedQuestionTextProps) {
   if (!text) return null;
+
+  const isArabic = /[\u0600-\u06FF]/.test(text);
+  const arabicStyle = isArabic
+    ? `font-arabic ${isOption ? "text-sm sm:text-base leading-loose" : "text-base sm:text-lg leading-loose"}`
+    : "";
 
   // Pola markdown image: ![alt](url)
   const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
 
   // Jika tidak ada gambar markdown, render langsung dengan newline
   if (!imageRegex.test(text)) {
-    return <p className={`whitespace-pre-line leading-relaxed ${className}`}>{text}</p>;
+    return (
+      <p
+        dir={isArabic ? "rtl" : "auto"}
+        className={`whitespace-pre-line leading-relaxed ${arabicStyle} ${className}`}
+      >
+        {text}
+      </p>
+    );
   }
 
   // Reset regex index
@@ -35,19 +47,25 @@ export default function FormattedQuestionText({
     const prevText = text.slice(lastIndex, match.index);
     if (prevText) {
       elements.push(
-        <span key={`text-${keyIndex++}`} className="whitespace-pre-line leading-relaxed block">
+        <span
+          key={`text-${keyIndex++}`}
+          dir={isArabic ? "rtl" : "auto"}
+          className={`whitespace-pre-line leading-relaxed block ${arabicStyle}`}
+        >
           {prevText}
-        </span>
+        </span>,
       );
     }
 
-    const alt = match[1] || 'Gambar Soal';
+    const alt = match[1] || "Gambar Soal";
     const src = match[2];
 
     elements.push(
       <div
         key={`img-${keyIndex++}`}
-        className={isOption ? 'my-1 inline-block' : 'my-3 text-center sm:text-left'}
+        className={
+          isOption ? "my-1 inline-block" : "my-3 text-center sm:text-left"
+        }
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -55,19 +73,21 @@ export default function FormattedQuestionText({
           alt={alt}
           className={`${
             isOption
-              ? 'max-h-24 max-w-full sm:max-w-xs'
-              : 'max-w-full sm:max-w-md max-h-80'
+              ? "max-h-24 max-w-full sm:max-w-xs"
+              : "max-w-full sm:max-w-md max-h-80"
           } w-auto h-auto rounded-lg border border-slate-200 shadow-2xs object-contain inline-block bg-white p-1 cursor-zoom-in hover:shadow-md transition-shadow`}
           onClick={(e) => {
             e.stopPropagation();
-            window.open(src, '_blank');
+            window.open(src, "_blank");
           }}
           title="Klik untuk memperbesar gambar"
         />
-        {!isOption && alt && alt !== 'Gambar Soal' && alt !== 'Ilustrasi' && (
-          <span className="block text-[11px] text-slate-500 mt-1 italic">{alt}</span>
+        {!isOption && alt && alt !== "Gambar Soal" && alt !== "Ilustrasi" && (
+          <span className="block text-[11px] text-slate-500 mt-1 italic">
+            {alt}
+          </span>
         )}
-      </div>
+      </div>,
     );
 
     lastIndex = match.index + match[0].length;
@@ -76,12 +96,22 @@ export default function FormattedQuestionText({
   const remainingText = text.slice(lastIndex);
   if (remainingText) {
     elements.push(
-      <span key={`text-${keyIndex++}`} className="whitespace-pre-line leading-relaxed block">
+      <span
+        key={`text-${keyIndex++}`}
+        dir={isArabic ? "rtl" : "auto"}
+        className={`whitespace-pre-line leading-relaxed block ${arabicStyle}`}
+      >
         {remainingText}
-      </span>
+      </span>,
     );
   }
 
-  return <div className={className}>{elements}</div>;
+  return (
+    <div
+      dir={isArabic ? "rtl" : "auto"}
+      className={`${arabicStyle} ${className}`}
+    >
+      {elements}
+    </div>
+  );
 }
-

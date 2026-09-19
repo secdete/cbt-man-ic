@@ -185,7 +185,7 @@
     },
     {
       "questionNumber": 14,
-      "questionText": "Diberikan barisan aritmatika naik x ,x ,...,x . Median dari data baru 3x -2019, 3x - 019,..., 3x - 2019 adalah 2019. Nilai rata-rata dari x ,x ,...,x adalah ... 1 2 2019, 1 2 2019 1 2 2019",
+      "questionText": "Diberikan barisan aritmatika naik x₁, x₂, ..., x₂₀₁₉. Median dari data baru 3x₁ - 2019, 3x₂ - 2019, ..., 3x₂₀₁₉ - 2019 adalah 2019. Nilai rata-rata dari x₁, x₂, ..., x₂₀₁₉ adalah ...",
       "optionA": "1346",
       "optionB": "1436",
       "optionC": "1463",
