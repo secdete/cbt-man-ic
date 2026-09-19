@@ -1,11 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // GET /api/exams - Ambil semua paket ujian
 export async function GET() {
   try {
     const exams = await prisma.exam.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         _count: {
           select: {
@@ -18,10 +21,10 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: exams });
   } catch (error: any) {
-    console.error('Error fetching exams:', error);
+    console.error("Error fetching exams:", error);
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil daftar ujian' },
-      { status: 500 }
+      { success: false, message: "Gagal mengambil daftar ujian" },
+      { status: 500 },
     );
   }
 }
@@ -33,7 +36,7 @@ export async function POST(req: NextRequest) {
     const {
       title,
       description,
-      category = 'SNPDB MAN IC',
+      category = "SNPDB MAN IC",
       durationMinutes = 90,
       token,
       passingScore = 65,
@@ -42,8 +45,8 @@ export async function POST(req: NextRequest) {
 
     if (!title || !token) {
       return NextResponse.json(
-        { success: false, message: 'Judul dan Token Ujian wajib diisi.' },
-        { status: 400 }
+        { success: false, message: "Judul dan Token Ujian wajib diisi." },
+        { status: 400 },
       );
     }
 
@@ -55,8 +58,11 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       return NextResponse.json(
-        { success: false, message: `Token "${cleanToken}" sudah digunakan. Silakan gunakan token lain.` },
-        { status: 400 }
+        {
+          success: false,
+          message: `Token "${cleanToken}" sudah digunakan. Silakan gunakan token lain.`,
+        },
+        { status: 400 },
       );
     }
 
@@ -72,15 +78,15 @@ export async function POST(req: NextRequest) {
         questions: {
           create: questions.map((q: any, index: number) => ({
             questionNumber: q.questionNumber || index + 1,
-            questionText: q.questionText || '',
-            optionA: q.optionA || '',
-            optionB: q.optionB || '',
-            optionC: q.optionC || '',
-            optionD: q.optionD || '',
+            questionText: q.questionText || "",
+            optionA: q.optionA || "",
+            optionB: q.optionB || "",
+            optionC: q.optionC || "",
+            optionD: q.optionD || "",
             optionE: q.optionE || null,
-            correctAnswer: (q.correctAnswer || 'A').toUpperCase(),
+            correctAnswer: (q.correctAnswer || "A").toUpperCase(),
             explanation: q.explanation || null,
-            subject: q.subject || 'Umum',
+            subject: q.subject || "Umum",
             points: parseInt(q.points, 10) || 4,
           })),
         },
@@ -96,11 +102,13 @@ export async function POST(req: NextRequest) {
       data: exam,
     });
   } catch (error: any) {
-    console.error('Error creating exam:', error);
+    console.error("Error creating exam:", error);
     return NextResponse.json(
-      { success: false, message: error?.message || 'Gagal membuat paket ujian.' },
-      { status: 500 }
+      {
+        success: false,
+        message: error?.message || "Gagal membuat paket ujian.",
+      },
+      { status: 500 },
     );
   }
 }
-

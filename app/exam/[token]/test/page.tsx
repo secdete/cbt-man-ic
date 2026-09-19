@@ -78,6 +78,27 @@ export default function CBTTestInterfacePage({
         active.remainingSeconds || active.exam.durationMinutes * 60,
       );
       setTabSwitchCount(active.session.tabSwitchCount || 0);
+
+      // Selalu sinkronisasi soal naskah terbaru dari database saat refresh halaman
+      if (active.exam?.id) {
+        fetch(`/api/exams/${active.exam.id}`)
+          .then((res) => res.json())
+          .then((json) => {
+            if (
+              json.success &&
+              json.data?.questions &&
+              json.data.questions.length > 0
+            ) {
+              setQuestions(json.data.questions);
+              active.questions = json.data.questions;
+              localStorage.setItem(
+                "cbt_active_session",
+                JSON.stringify(active),
+              );
+            }
+          })
+          .catch((err) => console.warn("Auto-sync questions warning:", err));
+      }
     } catch (e) {
       console.error(e);
       router.push(`/exam/${encodeURIComponent(token)}`);

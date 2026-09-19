@@ -1,9 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -11,7 +14,7 @@ export async function GET(
       where: { id },
       include: {
         questions: {
-          orderBy: { questionNumber: 'asc' },
+          orderBy: { questionNumber: "asc" },
         },
         _count: {
           select: { sessions: true },
@@ -21,23 +24,23 @@ export async function GET(
 
     if (!exam) {
       return NextResponse.json(
-        { success: false, message: 'Paket ujian tidak ditemukan' },
-        { status: 404 }
+        { success: false, message: "Paket ujian tidak ditemukan" },
+        { status: 404 },
       );
     }
 
     return NextResponse.json({ success: true, data: exam });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: 'Gagal mengambil detail ujian' },
-      { status: 500 }
+      { success: false, message: "Gagal mengambil detail ujian" },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -47,19 +50,19 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: 'Paket ujian berhasil dihapus',
+      message: "Paket ujian berhasil dihapus",
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: 'Gagal menghapus ujian' },
-      { status: 500 }
+      { success: false, message: "Gagal menghapus ujian" },
+      { status: 500 },
     );
   }
 }
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -71,8 +74,12 @@ export async function PATCH(
         title: body.title,
         description: body.description,
         category: body.category,
-        durationMinutes: body.durationMinutes ? parseInt(body.durationMinutes, 10) : undefined,
-        passingScore: body.passingScore ? parseInt(body.passingScore, 10) : undefined,
+        durationMinutes: body.durationMinutes
+          ? parseInt(body.durationMinutes, 10)
+          : undefined,
+        passingScore: body.passingScore
+          ? parseInt(body.passingScore, 10)
+          : undefined,
         isActive: body.isActive !== undefined ? body.isActive : undefined,
       },
     });
@@ -80,9 +87,8 @@ export async function PATCH(
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: 'Gagal memperbarui ujian' },
-      { status: 500 }
+      { success: false, message: "Gagal memperbarui ujian" },
+      { status: 500 },
     );
   }
 }
-

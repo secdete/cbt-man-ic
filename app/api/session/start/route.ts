@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,8 +10,8 @@ export async function POST(req: NextRequest) {
 
     if (!token || !studentName) {
       return NextResponse.json(
-        { success: false, message: 'Token Ujian dan Nama Siswa wajib diisi.' },
-        { status: 400 }
+        { success: false, message: "Token Ujian dan Nama Siswa wajib diisi." },
+        { status: 400 },
       );
     }
 
@@ -19,29 +22,39 @@ export async function POST(req: NextRequest) {
       where: { token: cleanToken },
       include: {
         questions: {
-          orderBy: { questionNumber: 'asc' },
+          orderBy: { questionNumber: "asc" },
         },
       },
     });
 
     if (!exam) {
       return NextResponse.json(
-        { success: false, message: `Token ujian "${cleanToken}" tidak ditemukan atau salah.` },
-        { status: 404 }
+        {
+          success: false,
+          message: `Token ujian "${cleanToken}" tidak ditemukan atau salah.`,
+        },
+        { status: 404 },
       );
     }
 
     if (!exam.isActive) {
       return NextResponse.json(
-        { success: false, message: 'Ujian ini sedang tidak aktif atau telah ditutup oleh panitia.' },
-        { status: 403 }
+        {
+          success: false,
+          message:
+            "Ujian ini sedang tidak aktif atau telah ditutup oleh panitia.",
+        },
+        { status: 403 },
       );
     }
 
     if (exam.questions.length === 0) {
       return NextResponse.json(
-        { success: false, message: 'Ujian ini belum memiliki butir soal yang diterbitkan.' },
-        { status: 400 }
+        {
+          success: false,
+          message: "Ujian ini belum memiliki butir soal yang diterbitkan.",
+        },
+        { status: 400 },
       );
     }
 
@@ -50,7 +63,7 @@ export async function POST(req: NextRequest) {
       where: {
         examId: exam.id,
         studentName: studentName.trim(),
-        status: 'IN_PROGRESS',
+        status: "IN_PROGRESS",
       },
       include: {
         submissions: true,
@@ -65,7 +78,7 @@ export async function POST(req: NextRequest) {
           studentName: studentName.trim(),
           studentNisn: studentNisn ? studentNisn.trim() : null,
           studentSchool: studentSchool ? studentSchool.trim() : null,
-          status: 'IN_PROGRESS',
+          status: "IN_PROGRESS",
           startTime: new Date(),
         },
         include: {
@@ -86,12 +99,17 @@ export async function POST(req: NextRequest) {
       // Waktu sudah habis
       await prisma.examSession.update({
         where: { id: session.id },
-        data: { status: 'TIMEOUT', endTime: new Date() },
+        data: { status: "TIMEOUT", endTime: new Date() },
       });
 
       return NextResponse.json(
-        { success: false, message: 'Waktu ujian untuk sesi Anda telah berakhir.', sessionId: session.id, isExpired: true },
-        { status: 400 }
+        {
+          success: false,
+          message: "Waktu ujian untuk sesi Anda telah berakhir.",
+          sessionId: session.id,
+          isExpired: true,
+        },
+        { status: 400 },
       );
     }
 
@@ -110,7 +128,10 @@ export async function POST(req: NextRequest) {
     }));
 
     // Format jawaban yang sudah tersimpan sebelumnya
-    const savedAnswers: Record<string, { selectedOption: string | null; isDoubtful: boolean }> = {};
+    const savedAnswers: Record<
+      string,
+      { selectedOption: string | null; isDoubtful: boolean }
+    > = {};
     for (const sub of session.submissions) {
       savedAnswers[sub.questionId] = {
         selectedOption: sub.selectedOption,
@@ -144,11 +165,13 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error starting session:', error);
+    console.error("Error starting session:", error);
     return NextResponse.json(
-      { success: false, message: error?.message || 'Gagal memulai sesi ujian.' },
-      { status: 500 }
+      {
+        success: false,
+        message: error?.message || "Gagal memulai sesi ujian.",
+      },
+      { status: 500 },
     );
   }
 }
-
