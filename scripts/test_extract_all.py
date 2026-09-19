@@ -170,3 +170,4 @@ print(f"IPA: {len(q_ipa)} questions")
 print(f"Kemampuan Analitik: {len(q_analitik)} questions")
 for q in q_analitik[:3]:
     print(f"  Q{q['number']}: {q['options']}")
+

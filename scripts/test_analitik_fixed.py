@@ -90,3 +90,4 @@ print(f"Total Kemampuan Analitik parsed: {len(questions)}")
 for q in questions:
     has_opts = len(q['options']) > 0
     print(f"Q{q['number']} (opts={len(q['options'])}): {' '.join(q['text_parts'])[:60]} | {list(q['options'].keys())}")
+

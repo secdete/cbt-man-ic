@@ -11,3 +11,4 @@ for p in pdf_files:
             if kw in text:
                 found_keys.append((i+1, kw))
     print(f"{fname}: {len(doc)} pages. Key matches: {found_keys}")
+

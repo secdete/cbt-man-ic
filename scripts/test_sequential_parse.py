@@ -89,3 +89,4 @@ for f, two_col in test_files:
     qs = test_sequential(f, two_col)
     missing_opts = sum(1 for q in qs if len(q['options']) == 0)
     print(f"{os.path.basename(f):<35} | Total Q: {len(qs):<3} | Missing Opts: {missing_opts}")
+

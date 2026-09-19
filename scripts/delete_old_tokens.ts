@@ -21,3 +21,4 @@ async function clean() {
 clean()
   .catch(console.error)
   .finally(() => prisma.$disconnect());
+

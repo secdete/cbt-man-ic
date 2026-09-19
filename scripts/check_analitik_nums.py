@@ -7,3 +7,4 @@ for pno in range(len(doc)):
     text = page.get_text()
     matches = re.findall(r'(?:^|\n)\s*(\d+)[\.\)]\s*([^\n]+)', text)
     print(f"Page {pno+1}: {[m[0] for m in matches]}")
+

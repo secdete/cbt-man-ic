@@ -29,3 +29,4 @@ for page_num in range(len(doc)):
 print(f"Berhasil mengekstrak {len(extracted)} gambar:")
 for name, w, h, size in extracted:
     print(f"- {name} ({w}x{h}, {size} bytes)")
+

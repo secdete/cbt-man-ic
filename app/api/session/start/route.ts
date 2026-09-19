@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getStudentFromRequest } from "@/lib/student-auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -16,6 +17,10 @@ export async function POST(req: NextRequest) {
     }
 
     const cleanToken = token.trim().toUpperCase();
+
+    // Cek apakah ada sesi akun siswa yang login
+    const studentSession = await getStudentFromRequest(req);
+    const studentId = studentSession?.id || null;
 
     // Cari ujian berdasarkan token
     const exam = await prisma.exam.findUnique({
@@ -63,6 +68,10 @@ export async function POST(req: NextRequest) {
       where: {
         examId: exam.id,
         studentName: studentName.trim(),
+        OR: [
+          ...(studentId ? [{ studentId }] : []),
+          { studentName: studentName.trim() },
+        ],
         status: "IN_PROGRESS",
       },
       include: {
@@ -75,6 +84,7 @@ export async function POST(req: NextRequest) {
       session = await prisma.examSession.create({
         data: {
           examId: exam.id,
+          studentId: studentId,
           studentName: studentName.trim(),
           studentNisn: studentNisn ? studentNisn.trim() : null,
           studentSchool: studentSchool ? studentSchool.trim() : null,

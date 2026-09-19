@@ -42,9 +42,22 @@ model Question {
   submissions    AnswerSubmission[]
 }
 
+model Student {
+  id           String        @id @default(uuid())
+  name         String
+  nisn         String        @unique
+  school       String?
+  passwordHash String
+  salt         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  sessions     ExamSession[]
+}
+
 model ExamSession {
   id              String             @id @default(uuid())
   examId          String
+  studentId       String?
   studentName     String
   studentNisn     String?
   studentSchool   String?
@@ -60,6 +73,7 @@ model ExamSession {
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   exam            Exam               @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student         Student?           @relation(fields: [studentId], references: [id], onDelete: SetNull)
   submissions     AnswerSubmission[]
 }
 

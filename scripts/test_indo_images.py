@@ -9,3 +9,4 @@ for pno in range(len(doc)):
         bimg = doc.extract_image(xref)
         rects = page.get_image_rects(xref)
         print(f"  xref={xref} {bimg['width']}x{bimg['height']} rect={rects[0] if rects else 'None'}")
+

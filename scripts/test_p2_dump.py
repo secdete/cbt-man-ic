@@ -10,3 +10,4 @@ def inspect_page(pdf_path, pno):
             f.write(f"y={b[1]:.1f}: {repr(b[4].strip())}\n")
 
 inspect_page('modul/Tes Akademik Ipa 182-210.pdf', 2)
+

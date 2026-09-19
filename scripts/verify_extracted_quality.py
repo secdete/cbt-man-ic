@@ -21,3 +21,4 @@ for jf in json_files:
             img_count += 1
             
     print(f"{token:<18} | {len(questions):<8} | {dummy_count:<11} | {img_count:<11}")
+

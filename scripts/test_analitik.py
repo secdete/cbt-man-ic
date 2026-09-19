@@ -30,3 +30,4 @@ for pno in range(len(doc)):
     print(f"Col 2 (right) blocks: {len(col2_sorted)}")
     for b in col2_sorted[:3]:
         print(f"  [y={round(b[1])}]: {b[4].strip()[:50]}")
+

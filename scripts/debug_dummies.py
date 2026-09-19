@@ -19,3 +19,4 @@ with open('scripts/debug_dummies.txt', 'w', encoding='utf-8') as f:
     f.write("\n\n".join(out))
 
 print("Wrote debug_dummies.txt")
+

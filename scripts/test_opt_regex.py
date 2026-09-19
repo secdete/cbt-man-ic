@@ -30,3 +30,4 @@ def extract_options(text):
 for st in sample_texts:
     opts = extract_options(st)
     print("Extracted from:", st[:30], "->", opts)
+

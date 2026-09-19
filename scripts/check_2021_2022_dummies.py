@@ -16,3 +16,4 @@ for fpath in files:
     print(f"\n{d['config']['token']} Dummies count: {len(dummies)}")
     for q in dummies:
         print(f"  Q{q['questionNumber']} (P{q['page']}): {repr(q['questionText'][:80])}")
+

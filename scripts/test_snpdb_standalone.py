@@ -71,3 +71,4 @@ dummies = [q for q in questions if len(q['options']) == 0]
 print(f"Questions missing options: {len(dummies)}")
 for q in questions[:5]:
     print(f"Q{q['number']} (P{q['page']}, opts={len(q['options'])}): {' '.join(q['text_parts'])[:60]} | {q['options']}")
+

@@ -137,3 +137,4 @@ for q in questions:
     opts_str = " ".join([f"({k}) {v[:25]}..." for k, v in q['options'].items()])
     has_img = any('![' in t for t in q['text_parts'])
     print(f"Q{q['num']} (P{q['page']}, img={has_img}, opts={len(q['options'])}): {' '.join(q['text_parts'])[:70]} | {opts_str}")
+

@@ -509,3 +509,4 @@ if __name__ == '__main__':
     for c in CONFIGS:
         parse_exam_master(c)
     print("\nMaster Extraction Complete!")
+

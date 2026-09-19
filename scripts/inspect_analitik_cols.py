@@ -14,3 +14,4 @@ for pno, page in enumerate(doc):
     print("--- RIGHT COLUMN ---")
     for b in col2:
         print(f"  ({b[0]:.0f},{b[1]:.0f}): {b[4].strip().replace(chr(10), ' ')[:80]}")
+

@@ -19,3 +19,4 @@ for pno in range(len(doc)):
         rects = page.get_image_rects(xref)
         if base_img['width'] > 150 and base_img['height'] > 100: # filter out small logos
             print(f"  [IMG] xref={xref} w={base_img['width']} h={base_img['height']} rect={rects[0] if rects else None}")
+

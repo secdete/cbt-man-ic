@@ -16,3 +16,4 @@ for fpath in files_to_check:
     for b in sorted(blocks, key=lambda x: (round(x[1] // 30), x[0]))[:15]:
         txt = b[4].strip().replace('\n', ' ')
         print(f"  bbox=({b[0]:.1f}, {b[1]:.1f}, {b[2]:.1f}, {b[3]:.1f}): {txt[:70]}")
+

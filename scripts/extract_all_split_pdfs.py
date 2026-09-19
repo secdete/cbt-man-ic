@@ -462,3 +462,4 @@ if __name__ == '__main__':
     print("EXTRACTION SUMMARY:")
     for s in summary:
         print(f"{s['token']:<18} | {s['questions']:<3} questions | {s['title']}")
+

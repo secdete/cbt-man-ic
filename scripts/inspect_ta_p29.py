@@ -13,3 +13,4 @@ for pno in [28, 29, 30]: # 0-indexed: pages 29, 30, 31
         bimg = doc.extract_image(xref)
         rects = page.get_image_rects(xref)
         print(f"  xref={xref} {bimg['width']}x{bimg['height']} rect={rects[0] if rects else None}")
+

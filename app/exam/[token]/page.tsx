@@ -9,11 +9,9 @@ import {
   AlertTriangle,
   Play,
   ArrowLeft,
+  ArrowRight,
   User,
-  School,
-  IdCard,
   ShieldAlert,
-  FileCheck2,
 } from "lucide-react";
 import Link from "next/link";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
@@ -38,19 +36,56 @@ export default function ExamConfirmationPage({
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("cbt_student_data");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setStudentData(parsed);
-      } catch (e) {
-        console.error(e);
-      }
-    }
+    async function loadData() {
+      // 1. Cek dari sessionStorage
+      let currentStudent: {
+        token: string;
+        studentName: string;
+        studentNisn: string;
+        studentSchool: string;
+      } | null = null;
 
-    async function fetchExamDetails() {
+      const stored = sessionStorage.getItem("cbt_student_data");
+      if (stored) {
+        try {
+          currentStudent = JSON.parse(stored);
+          setStudentData(currentStudent);
+          setIsAuthenticated(true);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      // 2. Jika belum ada di sessionStorage, cek sesi login dari server
+      if (!currentStudent?.studentName) {
+        try {
+          const authRes = await fetch("/api/student/me");
+          const authJson = await authRes.json();
+          if (authJson.success && authJson.student) {
+            const studentInfo = {
+              token,
+              studentName: authJson.student.name,
+              studentNisn: authJson.student.nisn,
+              studentSchool: authJson.student.school || "",
+            };
+            setStudentData(studentInfo);
+            sessionStorage.setItem(
+              "cbt_student_data",
+              JSON.stringify(studentInfo),
+            );
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+          }
+        } catch {
+          setIsAuthenticated(false);
+        }
+      }
+
+      // 3. Fetch exam details
       try {
         const res = await fetch("/api/exams");
         const json = await res.json();
@@ -71,7 +106,7 @@ export default function ExamConfirmationPage({
       }
     }
 
-    fetchExamDetails();
+    loadData();
   }, [token]);
 
   const handleStartExam = async () => {
@@ -119,8 +154,36 @@ export default function ExamConfirmationPage({
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-3 border-blue-700 border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs font-medium text-slate-600">
-            Memeriksa token & naskah ujian...
+            Memeriksa token &amp; naskah ujian...
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated === false && !studentData?.studentName) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh] px-4">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-xs border border-slate-200 p-6 text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+            <User className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-slate-900">
+              Wajib Masuk Akun Siswa
+            </h2>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Anda harus masuk atau mendaftar akun siswa terlebih dahulu sebelum
+              dapat mengakses lembar konfirmasi ujian <b>{token}</b>.
+            </p>
+          </div>
+          <Link
+            href="/"
+            className="w-full py-2.5 px-4 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Masuk / Daftar Akun Siswa</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
     );

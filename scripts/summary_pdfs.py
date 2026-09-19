@@ -9,3 +9,4 @@ for p in pdf_files:
     doc = pymupdf.open(p)
     img_cnt = sum(len(page.get_images()) for page in doc)
     print(f"{fname:<35} | {len(doc):<5} | {img_cnt:<6}")
+

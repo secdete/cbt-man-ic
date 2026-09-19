@@ -59,3 +59,4 @@ with open('scripts/multi_inspection_log.txt', 'w', encoding='utf-8') as f:
     f.write("\n".join(full_log))
 
 print("Done writing scripts/multi_inspection_log.txt")
+

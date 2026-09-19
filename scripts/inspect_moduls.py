@@ -41,3 +41,4 @@ with open("modul_analysis.txt", "w", encoding="utf-8") as f:
     f.write("\n".join(output_lines))
 
 print("Inspection report written to modul_analysis.txt")
+

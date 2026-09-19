@@ -13,3 +13,4 @@ for pno in range(len(doc)):
 print("Sections in TA MAN-IC Paket 1 11-43.pdf:")
 for s in sections[:20]:
     print(f"  P{s[0]}: {s[1]}")
+

@@ -18,3 +18,4 @@ for img in imgs:
     # Get image position on the page
     for img_rect in page.get_image_rects(xref):
         print(f'    rect on page: {img_rect}')
+

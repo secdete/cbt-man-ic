@@ -16,3 +16,4 @@ def inspect_missing_opts(json_path):
 inspect_missing_opts('scripts/extracted_exams/ta_man_ic_paket_1.json')
 inspect_missing_opts('scripts/extracted_exams/snpdb_2021_ipa.json')
 inspect_missing_opts('scripts/extracted_exams/snpdb_2021_keislaman.json')
+

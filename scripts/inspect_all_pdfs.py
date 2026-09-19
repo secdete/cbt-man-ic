@@ -22,3 +22,4 @@ for pdf_path in pdf_files:
             if base_img["width"] > 100 and base_img["height"] > 100:
                 large_imgs += 1
     print(f"- {filename} ({len(doc)} hal): {large_imgs} gambar soal (dari {total_imgs} total elemen)")
+

@@ -18,3 +18,4 @@ def check_boxes(fpath):
 check_boxes('modul/TA MAN-IC Paket 1 11-43.pdf')
 check_boxes('modul/TA MAN-PK Paket 1 68-97.pdf')
 check_boxes('modul/Tes Akademik Ipa 98-126.pdf')
+

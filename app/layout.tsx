@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { ShieldCheck, BookOpen } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
+import HeaderStudentStatus from "@/components/HeaderStudentStatus";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,20 +48,15 @@ export default function RootLayout({
             </Link>
 
             {/* Navigation Links */}
-            <nav className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-slate-100 transition-colors"
-              >
-                <BookOpen className="w-3.5 h-3.5 text-slate-500" />
-                <span>Portal Siswa</span>
-              </Link>
+            <nav className="flex items-center gap-2.5 sm:gap-3">
+              <HeaderStudentStatus />
               <Link
                 href="/admin"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-colors"
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-slate-300" />
-                <span>Panel Panitia</span>
+                <span className="hidden sm:inline">Panel Panitia</span>
+                <span className="sm:hidden">Panitia</span>
               </Link>
             </nav>
           </div>

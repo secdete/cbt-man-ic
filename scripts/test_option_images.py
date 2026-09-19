@@ -43,3 +43,4 @@ for b in page.get_text('blocks'):
             print(f"Option {opt_key} at y={b[1]:.1f} -> Matched Image: {matched_img['src']} ({matched_img['w']}x{matched_img['h']})")
         else:
             print(f"Option {opt_key} at y={b[1]:.1f} -> NO IMAGE MATCHED")
+

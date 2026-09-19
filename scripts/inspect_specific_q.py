@@ -19,3 +19,4 @@ def inspect_page_blocks(pdf_path, page_num):
 inspect_page_blocks('modul/Tes Akademik Ipa 98-126.pdf', 4) # Q6 is on page 4
 inspect_page_blocks('modul/Tes Akademik Ipa 182-210.pdf', 1) # Q2,3 is on page 1-2
 inspect_page_blocks('modul/Tes Akademik Ipa 182-210.pdf', 2)
+

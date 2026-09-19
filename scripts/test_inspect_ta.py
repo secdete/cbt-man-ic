@@ -12,3 +12,4 @@ for img in page.get_images():
 print('\nDrawings on page 1:', len(page.get_drawings()))
 for d in page.get_drawings()[:10]:
     print('  drawing:', d['rect'])
+

@@ -39,3 +39,4 @@ if curr_q:
 for q in questions:
     if len(q['options']) == 0:
         print(f"Missing Q{q['number']} on Page {q['page']}")
+

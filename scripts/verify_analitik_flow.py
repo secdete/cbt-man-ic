@@ -22,3 +22,4 @@ for b in items:
 
 print("Sequential Q numbers found in column stream:")
 print(q_nums)
+

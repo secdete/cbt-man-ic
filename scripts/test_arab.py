@@ -39,3 +39,4 @@ with open('scripts/test_arab_dump.json', 'w', encoding='utf-8') as f:
     json.dump(pages_data, f, ensure_ascii=False, indent=2)
 
 print("Dumped Bahasa Arab page data")
+
