@@ -16,7 +16,7 @@
   "questions": [
     {
       "questionNumber": 1,
-      "questionText": "![Ilustrasi](/soal-images/bahasa_arab/bahasa_arab_p1_x29_392x368.png)\n\n!ِِت الآ ِت َي ِبا ْل َك ِل َماُِّص ْو َر َت ْي ِن ال ُم َنا ِس َب َت ْي ال ِْص",
+      "questionText": "!ِِت الآ ِت َي ِبا ْل َك ِل َماُِّص ْو َر َت ْي ِن ال ُم َنا ِس َب َت ْي ال ِْص\n\n![Ilustrasi](/soal-images/bahasa_arab/bahasa_arab_p1_x29_r0_392x368.png)",
       "optionA": "غ ْر َف ُة ال ُم َذا َك َر",
       "optionB": "غ ْر َف ُة ال َّن ْو",
       "optionC": "س ِر ْي",
@@ -120,7 +120,7 @@
     },
     {
       "questionNumber": 9,
-      "questionText": "!ُِّصور ِة ال َّسا ِب َق بالِال ُج ْم َل َت ْي ِن ال ُم َنا ِس َب َت ْي ِْا ْخ َت",
+      "questionText": "!ُِّصور ِة ال َّسا ِب َق بالِال ُج ْم َل َت ْي ِن ال ُم َنا ِس َب َت ْي ِْا ْخ َت\n\n![Ilustrasi](/soal-images/bahasa_arab/bahasa_arab_p2_x41_r0_456x435.png)",
       "optionA": "ب ال ّد َّراج َّب ُر ُك ْو ‌ ُه َو ُي ِح",
       "optionB": "ب ال َخ ْي ِه َواي ُة أن َوا ْر ُر ُك ْو",
       "optionC": "‌ ِه َوا َي ُة َفا ِط َمة ُر ُك ْوب ال ّد َّرا َج",
@@ -133,7 +133,7 @@
     },
     {
       "questionNumber": 10,
-      "questionText": "![Ilustrasi](/soal-images/bahasa_arab/bahasa_arab_p2_x41_456x435.png)\n\n!ِ َب ْي َن ا ْل َم ْج ُم ْو َع َت ْيِال ِع َبا َر َت ْي ِن ال ُم َنا ِس َب َت ْي ِْص",
+      "questionText": "!ِ َب ْي َن ا ْل َم ْج ُم ْو َع َت ْيِال ِع َبا َر َت ْي ِن ال ُم َنا ِس َب َت ْي ِْص",
       "optionA": "كرة السلة رياضة مفيدة",
       "optionB": "يشاهد أحمد المباراة",
       "optionC": "يستعير أحمد الكتاب",
