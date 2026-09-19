@@ -604,42 +604,43 @@ export default function CBTTestInterfacePage({
           </div>
         </div>
 
-        {/* Right Column: Numbers Navigation Matrix (4 cols) */}
-        <div className="lg:col-span-4 bg-white rounded-xl shadow-xs border border-slate-200 p-5 space-y-4">
-          <div className="pb-3 border-b border-slate-100 flex items-center justify-between">
+        {/* Right Column: Numbers Navigation Matrix (Compact & Full View - No Scroll) */}
+        <div className="lg:col-span-4 bg-white rounded-xl shadow-xs border border-slate-200 p-4 space-y-3">
+          <div className="pb-2.5 border-b border-slate-100 flex items-center justify-between">
             <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
-              Nomor Soal Ujian
+              Nomor Soal ({questions.length})
             </h3>
-            <span className="text-xs font-bold text-slate-600">
-              {answeredCount + doubtfulCount}/{questions.length} Dijawab
+            <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+              {answeredCount + doubtfulCount}/{questions.length} Terjawab
             </span>
           </div>
 
           {/* Legend Indicators */}
           <div className="flex items-center gap-3 text-[11px] text-slate-600 pb-2 border-b border-slate-100">
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded bg-blue-700 inline-block" />
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded bg-blue-700 inline-block" />
               Terjawab
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded bg-amber-500 inline-block" />
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded bg-amber-500 inline-block" />
               Ragu
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded bg-slate-100 border border-slate-300 inline-block" />
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded bg-slate-100 border border-slate-300 inline-block" />
               Kosong
             </span>
           </div>
 
-          {/* Number Grid */}
-          <div className="grid grid-cols-5 gap-2 max-h-[380px] overflow-y-auto pr-1">
+          {/* Compact Number Grid (10 kolom agar 70 soal terlihat sekaligus dalam 7 baris tanpa scroll) */}
+          <div className="grid grid-cols-7 sm:grid-cols-10 gap-1.5">
             {questions.map((q, idx) => {
               const ans = answers[q.id];
               const isCurrent = idx === currentIndex;
               const isAnswered = ans && ans.selectedOption && !ans.isDoubtful;
               const isDoubt = ans && ans.isDoubtful;
 
-              let colorClasses = "bg-slate-50 border-slate-200 text-slate-700";
+              let colorClasses =
+                "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300";
               if (isAnswered) {
                 colorClasses =
                   "bg-blue-700 border-blue-700 text-white font-bold";
@@ -653,15 +654,16 @@ export default function CBTTestInterfacePage({
                   key={q.id}
                   type="button"
                   onClick={() => setCurrentIndex(idx)}
-                  className={`h-10 rounded text-xs font-bold border transition-all flex flex-col items-center justify-center cursor-pointer ${colorClasses} ${
+                  className={`h-8 sm:h-8.5 rounded-md text-[11px] font-bold border transition-all flex flex-col items-center justify-center cursor-pointer p-0.5 ${colorClasses} ${
                     isCurrent
-                      ? "ring-2 ring-blue-600 ring-offset-1 font-black z-10"
+                      ? "ring-2 ring-blue-600 ring-offset-1 font-black z-10 scale-105 shadow-xs"
                       : ""
                   }`}
+                  title={`Soal No. ${q.questionNumber}${ans?.selectedOption ? ` (Jawaban: ${ans.selectedOption})` : ""}`}
                 >
-                  <span>{q.questionNumber}</span>
+                  <span className="leading-none">{q.questionNumber}</span>
                   {ans?.selectedOption && (
-                    <span className="text-[9px] leading-none opacity-90">
+                    <span className="text-[8px] leading-none font-black opacity-95 mt-0.5">
                       {ans.selectedOption}
                     </span>
                   )}
@@ -671,19 +673,32 @@ export default function CBTTestInterfacePage({
           </div>
 
           {/* Footer Shortcuts Info */}
-          <div className="pt-3 border-t border-slate-100 text-[10px] text-slate-500 space-y-1">
-            <p className="font-semibold text-slate-700">Pintasan Keyboard:</p>
-            <p>
-              • Tekan <kbd className="px-1 bg-slate-100 rounded border">A</kbd>–
-              <kbd className="px-1 bg-slate-100 rounded border">E</kbd> untuk
-              memilih opsi jawaban
-            </p>
-            <p>
-              • Tekan{" "}
-              <kbd className="px-1 bg-slate-100 rounded border">&larr;</kbd> dan{" "}
-              <kbd className="px-1 bg-slate-100 rounded border">&rarr;</kbd>{" "}
-              untuk ganti nomor
-            </p>
+          <div className="pt-2.5 border-t border-slate-100 text-[10px] text-slate-500 flex flex-wrap items-center justify-between gap-1">
+            <span>
+              <kbd className="px-1 bg-slate-100 rounded border font-mono">
+                A
+              </kbd>
+              –
+              <kbd className="px-1 bg-slate-100 rounded border font-mono">
+                E
+              </kbd>{" "}
+              Opsi
+            </span>
+            <span>
+              <kbd className="px-1 bg-slate-100 rounded border font-mono">
+                &larr;
+              </kbd>
+              <kbd className="px-1 bg-slate-100 rounded border font-mono">
+                &rarr;
+              </kbd>{" "}
+              Nomor
+            </span>
+            <span>
+              <kbd className="px-1 bg-slate-100 rounded border font-mono">
+                R
+              </kbd>{" "}
+              Ragu
+            </span>
           </div>
         </div>
       </div>

@@ -107,7 +107,10 @@ export default function ExamCertificate({
               </h1>
 
               <p className="text-xs font-mono text-slate-500">
-                No. Verifikasi: <span className="font-bold text-slate-700">{certificateNumber}</span>
+                No. Verifikasi:{" "}
+                <span className="font-bold text-slate-700">
+                  {certificateNumber}
+                </span>
               </p>
             </div>
 
@@ -129,11 +132,16 @@ export default function ExamCertificate({
               </h2>
 
               <p className="text-xs sm:text-sm font-semibold text-slate-700">
-                Asal Madrasah / Sekolah: <span className="text-slate-900 font-bold">{studentSchool}</span>
+                Asal Madrasah / Sekolah:{" "}
+                <span className="text-slate-900 font-bold">
+                  {studentSchool}
+                </span>
               </p>
 
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pt-2">
-                Telah menyelesaikan simulasi Computer-Based Test (CBT) Seleksi Nasional Peserta Didik Baru (SNPDB) Madrasah Aliyah Negeri Insan Cendekia pada naskah:
+                Telah menyelesaikan simulasi Computer-Based Test (CBT) Seleksi
+                Nasional Peserta Didik Baru (SNPDB) Madrasah Aliyah Negeri Insan
+                Cendekia pada naskah:
               </p>
 
               <div className="inline-block px-4 py-1.5 rounded-lg bg-blue-50 border border-blue-200">
@@ -226,4 +234,3 @@ export default function ExamCertificate({
     </div>
   );
 }
-
