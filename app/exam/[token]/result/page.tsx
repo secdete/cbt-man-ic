@@ -356,7 +356,13 @@ export default function ExamResultPage({
                 { key: "C", text: q.optionC },
                 { key: "D", text: q.optionD },
                 ...(q.optionE ? [{ key: "E", text: q.optionE }] : []),
-              ];
+              ].filter(
+                (opt) =>
+                  opt.text &&
+                  opt.text.trim() !== "" &&
+                  opt.text.trim() !== "-" &&
+                  opt.text.trim() !== `Pilihan ${opt.key}`
+              );
 
               return (
                 <div

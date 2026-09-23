@@ -618,7 +618,15 @@ export default function CBTTestInterfacePage({
                   ...(currentQ.optionE
                     ? [{ key: "E", text: currentQ.optionE }]
                     : []),
-                ].map((opt) => {
+                ]
+                  .filter(
+                    (opt) =>
+                      opt.text &&
+                      opt.text.trim() !== "" &&
+                      opt.text.trim() !== "-" &&
+                      opt.text.trim() !== `Pilihan ${opt.key}`
+                  )
+                  .map((opt) => {
                   const isSelected = currentAnswer?.selectedOption === opt.key;
                   return (
                     <button
