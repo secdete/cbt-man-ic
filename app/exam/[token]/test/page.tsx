@@ -624,39 +624,40 @@ export default function CBTTestInterfacePage({
                       opt.text &&
                       opt.text.trim() !== "" &&
                       opt.text.trim() !== "-" &&
-                      opt.text.trim() !== `Pilihan ${opt.key}`
+                      opt.text.trim() !== `Pilihan ${opt.key}`,
                   )
                   .map((opt) => {
-                  const isSelected = currentAnswer?.selectedOption === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      onClick={() => handleSelectOption(opt.key)}
-                      className={`w-full p-3 sm:p-3.5 rounded-xl border text-left flex items-start gap-3.5 transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-blue-50 border-blue-600 shadow-2xs text-blue-950"
-                          : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/70 text-slate-800"
-                      }`}
-                    >
-                      <span
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
+                    const isSelected =
+                      currentAnswer?.selectedOption === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => handleSelectOption(opt.key)}
+                        className={`w-full p-3 sm:p-3.5 rounded-xl border text-left flex items-start gap-3.5 transition-all cursor-pointer ${
                           isSelected
-                            ? "bg-blue-700 text-white shadow-xs"
-                            : "bg-white text-slate-700 border border-slate-300"
+                            ? "bg-blue-50 border-blue-600 shadow-2xs text-blue-950"
+                            : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/70 text-slate-800"
                         }`}
                       >
-                        {opt.key}
-                      </span>
-                      <div className="pt-0.5 flex-1 text-xs sm:text-sm">
-                        <FormattedQuestionText
-                          text={opt.text}
-                          isOption={true}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
+                        <span
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
+                            isSelected
+                              ? "bg-blue-700 text-white shadow-xs"
+                              : "bg-white text-slate-700 border border-slate-300"
+                          }`}
+                        >
+                          {opt.key}
+                        </span>
+                        <div className="pt-0.5 flex-1 text-xs sm:text-sm">
+                          <FormattedQuestionText
+                            text={opt.text}
+                            isOption={true}
+                          />
+                        </div>
+                      </button>
+                    );
+                  })}
               </div>
             )}
 

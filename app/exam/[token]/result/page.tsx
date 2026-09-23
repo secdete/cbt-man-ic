@@ -361,7 +361,7 @@ export default function ExamResultPage({
                   opt.text &&
                   opt.text.trim() !== "" &&
                   opt.text.trim() !== "-" &&
-                  opt.text.trim() !== `Pilihan ${opt.key}`
+                  opt.text.trim() !== `Pilihan ${opt.key}`,
               );
 
               return (
