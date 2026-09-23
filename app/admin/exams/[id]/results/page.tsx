@@ -219,24 +219,23 @@ export default function AdminExamResultsPage({
             Kembali ke Panel Admin
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               {exam.title}
             </h1>
-            <span className="font-mono text-xs font-bold px-2.5 py-1 bg-blue-100 text-blue-800 rounded-md">
+            <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200">
               TOKEN: {exam.token}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Rekap hasil pengerjaan CBT, peringkat siswa, dan analisis kelulusan
-            passing grade
+          <p className="text-xs text-slate-500 mt-1">
+            Rekap hasil pengerjaan CBT, peringkat peserta, dan analisis kelulusan passing grade
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors cursor-pointer"
             title="Unduh file spreadsheet Excel / CSV"
           >
             <FileSpreadsheet className="w-4 h-4" />
@@ -246,7 +245,7 @@ export default function AdminExamResultsPage({
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>Cetak Rekap</span>
@@ -254,61 +253,49 @@ export default function AdminExamResultsPage({
         </div>
       </div>
 
-      {/* Metric Cards */}
+      {/* Metric Cards - Minimalist Bento */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center flex-shrink-0">
-            <Users className="w-6 h-6" />
+        <div className="bg-white p-5 rounded-xl border border-slate-200/80">
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-xs font-medium text-slate-500">Total Peserta</span>
+            <Users className="w-4 h-4 text-slate-400" />
           </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium">
-              Total Peserta Ujian
-            </p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">
-              {analytics.totalParticipants}
-            </p>
-          </div>
+          <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
+            {analytics.totalParticipants}
+          </p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center flex-shrink-0">
-            <TrendingUp className="w-6 h-6" />
+        <div className="bg-white p-5 rounded-xl border border-slate-200/80">
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-xs font-medium text-slate-500">Rata-Rata Skor</span>
+            <TrendingUp className="w-4 h-4 text-slate-400" />
           </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium">Rata-Rata Skor</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">
-              {analytics.averageScore}
-            </p>
-          </div>
+          <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
+            {analytics.averageScore}
+          </p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-            <Award className="w-6 h-6" />
+        <div className="bg-white p-5 rounded-xl border border-slate-200/80">
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-xs font-medium text-slate-500">Skor Tertinggi</span>
+            <Award className="w-4 h-4 text-slate-400" />
           </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium">Skor Tertinggi</p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">
-              {analytics.highestScore}
-            </p>
-          </div>
+          <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
+            {analytics.highestScore}
+          </p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-            <CheckCircle2 className="w-6 h-6" />
+        <div className="bg-white p-5 rounded-xl border border-slate-200/80">
+          <div className="flex items-center justify-between text-slate-400 mb-2">
+            <span className="text-xs font-medium text-slate-500">Lulus Passing Grade</span>
+            <CheckCircle2 className="w-4 h-4 text-slate-400" />
           </div>
-          <div>
-            <p className="text-xs text-slate-500 font-medium">
-              Lulus Passing Grade
-            </p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">
-              {analytics.passedCount}{" "}
-              <span className="text-xs font-normal text-slate-400">
-                ({analytics.passPercentage}%)
-              </span>
-            </p>
-          </div>
+          <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
+            {analytics.passedCount}{" "}
+            <span className="text-xs font-normal text-slate-400 font-sans">
+              ({analytics.passPercentage}%)
+            </span>
+          </p>
         </div>
       </div>
 
@@ -365,98 +352,66 @@ export default function AdminExamResultsPage({
                 {filteredLeaderboard.map((student: any) => (
                   <tr
                     key={student.id}
-                    className="hover:bg-slate-50/70 transition-colors"
+                    className="hover:bg-slate-50/60 transition-colors"
                   >
-                    <td className="py-3.5 px-4 text-center font-extrabold text-slate-800">
-                      {student.rank === 1 ? (
-                        <span className="inline-block p-1 rounded-md bg-amber-100 text-amber-800">
-                          🥇 #1
-                        </span>
-                      ) : student.rank === 2 ? (
-                        <span className="inline-block p-1 rounded-md bg-slate-200 text-slate-700">
-                          🥈 #2
-                        </span>
-                      ) : student.rank === 3 ? (
-                        <span className="inline-block p-1 rounded-md bg-amber-50 text-amber-700">
-                          🥉 #3
-                        </span>
-                      ) : (
-                        `#${student.rank}`
-                      )}
+                    <td className="py-3 px-4 text-center font-mono text-xs font-medium text-slate-500">
+                      #{student.rank}
                     </td>
 
-                    <td className="py-3.5 px-4 font-bold text-slate-900">
-                      <div>{student.studentName}</div>
+                    <td className="py-3 px-4">
+                      <span className="font-medium text-slate-900 block">{student.studentName}</span>
                       {student.studentNisn && (
-                        <span className="text-[10px] font-normal text-slate-400">
+                        <span className="text-[10px] text-slate-400 font-mono">
                           NISN: {student.studentNisn}
                         </span>
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-600">
+                    <td className="py-3 px-4 text-slate-600 text-xs">
                       {student.studentSchool || "-"}
                     </td>
 
-                    <td className="py-3.5 px-4 text-slate-700 font-mono text-[11px]">
-                      {student.studentWhatsapp ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                          <Phone className="w-3 h-3" />
-                          {student.studentWhatsapp}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 italic">-</span>
-                      )}
+                    <td className="py-3 px-4 text-slate-600 font-mono text-xs">
+                      {student.studentWhatsapp || "-"}
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="text-base font-black text-slate-900">
-                        {student.totalScore}
-                      </span>
+                    <td className="py-3 px-4 text-center font-mono text-sm font-semibold text-slate-900">
+                      {student.totalScore}
                     </td>
 
-                    <td className="py-3.5 px-4 text-center font-bold text-blue-800">
+                    <td className="py-3 px-4 text-center font-mono text-xs text-slate-700">
                       {student.accuracy}%
                     </td>
 
-                    <td className="py-3.5 px-4 text-center font-medium">
-                      <span className="text-blue-600 font-bold">
-                        {student.correctCount}
-                      </span>{" "}
-                      /{" "}
-                      <span className="text-rose-600 font-bold">
-                        {student.incorrectCount}
-                      </span>{" "}
-                      /{" "}
-                      <span className="text-slate-400">
-                        {student.unansweredCount}
-                      </span>
+                    <td className="py-3 px-4 text-center font-mono text-xs text-slate-600">
+                      <span className="text-emerald-700 font-medium">{student.correctCount}</span>
+                      {" / "}
+                      <span className="text-rose-600 font-medium">{student.incorrectCount}</span>
+                      {" / "}
+                      <span className="text-slate-400">{student.unansweredCount}</span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3 px-4 text-center font-mono text-xs">
                       {student.tabSwitchCount > 0 ? (
-                        <span className="inline-flex items-center gap-1 font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 text-[11px]">
-                          <ShieldAlert className="w-3 h-3" />
-                          {student.tabSwitchCount}x
-                        </span>
+                        <span className="text-rose-600 font-medium">{student.tabSwitchCount}x</span>
                       ) : (
-                        <span className="text-blue-600 font-bold">0</span>
+                        <span className="text-slate-400">0</span>
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3 px-4 text-center">
                       <span
-                        className={`inline-block px-2.5 py-1 rounded-full font-bold text-[10px] uppercase tracking-wider ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${
                           student.isPassed
-                            ? "bg-blue-100 text-blue-800 border border-blue-300"
-                            : "bg-rose-100 text-rose-800 border border-rose-300"
+                            ? "bg-[#EDF3EC] text-[#346538] border border-[#d8e6d6]"
+                            : "bg-[#FDEBEC] text-[#9F2F2D] border border-[#f7d6d8]"
                         }`}
                       >
-                        {student.isPassed ? "LULUS" : "TIDAK LULUS"}
+                        {student.isPassed ? "Lulus" : "Tidak Lulus"}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3 px-4 text-center">
                       <button
                         type="button"
                         onClick={() =>
@@ -465,8 +420,8 @@ export default function AdminExamResultsPage({
                             studentName: student.studentName,
                           })
                         }
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 font-semibold text-[11px] transition-colors cursor-pointer"
-                        title={`Reset / beri kesempatan ujian ulang untuk ${student.studentName}`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-colors cursor-pointer"
+                        title={`Reset sesi ujian untuk ${student.studentName}`}
                       >
                         <RotateCcw className="w-3 h-3" />
                         <span>Reset</span>
@@ -482,26 +437,24 @@ export default function AdminExamResultsPage({
 
       {/* Modal Konfirmasi Reset Ujian Peserta */}
       {sessionToReset && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-rose-200 space-y-4 animate-in fade-in zoom-in duration-150 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-              <AlertTriangle className="w-6 h-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-sm border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-150 text-center">
+            <div className="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mx-auto border border-rose-200">
+              <AlertTriangle className="w-5 h-5" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-base font-extrabold text-slate-900">
+              <h3 className="text-sm font-bold text-slate-900">
                 Beri Kesempatan Ujian Ulang?
               </h3>
-              <p className="text-xs text-slate-600">Sesi ujian atas nama:</p>
-              <p className="text-sm font-bold text-slate-900 bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <p className="text-xs text-slate-500">Sesi ujian atas nama:</p>
+              <p className="text-xs font-mono font-medium text-slate-900 bg-slate-50 p-2 rounded border border-slate-200">
                 {sessionToReset.studentName}
               </p>
             </div>
 
-            <p className="text-[11px] text-rose-700 bg-rose-50 p-2.5 rounded-lg border border-rose-200 text-left leading-relaxed">
-              ⚠️ <b>Peringatan:</b> Tindakan ini akan menghapus lembar jawaban
-              siswa dari database. Siswa dapat menggunakan token ujian untuk
-              mengerjakan kembali dari awal.
+            <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded border border-slate-200 text-left leading-relaxed">
+              Tindakan ini akan menghapus lembar jawaban siswa dari database sehingga siswa dapat menggunakan token ujian untuk mengerjakan kembali dari awal.
             </p>
 
             <div className="flex items-center justify-center gap-2 pt-1">
@@ -509,7 +462,7 @@ export default function AdminExamResultsPage({
                 type="button"
                 disabled={resetting}
                 onClick={() => setSessionToReset(null)}
-                className="flex-1 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                className="flex-1 py-1.5 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
               >
                 Batal
               </button>
@@ -517,14 +470,14 @@ export default function AdminExamResultsPage({
                 type="button"
                 disabled={resetting}
                 onClick={handleConfirmReset}
-                className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                className="flex-1 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
               >
                 {resetting ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Ya, Reset Ujian</span>
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Ya, Reset</span>
                   </>
                 )}
               </button>
