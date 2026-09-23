@@ -47,3 +47,6 @@ yarn-error.log*
 skills-lock.json
 modul/
 *.txt
+__pycache__/
+*.pyc
+
