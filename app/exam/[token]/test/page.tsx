@@ -88,43 +88,60 @@ export default function CBTTestInterfacePage({
 
   // Inisialisasi Sesi Ujian
   useEffect(() => {
-    const rawActive = localStorage.getItem("cbt_active_session");
-    if (!rawActive) {
-      router.push(`/exam/${encodeURIComponent(token)}`);
-      return;
-    }
-
-    try {
-      const active = JSON.parse(rawActive);
-      setSessionData(active.session);
-      setQuestions(active.questions || []);
-      setAnswers(active.savedAnswers || {});
-      setRemainingSeconds(
-        active.remainingSeconds || active.exam.durationMinutes * 60,
-      );
-      setTabSwitchCount(active.session.tabSwitchCount || 0);
-
-      // Sinkronisasi soal naskah terbaru dari server
-      if (active.exam?.id) {
-        fetch(`/api/exams/${active.exam.id}`)
-          .then((res) => res.json())
-          .then((json) => {
-            if (
-              json.success &&
-              json.data?.questions &&
-              json.data.questions.length > 0
-            ) {
-              setQuestions(json.data.questions);
-            }
-          })
-          .catch((err) => console.warn("Auto-sync questions warning:", err));
+    const restoreSession = async () => {
+      const rawActive = localStorage.getItem("cbt_active_session");
+      if (!rawActive) {
+        router.replace(`/exam/${encodeURIComponent(token)}`);
+        return;
       }
-    } catch (e) {
-      console.error(e);
-      router.push(`/exam/${encodeURIComponent(token)}`);
-    } finally {
-      setLoading(false);
-    }
+
+      try {
+        const active = JSON.parse(rawActive);
+        const statusResponse = await fetch(
+          `/api/session/${active.session?.id}/anti-cheat`,
+          { cache: "no-store" },
+        );
+        const statusJson = await statusResponse.json();
+
+        if (!statusJson.success || statusJson.data?.status !== "IN_PROGRESS") {
+          localStorage.removeItem("cbt_active_session");
+          router.replace(`/exam/${encodeURIComponent(token)}`);
+          return;
+        }
+
+        setSessionData(active.session);
+        setQuestions(active.questions || []);
+        setAnswers(active.savedAnswers || {});
+        setRemainingSeconds(
+          active.remainingSeconds || active.exam.durationMinutes * 60,
+        );
+        setTabSwitchCount(statusJson.data.tabSwitchCount || 0);
+
+        // Sinkronisasi soal naskah terbaru dari server
+        if (active.exam?.id) {
+          fetch(`/api/exams/${active.exam.id}`)
+            .then((res) => res.json())
+            .then((json) => {
+              if (
+                json.success &&
+                json.data?.questions &&
+                json.data.questions.length > 0
+              ) {
+                setQuestions(json.data.questions);
+              }
+            })
+            .catch((err) => console.warn("Auto-sync questions warning:", err));
+        }
+      } catch (e) {
+        console.error(e);
+        localStorage.removeItem("cbt_active_session");
+        router.replace(`/exam/${encodeURIComponent(token)}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    restoreSession();
   }, [token, router]);
 
   // Countdown Timer
@@ -188,22 +205,27 @@ export default function CBTTestInterfacePage({
       const nextCount = tabSwitchCount + 1;
       setTabSwitchCount(nextCount);
 
-      if (sessionData?.id) {
-        try {
-          await fetch(`/api/session/${sessionData.id}/anti-cheat`, {
-            method: "POST",
-          });
-        } catch (e) {
-          console.error(e);
-        }
-      }
+      if (!sessionData?.id) return;
 
-      // Jika pelanggaran mencapai 3 kali, otomatis submit paksa
-      if (nextCount >= 3) {
-        setAutoSubmittedDueToCheat(true);
-        setTimeout(() => {
+      try {
+        const antiCheatResponse = await fetch(
+          `/api/session/${sessionData.id}/anti-cheat`,
+          {
+            method: "POST",
+          },
+        );
+        const antiCheatJson = await antiCheatResponse.json();
+        const recordedCount = antiCheatJson.tabSwitchCount || nextCount;
+        setTabSwitchCount(recordedCount);
+
+        // Jika pelanggaran mencapai 3 kali, otomatis submit paksa setelah
+        // server selesai mencatat pelanggaran tersebut.
+        if (recordedCount >= 3) {
+          setAutoSubmittedDueToCheat(true);
           handleAutoSubmit();
-        }, 2500);
+        }
+      } catch (e) {
+        console.error(e);
       }
     },
     [tabSwitchCount, sessionData?.id, handleAutoSubmit],

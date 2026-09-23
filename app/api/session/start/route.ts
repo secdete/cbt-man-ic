@@ -96,6 +96,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Peserta hanya boleh memiliki satu sesi agar sesi yang sudah selesai
+    // tidak dapat dibuka ulang melalui tombol mulai atau browser back.
+    const previousSession = await prisma.examSession.findFirst({
+      where: {
+        examId: exam.id,
+        studentName: studentName.trim(),
+      },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, status: true },
+    });
+
+    if (previousSession && previousSession.status !== "IN_PROGRESS") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Sesi ujian Anda sudah berakhir dan tidak dapat dibuka kembali.",
+        },
+        { status: 403 },
+      );
+    }
+
     // Cek apakah siswa ini sudah memiliki sesi aktif untuk ujian ini
     let session = await prisma.examSession.findFirst({
       where: {
