@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
@@ -12,10 +12,15 @@ export async function GET(
       where: { id },
       include: {
         questions: {
-          select: { id: true, questionNumber: true, points: true, correctAnswer: true },
+          select: {
+            id: true,
+            questionNumber: true,
+            points: true,
+            correctAnswer: true,
+          },
         },
         sessions: {
-          orderBy: { totalScore: 'desc' },
+          orderBy: { totalScore: "desc" },
           include: {
             submissions: true,
           },
@@ -24,14 +29,20 @@ export async function GET(
     });
 
     if (!exam) {
-      return NextResponse.json({ success: false, message: 'Ujian tidak ditemukan' }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "Ujian tidak ditemukan" },
+        { status: 404 },
+      );
     }
 
     const totalParticipants = exam.sessions.length;
-    const completedSessions = exam.sessions.filter((s) => s.status === 'COMPLETED');
+    const completedSessions = exam.sessions.filter(
+      (s) => s.status === "COMPLETED",
+    );
     const averageScore =
       completedSessions.length > 0
-        ? completedSessions.reduce((acc, s) => acc + s.totalScore, 0) / completedSessions.length
+        ? completedSessions.reduce((acc, s) => acc + s.totalScore, 0) /
+          completedSessions.length
         : 0;
 
     const highestScore =
@@ -39,7 +50,9 @@ export async function GET(
         ? Math.max(...completedSessions.map((s) => s.totalScore))
         : 0;
 
-    const passedCount = completedSessions.filter((s) => s.totalScore >= exam.passingScore).length;
+    const passedCount = completedSessions.filter(
+      (s) => s.totalScore >= exam.passingScore,
+    ).length;
 
     return NextResponse.json({
       success: true,
@@ -58,7 +71,10 @@ export async function GET(
           averageScore: parseFloat(averageScore.toFixed(1)),
           highestScore,
           passedCount,
-          passPercentage: totalParticipants > 0 ? Math.round((passedCount / totalParticipants) * 100) : 0,
+          passPercentage:
+            totalParticipants > 0
+              ? Math.round((passedCount / totalParticipants) * 100)
+              : 0,
         },
         leaderboard: exam.sessions.map((s, index) => ({
           rank: index + 1,
@@ -66,6 +82,7 @@ export async function GET(
           studentName: s.studentName,
           studentNisn: s.studentNisn,
           studentSchool: s.studentSchool,
+          studentWhatsapp: s.studentWhatsapp,
           status: s.status,
           totalScore: s.totalScore,
           accuracy: s.accuracy,
@@ -80,8 +97,10 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    console.error('Error fetching admin results:', error);
-    return NextResponse.json({ success: false, message: 'Gagal mengambil rekap nilai' }, { status: 500 });
+    console.error("Error fetching admin results:", error);
+    return NextResponse.json(
+      { success: false, message: "Gagal mengambil rekap nilai" },
+      { status: 500 },
+    );
   }
 }
-

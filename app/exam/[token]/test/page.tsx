@@ -13,6 +13,8 @@ import {
   ShieldAlert,
   Send,
   Lock,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
 import FormattedQuestionText from "@/components/FormattedQuestionText";
@@ -65,6 +67,24 @@ export default function CBTTestInterfacePage({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [autoSubmittedDueToCheat, setAutoSubmittedDueToCheat] = useState(false);
   const lastViolationRef = useRef(0);
+
+  // Network Online/Offline Monitor
+  const [isOnline, setIsOnline] = useState(true);
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    if (typeof window !== "undefined") {
+      setIsOnline(navigator.onLine);
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
+    }
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // Inisialisasi Sesi Ujian
   useEffect(() => {
@@ -417,8 +437,29 @@ export default function CBTTestInterfacePage({
             </div>
           </div>
 
-          {/* Anti-cheat Violation Counter & Timer */}
+          {/* Anti-cheat Violation Counter, Network Status & Timer */}
           <div className="flex items-center gap-3">
+            {/* Network Indicator Badge */}
+            <div
+              className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                isOnline
+                  ? "bg-emerald-950/80 text-emerald-300 border-emerald-800"
+                  : "bg-amber-950/80 text-amber-300 border-amber-700 animate-pulse"
+              }`}
+            >
+              {isOnline ? (
+                <>
+                  <Wifi className="w-3 h-3 text-emerald-400" />
+                  <span>Online</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-3 h-3 text-amber-400" />
+                  <span>Offline (Tersimpan Lokal)</span>
+                </>
+              )}
+            </div>
+
             {tabSwitchCount > 0 && (
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded bg-rose-950 text-rose-300 border border-rose-800 animate-pulse">
                 <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
@@ -451,156 +492,185 @@ export default function CBTTestInterfacePage({
         </div>
       </header>
 
+      {/* Offline Alert Banner */}
+      {!isOnline && (
+        <div className="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-semibold flex items-center justify-center gap-2 shadow-sm">
+          <WifiOff className="w-4 h-4 shrink-0 text-slate-900" />
+          <span>
+            Koneksi terputus. Jangan panik! Jawaban Anda tetap tersimpan
+            otomatis di perangkat ini dan akan disinkronkan saat terhubung
+            kembali.
+          </span>
+        </div>
+      )}
+
       {/* Main Examination Workspace */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Question Area (8 cols) */}
-        <div className="lg:col-span-8 bg-white rounded-xl shadow-xs border border-slate-200 p-6 sm:p-7 space-y-6">
-          {/* Question Header & Font Resizer */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <span className="font-extrabold text-sm px-3 py-1 bg-slate-900 text-white rounded-lg">
-                Soal No. {currentQ ? currentQ.questionNumber : currentIndex + 1}
-              </span>
-              {currentQ?.subject && (
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
-                  {currentQ.subject}
+        <div className="lg:col-span-8 bg-white rounded-xl shadow-xs border border-slate-200 p-6 sm:p-7 relative overflow-hidden">
+          {/* Subtle Anti-Photo Watermark */}
+          <div className="pointer-events-none select-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.035]">
+            <div className="rotate-[-25deg] text-center font-black tracking-widest text-slate-900 leading-relaxed text-xs sm:text-sm whitespace-pre">
+              {`${(sessionData?.studentName || "PESERTA").toUpperCase()} • ${(sessionData?.studentSchool || "SEKOLAH").toUpperCase()}\nTOKEN: ${token} • CBT MAN IC\n`.repeat(
+                12,
+              )}
+            </div>
+          </div>
+
+          <div className="relative z-10 space-y-6">
+            {/* Question Header & Font Resizer */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-sm px-3 py-1 bg-slate-900 text-white rounded-lg">
+                  Soal No.{" "}
+                  {currentQ ? currentQ.questionNumber : currentIndex + 1}
                 </span>
+                {currentQ?.subject && (
+                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+                    {currentQ.subject}
+                  </span>
+                )}
+              </div>
+
+              {/* Font Size Selector */}
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs">
+                <button
+                  type="button"
+                  onClick={() => setFontSize("normal")}
+                  className={`px-2 py-0.5 rounded font-bold cursor-pointer ${
+                    fontSize === "normal"
+                      ? "bg-white text-slate-900 shadow-2xs"
+                      : "text-slate-500"
+                  }`}
+                >
+                  A
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFontSize("large")}
+                  className={`px-2 py-0.5 rounded font-bold text-sm cursor-pointer ${
+                    fontSize === "large"
+                      ? "bg-white text-slate-900 shadow-2xs"
+                      : "text-slate-500"
+                  }`}
+                >
+                  A+
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFontSize("xlarge")}
+                  className={`px-2 py-0.5 rounded font-bold text-base cursor-pointer ${
+                    fontSize === "xlarge"
+                      ? "bg-white text-slate-900 shadow-2xs"
+                      : "text-slate-500"
+                  }`}
+                >
+                  A++
+                </button>
+              </div>
+            </div>
+
+            {/* Question Text */}
+            <div
+              className={`text-slate-900 leading-relaxed ${
+                fontSize === "normal"
+                  ? "text-sm sm:text-base"
+                  : fontSize === "large"
+                    ? "text-base sm:text-lg"
+                    : "text-lg sm:text-xl"
+              }`}
+            >
+              {currentQ && (
+                <FormattedQuestionText text={currentQ.questionText} />
               )}
             </div>
 
-            {/* Font Size Selector */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs">
-              <button
-                type="button"
-                onClick={() => setFontSize("normal")}
-                className={`px-2 py-0.5 rounded font-bold cursor-pointer ${
-                  fontSize === "normal"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-500"
-                }`}
-              >
-                A
-              </button>
-              <button
-                type="button"
-                onClick={() => setFontSize("large")}
-                className={`px-2 py-0.5 rounded font-bold text-sm cursor-pointer ${
-                  fontSize === "large"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-500"
-                }`}
-              >
-                A+
-              </button>
-              <button
-                type="button"
-                onClick={() => setFontSize("xlarge")}
-                className={`px-2 py-0.5 rounded font-bold text-base cursor-pointer ${
-                  fontSize === "xlarge"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-500"
-                }`}
-              >
-                A++
-              </button>
-            </div>
-          </div>
-
-          {/* Question Text */}
-          <div
-            className={`text-slate-900 leading-relaxed ${
-              fontSize === "normal"
-                ? "text-sm sm:text-base"
-                : fontSize === "large"
-                  ? "text-base sm:text-lg"
-                  : "text-lg sm:text-xl"
-            }`}
-          >
-            {currentQ && <FormattedQuestionText text={currentQ.questionText} />}
-          </div>
-
-          {/* Options A - E */}
-          {currentQ && (
-            <div className="space-y-3 pt-2">
-              {[
-                { key: "A", text: currentQ.optionA },
-                { key: "B", text: currentQ.optionB },
-                { key: "C", text: currentQ.optionC },
-                { key: "D", text: currentQ.optionD },
-                ...(currentQ.optionE
-                  ? [{ key: "E", text: currentQ.optionE }]
-                  : []),
-              ].map((opt) => {
-                const isSelected = currentAnswer?.selectedOption === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => handleSelectOption(opt.key)}
-                    className={`w-full p-3 sm:p-3.5 rounded-xl border text-left flex items-start gap-3.5 transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-blue-50 border-blue-600 shadow-2xs text-blue-950"
-                        : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/70 text-slate-800"
-                    }`}
-                  >
-                    <span
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
+            {/* Options A - E */}
+            {currentQ && (
+              <div className="space-y-3 pt-2">
+                {[
+                  { key: "A", text: currentQ.optionA },
+                  { key: "B", text: currentQ.optionB },
+                  { key: "C", text: currentQ.optionC },
+                  { key: "D", text: currentQ.optionD },
+                  ...(currentQ.optionE
+                    ? [{ key: "E", text: currentQ.optionE }]
+                    : []),
+                ].map((opt) => {
+                  const isSelected = currentAnswer?.selectedOption === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => handleSelectOption(opt.key)}
+                      className={`w-full p-3 sm:p-3.5 rounded-xl border text-left flex items-start gap-3.5 transition-all cursor-pointer ${
                         isSelected
-                          ? "bg-blue-700 text-white shadow-xs"
-                          : "bg-white text-slate-700 border border-slate-300"
+                          ? "bg-blue-50 border-blue-600 shadow-2xs text-blue-950"
+                          : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/70 text-slate-800"
                       }`}
                     >
-                      {opt.key}
-                    </span>
-                    <div className="pt-0.5 flex-1 text-xs sm:text-sm">
-                      <FormattedQuestionText text={opt.text} isOption={true} />
-                    </div>
-                  </button>
-                );
-              })}
+                      <span
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
+                          isSelected
+                            ? "bg-blue-700 text-white shadow-xs"
+                            : "bg-white text-slate-700 border border-slate-300"
+                        }`}
+                      >
+                        {opt.key}
+                      </span>
+                      <div className="pt-0.5 flex-1 text-xs sm:text-sm">
+                        <FormattedQuestionText
+                          text={opt.text}
+                          isOption={true}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Navigation Controls & Doubtful Button */}
+            <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <button
+                type="button"
+                disabled={currentIndex === 0}
+                onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Sebelumnya</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleToggleDoubtful}
+                className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                  currentAnswer?.isDoubtful
+                    ? "bg-amber-500 text-white shadow-xs"
+                    : "bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100"
+                }`}
+              >
+                <Flag className="w-3.5 h-3.5" />
+                <span>
+                  {currentAnswer?.isDoubtful ? "Tandai Yakin" : "Ragu-ragu"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                disabled={currentIndex === questions.length - 1}
+                onClick={() =>
+                  setCurrentIndex((prev) =>
+                    Math.min(questions.length - 1, prev + 1),
+                  )
+                }
+                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+              >
+                <span>Selanjutnya</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
-          )}
-
-          {/* Navigation Controls & Doubtful Button */}
-          <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <button
-              type="button"
-              disabled={currentIndex === 0}
-              onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-              className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Sebelumnya</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleToggleDoubtful}
-              className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
-                currentAnswer?.isDoubtful
-                  ? "bg-amber-500 text-white shadow-xs"
-                  : "bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100"
-              }`}
-            >
-              <Flag className="w-3.5 h-3.5" />
-              <span>
-                {currentAnswer?.isDoubtful ? "Tandai Yakin" : "Ragu-ragu"}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              disabled={currentIndex === questions.length - 1}
-              onClick={() =>
-                setCurrentIndex((prev) =>
-                  Math.min(questions.length - 1, prev + 1),
-                )
-              }
-              className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
-            >
-              <span>Selanjutnya</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
           </div>
         </div>
 
