@@ -48,6 +48,7 @@ export default function CreateExamPage() {
   // Tab Ekstraksi
   const [inputMode, setInputMode] = useState<"PDF" | "TEXT">("PDF");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [rawText, setRawText] = useState("");
   const [parsing, setParsing] = useState(false);
   const [parseMessage, setParseMessage] = useState<{
@@ -446,14 +447,14 @@ export default function CreateExamPage() {
                 </h2>
               </div>
 
-              <div className="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold">
+              <div className="inline-flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200/80 text-xs">
                 <button
                   type="button"
                   onClick={() => setInputMode("PDF")}
-                  className={`px-3 py-1.5 rounded-lg cursor-pointer ${
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                     inputMode === "PDF"
-                      ? "bg-white text-blue-800 shadow-2xs"
-                      : "text-slate-500"
+                      ? "bg-white text-slate-900 shadow-2xs"
+                      : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   Unggah Berkas PDF
@@ -461,10 +462,10 @@ export default function CreateExamPage() {
                 <button
                   type="button"
                   onClick={() => setInputMode("TEXT")}
-                  className={`px-3 py-1.5 rounded-lg cursor-pointer ${
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                     inputMode === "TEXT"
-                      ? "bg-white text-blue-800 shadow-2xs"
-                      : "text-slate-500"
+                      ? "bg-white text-slate-900 shadow-2xs"
+                      : "text-slate-500 hover:text-slate-800"
                   }`}
                 >
                   Tempel Teks Soal
@@ -474,32 +475,71 @@ export default function CreateExamPage() {
 
             {parseMessage && (
               <div
-                className={`p-4 rounded-2xl border text-xs sm:text-sm flex items-start gap-3 ${
+                className={`p-3.5 rounded-lg border text-xs flex items-start gap-2.5 ${
                   parseMessage.type === "success"
-                    ? "bg-blue-50 border-blue-300 text-blue-900"
-                    : "bg-rose-50 border-rose-300 text-rose-900"
+                    ? "bg-[#EDF3EC] border-[#d8e6d6] text-[#346538]"
+                    : "bg-[#FDEBEC] border-[#f7d6d8] text-[#9F2F2D]"
                 }`}
               >
                 {parseMessage.type === "success" ? (
-                  <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-blue-600 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-[#346538] mt-0.5" />
                 ) : (
-                  <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-600 mt-0.5" />
+                  <AlertCircle className="w-4 h-4 flex-shrink-0 text-[#9F2F2D] mt-0.5" />
                 )}
-                <span>{parseMessage.text}</span>
+                <div className="flex-1 space-y-1">
+                  <p>{parseMessage.text}</p>
+                  {parseMessage.type === "error" && inputMode === "PDF" && (
+                    <button
+                      type="button"
+                      onClick={() => setInputMode("TEXT")}
+                      className="text-[11px] underline font-medium hover:opacity-80 cursor-pointer block mt-1"
+                    >
+                      Coba tempel teks naskah soal langsung via tab &quot;Tempel
+                      Teks Soal&quot; →
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
             {/* TAB 1: UPLOAD PDF */}
             {inputMode === "PDF" && (
-              <div className="space-y-4">
-                <div className="border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/40 rounded-xl p-8 text-center transition-colors">
-                  <Upload className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-                  <p className="text-sm font-bold text-slate-800">
-                    Pilih atau Geser (Drag & Drop) Berkas PDF Naskah Soal
+              <div className="space-y-3.5">
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                      const f = e.dataTransfer.files[0];
+                      if (f.name.toLowerCase().endsWith(".pdf")) {
+                        setSelectedFile(f);
+                        setParseMessage(null);
+                      } else {
+                        alert("Harap pilih berkas dengan format .pdf");
+                      }
+                    }
+                  }}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                    isDragging
+                      ? "border-slate-800 bg-slate-100/60"
+                      : "border-slate-300 hover:border-slate-400 bg-slate-50/50"
+                  }`}
+                >
+                  <Upload className="w-10 h-10 text-slate-400 mx-auto mb-2.5" />
+                  <p className="text-xs font-semibold text-slate-800">
+                    Pilih atau geser berkas PDF naskah soal ke area ini
                   </p>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Mendukung dokumen PDF naskah tryout SNPDB MAN IC lengkap
-                    dengan opsi A-E dan kunci jawaban
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Mendukung naskah soal SNPDB MAN IC lengkap dengan opsi A-E
+                    dan kunci jawaban
                   </p>
 
                   <input
@@ -509,24 +549,36 @@ export default function CreateExamPage() {
                     onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                         setSelectedFile(e.target.files[0]);
+                        setParseMessage(null);
                       }
                     }}
                     className="hidden"
                   />
 
-                  <div className="mt-5 flex items-center justify-center gap-3">
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
                     <label
                       htmlFor="pdf-upload"
-                      className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 shadow-2xs transition-all cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors cursor-pointer"
                     >
-                      Pilih File PDF...
+                      Pilih Berkas PDF
                     </label>
 
                     {selectedFile && (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-700 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg">
+                      <div className="inline-flex items-center gap-2 text-xs font-mono text-slate-700 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg">
                         <FileText className="w-3.5 h-3.5 text-slate-500" />
-                        <span>{selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)</span>
-                      </span>
+                        <span>
+                          {selectedFile.name} (
+                          {(selectedFile.size / 1024).toFixed(1)} KB)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFile(null)}
+                          className="text-slate-400 hover:text-rose-600 transition-colors cursor-pointer ml-1"
+                          title="Hapus berkas terpilih"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -535,17 +587,17 @@ export default function CreateExamPage() {
                   type="button"
                   disabled={!selectedFile || parsing}
                   onClick={handleParsePDF}
-                  className="w-full py-3.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+                  className="w-full py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
                 >
                   {parsing ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Sedang Mengekstrak Butir Soal dari PDF...</span>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Mengekstrak butir soal dari PDF...</span>
                     </div>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>Proses & Ekstrak Soal Otomatis</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Proses &amp; Ekstrak Soal Otomatis</span>
                     </>
                   )}
                 </button>
@@ -554,29 +606,29 @@ export default function CreateExamPage() {
 
             {/* TAB 2: PASTE RAW TEXT */}
             {inputMode === "TEXT" && (
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <textarea
                   rows={8}
                   value={rawText}
                   onChange={(e) => setRawText(e.target.value)}
                   placeholder={`Contoh naskah:\n1. Rukun iman yang ke-3 adalah...\nA. Iman kepada Allah\nB. Iman kepada Malaikat\nC. Iman kepada Kitab-kitab Allah\nD. Iman kepada Rasul\nE. Iman kepada Hari Akhir\nKunci: C\nPembahasan: Rukun iman ketiga adalah kitab Allah.\n\n2. Jika x + 5 = 12, maka x adalah...\nA. 5\nB. 6\nC. 7\nD. 8\nE. 9\nKunci: C`}
-                  className="w-full p-4 bg-slate-50 border border-slate-300 rounded-2xl text-xs font-mono text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full p-3.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400"
                 />
 
                 <button
                   type="button"
                   disabled={!rawText.trim() || parsing}
                   onClick={handleParseText}
-                  className="w-full py-3.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
+                  className="w-full py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
                 >
                   {parsing ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Menganalisis Teks Soal...</span>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Menganalisis teks soal...</span>
                     </div>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
+                      <Sparkles className="w-3.5 h-3.5" />
                       <span>Ekstrak Soal dari Teks</span>
                     </>
                   )}
@@ -789,13 +841,13 @@ export default function CreateExamPage() {
 
         {/* Bottom Action Bar */}
         {questions.length > 0 && (
-          <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
             <button
               type="button"
               onClick={handleAddQuestion}
-              className="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2 rounded-lg border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <Plus className="w-4 h-4 text-blue-600" />
+              <Plus className="w-3.5 h-3.5" />
               <span>Tambah 1 Butir Soal Lagi</span>
             </button>
 
@@ -803,14 +855,14 @@ export default function CreateExamPage() {
               type="button"
               onClick={handleSaveExam}
               disabled={saving}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {saving ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span>Simpan & Terbitkan Tryout Sekarang</span>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Simpan &amp; Terbitkan Tryout</span>
                 </>
               )}
             </button>

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractTextFromPDF, parseQuestionsFromText } from "@/lib/pdf-parser";
 
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   try {

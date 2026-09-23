@@ -1,3 +1,195 @@
+import zlib from "zlib";
+
+// Polyfills for browser-only globals required by pdf-parse v2 / pdfjs-dist in Node.js / Vercel Serverless
+if (typeof (globalThis as any).DOMMatrix === "undefined") {
+  class DOMMatrixPolyfill {
+    a = 1;
+    b = 0;
+    c = 0;
+    d = 1;
+    e = 0;
+    f = 0;
+    m11 = 1;
+    m12 = 0;
+    m13 = 0;
+    m14 = 0;
+    m21 = 0;
+    m22 = 1;
+    m23 = 0;
+    m24 = 0;
+    m31 = 0;
+    m32 = 0;
+    m33 = 1;
+    m34 = 0;
+    m41 = 0;
+    m42 = 0;
+    m43 = 0;
+    m44 = 1;
+    is2D = true;
+    isIdentity = true;
+
+    constructor(init?: any) {
+      if (Array.isArray(init) || (init && typeof init.length === "number")) {
+        if (init.length === 6) {
+          this.a = this.m11 = init[0] ?? 1;
+          this.b = this.m12 = init[1] ?? 0;
+          this.c = this.m21 = init[2] ?? 0;
+          this.d = this.m22 = init[3] ?? 1;
+          this.e = this.m41 = init[4] ?? 0;
+          this.f = this.m42 = init[5] ?? 0;
+          this.is2D = true;
+        } else if (init.length === 16) {
+          this.m11 = init[0];
+          this.m12 = init[1];
+          this.m13 = init[2];
+          this.m14 = init[3];
+          this.m21 = init[4];
+          this.m22 = init[5];
+          this.m23 = init[6];
+          this.m24 = init[7];
+          this.m31 = init[8];
+          this.m32 = init[9];
+          this.m33 = init[10];
+          this.m34 = init[11];
+          this.m41 = init[12];
+          this.m42 = init[13];
+          this.m43 = init[14];
+          this.m44 = init[15];
+          this.a = this.m11;
+          this.b = this.m12;
+          this.c = this.m21;
+          this.d = this.m22;
+          this.e = this.m41;
+          this.f = this.m42;
+          this.is2D = false;
+        }
+      }
+    }
+
+    multiply(other: any) {
+      return this;
+    }
+    preMultiplySelf(other: any) {
+      return this;
+    }
+    multiplySelf(other: any) {
+      return this;
+    }
+    inverse() {
+      return this;
+    }
+    invertSelf() {
+      return this;
+    }
+    translate(tx = 0, ty = 0, tz = 0) {
+      return this;
+    }
+    translateSelf(tx = 0, ty = 0, tz = 0) {
+      return this;
+    }
+    scale(sx = 1, sy = 1, sz = 1) {
+      return this;
+    }
+    scaleSelf(sx = 1, sy = 1, sz = 1) {
+      return this;
+    }
+    rotate(angle = 0) {
+      return this;
+    }
+    rotateSelf(angle = 0) {
+      return this;
+    }
+    transformPoint(point: any) {
+      const x = point?.x ?? 0;
+      const y = point?.y ?? 0;
+      return {
+        x: this.a * x + this.c * y + this.e,
+        y: this.b * x + this.d * y + this.f,
+        z: point?.z ?? 0,
+        w: point?.w ?? 1,
+      };
+    }
+    toFloat32Array() {
+      return new Float32Array([
+        this.m11,
+        this.m12,
+        this.m13,
+        this.m14,
+        this.m21,
+        this.m22,
+        this.m23,
+        this.m24,
+        this.m31,
+        this.m32,
+        this.m33,
+        this.m34,
+        this.m41,
+        this.m42,
+        this.m43,
+        this.m44,
+      ]);
+    }
+    toFloat64Array() {
+      return new Float64Array([
+        this.m11,
+        this.m12,
+        this.m13,
+        this.m14,
+        this.m21,
+        this.m22,
+        this.m23,
+        this.m24,
+        this.m31,
+        this.m32,
+        this.m33,
+        this.m34,
+        this.m41,
+        this.m42,
+        this.m43,
+        this.m44,
+      ]);
+    }
+    static fromMatrix(other: any) {
+      return new DOMMatrixPolyfill(other);
+    }
+    static fromFloat32Array(arr: any) {
+      return new DOMMatrixPolyfill(Array.from(arr));
+    }
+    static fromFloat64Array(arr: any) {
+      return new DOMMatrixPolyfill(Array.from(arr));
+    }
+  }
+
+  (globalThis as any).DOMMatrix = DOMMatrixPolyfill;
+  (globalThis as any).DOMMatrixReadOnly = DOMMatrixPolyfill;
+  if (typeof global !== "undefined") {
+    (global as any).DOMMatrix = DOMMatrixPolyfill;
+    (global as any).DOMMatrixReadOnly = DOMMatrixPolyfill;
+  }
+}
+
+if (typeof (globalThis as any).Path2D === "undefined") {
+  (globalThis as any).Path2D = class Path2D {};
+  if (typeof global !== "undefined")
+    (global as any).Path2D = (globalThis as any).Path2D;
+}
+
+if (typeof (globalThis as any).ImageData === "undefined") {
+  class ImageDataPolyfill {
+    data: Uint8ClampedArray;
+    width: number;
+    height: number;
+    constructor(w: number, h: number) {
+      this.width = w;
+      this.height = h;
+      this.data = new Uint8ClampedArray(w * h * 4);
+    }
+  }
+  (globalThis as any).ImageData = ImageDataPolyfill;
+  if (typeof global !== "undefined")
+    (global as any).ImageData = ImageDataPolyfill;
+}
+
 export interface ParsedQuestion {
   questionNumber: number;
   questionText: string;
@@ -12,26 +204,89 @@ export interface ParsedQuestion {
   points?: number;
 }
 
+/**
+ * Fallback lightweight text extractor from raw PDF stream in case pdf-parse encounters an unhandled runtime error
+ */
+function fallbackExtractRawPDF(buffer: Buffer): string {
+  try {
+    let fullText = "";
+    const content = buffer.toString("binary");
+    const streamRegex = /stream[\r\n]+([\s\S]*?)[\r\n]+endstream/g;
+    let match;
+    while ((match = streamRegex.exec(content)) !== null) {
+      const rawStream = Buffer.from(match[1], "binary");
+      let decompressed: Buffer | null = null;
+      try {
+        decompressed = zlib.inflateSync(rawStream);
+      } catch {
+        try {
+          decompressed = zlib.inflateRawSync(rawStream);
+        } catch {
+          decompressed = rawStream;
+        }
+      }
+      if (decompressed) {
+        const streamStr = decompressed.toString("latin1");
+        const tjMatches = streamStr.match(/\(([^)]+)\)\s*Tj/g);
+        if (tjMatches) {
+          for (const m of tjMatches) {
+            const t = m.replace(/^\(/, "").replace(/\)\s*Tj$/, "");
+            fullText += t + " ";
+          }
+        }
+        const arrayTjMatches = streamStr.match(/\[([^\]]+)\]\s*TJ/g);
+        if (arrayTjMatches) {
+          for (const m of arrayTjMatches) {
+            const innerMatches = m.match(/\(([^)]+)\)/g);
+            if (innerMatches) {
+              for (const im of innerMatches) {
+                fullText += im.slice(1, -1);
+              }
+              fullText += " ";
+            }
+          }
+        }
+      }
+    }
+    return fullText.trim();
+  } catch {
+    return "";
+  }
+}
+
 export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
     const pdfModule = require("pdf-parse");
     if (typeof pdfModule === "function") {
       const data = await pdfModule(buffer);
-      return data.text || "";
+      if (data.text && data.text.trim().length > 0) {
+        return data.text;
+      }
     } else if (pdfModule.PDFParse) {
       const parser = new pdfModule.PDFParse({ data: buffer });
       const result = await parser.getText();
       if (typeof parser.destroy === "function") {
         await parser.destroy();
       }
-      return result.text || "";
-    } else {
-      throw new Error("Format library pdf-parse tidak dikenali.");
+      if (result.text && result.text.trim().length > 0) {
+        return result.text;
+      }
     }
+    // Fallback if returned empty
+    const fallbackText = fallbackExtractRawPDF(buffer);
+    if (fallbackText) return fallbackText;
+    return "";
   } catch (error: any) {
-    console.error("Gagal mengekstrak teks PDF:", error);
+    console.warn(
+      "pdf-parse error, trying fallback raw stream extraction:",
+      error,
+    );
+    const fallbackText = fallbackExtractRawPDF(buffer);
+    if (fallbackText && fallbackText.trim().length > 0) {
+      return fallbackText;
+    }
     throw new Error(
-      `Ekstraksi PDF gagal: ${error?.message || "Error tidak diketahui"}`,
+      `Ekstraksi PDF gagal: ${error?.message || "Format PDF tidak dapat dibaca"}`,
     );
   }
 }

@@ -227,7 +227,8 @@ export default function AdminExamResultsPage({
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Rekap hasil pengerjaan CBT, peringkat peserta, dan analisis kelulusan passing grade
+            Rekap hasil pengerjaan CBT, peringkat peserta, dan analisis
+            kelulusan passing grade
           </p>
         </div>
 
@@ -257,7 +258,9 @@ export default function AdminExamResultsPage({
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200/80">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-medium text-slate-500">Total Peserta</span>
+            <span className="text-xs font-medium text-slate-500">
+              Total Peserta
+            </span>
             <Users className="w-4 h-4 text-slate-400" />
           </div>
           <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
@@ -267,7 +270,9 @@ export default function AdminExamResultsPage({
 
         <div className="bg-white p-5 rounded-xl border border-slate-200/80">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-medium text-slate-500">Rata-Rata Skor</span>
+            <span className="text-xs font-medium text-slate-500">
+              Rata-Rata Skor
+            </span>
             <TrendingUp className="w-4 h-4 text-slate-400" />
           </div>
           <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
@@ -277,7 +282,9 @@ export default function AdminExamResultsPage({
 
         <div className="bg-white p-5 rounded-xl border border-slate-200/80">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-medium text-slate-500">Skor Tertinggi</span>
+            <span className="text-xs font-medium text-slate-500">
+              Skor Tertinggi
+            </span>
             <Award className="w-4 h-4 text-slate-400" />
           </div>
           <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
@@ -287,7 +294,9 @@ export default function AdminExamResultsPage({
 
         <div className="bg-white p-5 rounded-xl border border-slate-200/80">
           <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-medium text-slate-500">Lulus Passing Grade</span>
+            <span className="text-xs font-medium text-slate-500">
+              Lulus Passing Grade
+            </span>
             <CheckCircle2 className="w-4 h-4 text-slate-400" />
           </div>
           <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
@@ -359,7 +368,9 @@ export default function AdminExamResultsPage({
                     </td>
 
                     <td className="py-3 px-4">
-                      <span className="font-medium text-slate-900 block">{student.studentName}</span>
+                      <span className="font-medium text-slate-900 block">
+                        {student.studentName}
+                      </span>
                       {student.studentNisn && (
                         <span className="text-[10px] text-slate-400 font-mono">
                           NISN: {student.studentNisn}
@@ -384,16 +395,24 @@ export default function AdminExamResultsPage({
                     </td>
 
                     <td className="py-3 px-4 text-center font-mono text-xs text-slate-600">
-                      <span className="text-emerald-700 font-medium">{student.correctCount}</span>
+                      <span className="text-emerald-700 font-medium">
+                        {student.correctCount}
+                      </span>
                       {" / "}
-                      <span className="text-rose-600 font-medium">{student.incorrectCount}</span>
+                      <span className="text-rose-600 font-medium">
+                        {student.incorrectCount}
+                      </span>
                       {" / "}
-                      <span className="text-slate-400">{student.unansweredCount}</span>
+                      <span className="text-slate-400">
+                        {student.unansweredCount}
+                      </span>
                     </td>
 
                     <td className="py-3 px-4 text-center font-mono text-xs">
                       {student.tabSwitchCount > 0 ? (
-                        <span className="text-rose-600 font-medium">{student.tabSwitchCount}x</span>
+                        <span className="text-rose-600 font-medium">
+                          {student.tabSwitchCount}x
+                        </span>
                       ) : (
                         <span className="text-slate-400">0</span>
                       )}
@@ -454,7 +473,9 @@ export default function AdminExamResultsPage({
             </div>
 
             <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded border border-slate-200 text-left leading-relaxed">
-              Tindakan ini akan menghapus lembar jawaban siswa dari database sehingga siswa dapat menggunakan token ujian untuk mengerjakan kembali dari awal.
+              Tindakan ini akan menghapus lembar jawaban siswa dari database
+              sehingga siswa dapat menggunakan token ujian untuk mengerjakan
+              kembali dari awal.
             </p>
 
             <div className="flex items-center justify-center gap-2 pt-1">
