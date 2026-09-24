@@ -26,24 +26,24 @@ export default function SiteLayoutWrapper({
     <>
       {/* Top Institutional Header */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white shadow-xs">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-3">
           {/* Logo & Identity */}
           <Link
             href="/"
-            className="flex items-center gap-2 sm:gap-3 group min-w-0"
+            className="flex items-center gap-3 sm:gap-3.5 group min-w-0"
           >
-            <CakrawalaLogo className="h-8 sm:h-10 w-auto flex-shrink-0" height={40} />
-            <div className="border-l border-slate-200 pl-2.5 sm:pl-3 min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 whitespace-nowrap">
+            <CakrawalaLogo className="h-11 sm:h-13 w-auto flex-shrink-0" height={52} />
+            <div className="border-l border-slate-200 pl-3 sm:pl-3.5 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-base sm:text-lg tracking-tight text-slate-900 whitespace-nowrap">
                   CAKRAWALA{" "}
                   <span className="text-blue-700 font-extrabold">CBT</span>
                 </span>
-                <span className="hidden xs:inline-block text-[10px] sm:text-[11px] font-semibold text-blue-800 bg-blue-50 border border-blue-200 px-1.5 sm:px-2 py-0.5 rounded">
+                <span className="hidden xs:inline-block text-[10px] sm:text-xs font-semibold text-blue-800 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
                   SNPDB MAN IC
                 </span>
               </div>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate hidden sm:block">
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium truncate hidden sm:block">
                 Madrasah Aliyah Negeri Insan Cendekia
               </p>
             </div>

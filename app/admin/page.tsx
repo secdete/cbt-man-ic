@@ -363,8 +363,8 @@ export default function AdminDashboardPage() {
     <div className="flex-1 py-6 sm:py-10 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-6 sm:space-y-8">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 sm:pb-6 border-b border-slate-200">
-        <div className="flex items-center gap-3">
-          <CakrawalaLogo height={40} className="h-9 sm:h-11 w-auto flex-shrink-0" />
+        <div className="flex items-center gap-3.5">
+          <CakrawalaLogo height={52} className="h-11 sm:h-13 w-auto flex-shrink-0" />
           <div>
             <div className="flex items-center gap-2">
               <span className="p-1 rounded-md bg-blue-100 text-blue-800 flex-shrink-0">

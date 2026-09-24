@@ -196,13 +196,13 @@ export default function StudentHomePage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-800/80 p-2.5 sm:p-3 rounded-xl border border-slate-700 flex-shrink-0">
-            <CakrawalaLogo className="h-10 sm:h-12 w-auto" height={48} />
-            <div className="text-left border-l border-slate-700 pl-2.5 sm:pl-3">
-              <p className="text-xs font-bold text-slate-200">
+          <div className="flex items-center gap-3.5 bg-slate-800/90 p-3 sm:p-3.5 rounded-2xl border border-slate-700 shadow-md flex-shrink-0">
+            <CakrawalaLogo className="h-12 sm:h-14 w-auto" height={58} />
+            <div className="text-left border-l border-slate-700 pl-3">
+              <p className="text-sm font-bold text-white tracking-tight">
                 Cakrawala Learning
               </p>
-              <p className="text-[10px] sm:text-[11px] text-slate-400">Portal Ujian Terpadu</p>
+              <p className="text-[11px] text-slate-400">Portal Ujian Terpadu</p>
             </div>
           </div>
         </div>
