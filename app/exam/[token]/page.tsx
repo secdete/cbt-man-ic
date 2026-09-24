@@ -204,17 +204,17 @@ export default function ExamConfirmationPage({
   }
 
   return (
-    <div className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto w-full">
+    <div className="flex-1 py-5 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-3xl mx-auto w-full">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 mb-5 transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 mb-4 sm:mb-5 transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         Kembali ke Halaman Masuk
       </Link>
 
       {errorMessage && (
-        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2.5 text-rose-800 text-xs">
+        <div className="mb-4 sm:mb-5 p-3 sm:p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2.5 text-rose-800 text-xs">
           <AlertTriangle className="w-4 h-4 flex-shrink-0 text-rose-600" />
           <span>{errorMessage}</span>
         </div>
@@ -223,33 +223,33 @@ export default function ExamConfirmationPage({
       {exam && (
         <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
           {/* Slip Header */}
-          <div className="bg-slate-900 text-white p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <CakrawalaLogo className="h-11 w-auto" height={44} />
-              <div className="border-l border-slate-700 pl-3">
+          <div className="bg-slate-900 text-white p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-3.5">
+              <CakrawalaLogo className="h-9 sm:h-11 w-auto flex-shrink-0" height={44} />
+              <div className="border-l border-slate-700 pl-2.5 sm:pl-3">
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-900 text-blue-200 border border-blue-700">
                   {exam.category}
                 </span>
-                <h1 className="mt-1 text-lg sm:text-xl font-bold text-white tracking-tight">
+                <h1 className="mt-1 text-base sm:text-xl font-bold text-white tracking-tight leading-tight">
                   {exam.title}
                 </h1>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
                   Lembar Konfirmasi Peserta Sebelum Memulai Ujian
                 </p>
               </div>
             </div>
 
-            <div className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-right">
+            <div className="bg-slate-800 border border-slate-700 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-left sm:text-right flex items-center sm:block gap-2">
               <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                Status Naskah
+                Status Naskah:
               </p>
-              <p className="font-mono font-bold text-sm text-emerald-400">
+              <p className="font-mono font-bold text-xs sm:text-sm text-emerald-400">
                 TERVERIFIKASI
               </p>
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
             {/* Tabel Konfirmasi Identitas Siswa */}
             <div>
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
@@ -259,34 +259,34 @@ export default function ExamConfirmationPage({
                 <table className="w-full text-xs text-left">
                   <tbody className="divide-y divide-slate-200">
                     <tr className="bg-slate-50/60">
-                      <td className="w-1/3 py-2.5 px-4 font-semibold text-slate-600 flex items-center gap-1.5">
+                      <td className="w-2/5 sm:w-1/3 py-2 sm:py-2.5 px-3 sm:px-4 font-semibold text-slate-600 flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5 text-slate-400" />
-                        Nama Lengkap Peserta
+                        Nama Lengkap
                       </td>
-                      <td className="py-2.5 px-4 font-bold text-slate-900">
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4 font-bold text-slate-900">
                         {studentData?.studentName}
                       </td>
                     </tr>
                     <tr>
-                      <td className="py-2.5 px-4 font-semibold text-slate-600">
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4 font-semibold text-slate-600">
                         <span className="flex items-center gap-1.5">
                           <School className="w-3.5 h-3.5 text-slate-400" />
-                          Asal Madrasah / Sekolah
+                          Asal Sekolah
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-slate-800">
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4 text-slate-800">
                         {studentData?.studentSchool}
                       </td>
                     </tr>
                     {studentData?.studentWhatsapp && (
                       <tr className="bg-slate-50/60">
-                        <td className="py-2.5 px-4 font-semibold text-slate-600">
+                        <td className="py-2 sm:py-2.5 px-3 sm:px-4 font-semibold text-slate-600">
                           <span className="flex items-center gap-1.5">
                             <Phone className="w-3.5 h-3.5 text-slate-400" />
                             No. WhatsApp
                           </span>
                         </td>
-                        <td className="py-2.5 px-4 text-slate-800 font-mono">
+                        <td className="py-2 sm:py-2.5 px-3 sm:px-4 text-slate-800 font-mono">
                           {studentData.studentWhatsapp}
                         </td>
                       </tr>

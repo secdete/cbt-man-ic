@@ -360,17 +360,17 @@ export default function AdminDashboardPage() {
   );
 
   return (
-    <div className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-8">
+    <div className="flex-1 py-6 sm:py-10 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-6 sm:space-y-8">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 sm:pb-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <CakrawalaLogo height={44} className="h-11 w-auto" />
+          <CakrawalaLogo height={40} className="h-9 sm:h-11 w-auto flex-shrink-0" />
           <div>
             <div className="flex items-center gap-2">
-              <span className="p-1 rounded-md bg-blue-100 text-blue-800">
+              <span className="p-1 rounded-md bg-blue-100 text-blue-800 flex-shrink-0">
                 <ShieldCheck className="w-4 h-4 text-blue-700" />
               </span>
-              <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+              <h1 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight">
                 Panel Administrator Cakrawala
               </h1>
             </div>
@@ -381,10 +381,10 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <Link
             href="/admin/exams/create"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Upload PDF / Buat Tryout</span>
@@ -393,7 +393,7 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium text-xs transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium text-xs transition-colors cursor-pointer"
             title="Keluar dari Panel Admin"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -403,8 +403,8 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Metrics Row - Minimalist Bento */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200/80">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80">
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-medium text-slate-500">
               Total Paket Tryout
@@ -416,7 +416,7 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200/80">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80">
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-medium text-slate-500">
               Total Butir Soal Terdaftar
@@ -428,7 +428,7 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-slate-200/80">
+        <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80">
           <div className="flex items-center justify-between text-slate-400 mb-2">
             <span className="text-xs font-medium text-slate-500">
               Total Peserta Mengerjakan
@@ -443,9 +443,9 @@ export default function AdminDashboardPage() {
 
       {/* Table of Exams with Schedule & Token Control */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
               Daftar Paket Ujian &amp; Kontrol Jadwal
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -453,7 +453,7 @@ export default function AdminDashboardPage() {
               kepada peserta saat sesi ujian dibuka
             </p>
           </div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 flex-shrink-0">
             {exams.length} Paket Terdaftar
           </span>
         </div>
@@ -647,8 +647,8 @@ export default function AdminDashboardPage() {
 
       {/* Modal Pengaturan Jadwal Ujian */}
       {editingExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-blue-700" />
@@ -720,8 +720,8 @@ export default function AdminDashboardPage() {
 
       {/* Modal Kelola Kunci Jawaban (Answer Key Manager) */}
       {keyModalExam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-3 sm:p-6 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-4xl w-full p-6 shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] space-y-4 animate-in fade-in zoom-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-2.5 sm:p-6 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] space-y-3 sm:space-y-4 animate-in fade-in zoom-in duration-150">
             {/* Modal Header */}
             <div className="flex items-start justify-between pb-3 border-b border-slate-100 gap-4">
               <div className="space-y-1">

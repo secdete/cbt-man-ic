@@ -15,6 +15,8 @@ import {
   Lock,
   Wifi,
   WifiOff,
+  LayoutGrid,
+  X,
 } from "lucide-react";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
 import FormattedQuestionText from "@/components/FormattedQuestionText";
@@ -59,6 +61,7 @@ export default function CBTTestInterfacePage({
   );
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
 
   // Anti-Cheat Proctoring States
   const [tabSwitchAlert, setTabSwitchAlert] = useState(false);
@@ -437,7 +440,7 @@ export default function CBTTestInterfacePage({
 
   return (
     <div
-      className="flex-1 flex flex-col min-h-screen bg-slate-100 select-none"
+      className="flex-1 flex flex-col min-h-screen bg-slate-100 select-none pb-24 lg:pb-8"
       onContextMenu={(e) => e.preventDefault()}
       onCopy={(e) => e.preventDefault()}
       onCut={(e) => e.preventDefault()}
@@ -445,25 +448,24 @@ export default function CBTTestInterfacePage({
     >
       {/* Top Test Header Bar */}
       <header className="sticky top-0 z-30 bg-slate-900 text-white border-b border-slate-800 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <CakrawalaLogo className="h-8 w-auto" height={32} />
-            <div className="border-l border-slate-700 pl-3 hidden sm:block">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-13 sm:h-14 flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <CakrawalaLogo className="h-7 sm:h-8 w-auto flex-shrink-0" height={32} />
+            <div className="border-l border-slate-700 pl-2.5 sm:pl-3 min-w-0">
               <p className="font-bold text-xs tracking-tight text-white line-clamp-1">
                 {sessionData?.exam?.title || "Simulasi SNPDB MAN IC"}
               </p>
-              <p className="text-[10px] text-slate-400">
-                Peserta: {sessionData?.studentName} •{" "}
-                {sessionData?.studentSchool}
+              <p className="text-[10px] text-slate-400 truncate hidden xs:block">
+                Peserta: {sessionData?.studentName}
               </p>
             </div>
           </div>
 
           {/* Anti-cheat Violation Counter, Network Status & Timer */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             {/* Network Indicator Badge */}
             <div
-              className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+              className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
                 isOnline
                   ? "bg-emerald-950/80 text-emerald-300 border-emerald-800"
                   : "bg-amber-950/80 text-amber-300 border-amber-700 animate-pulse"
@@ -477,27 +479,28 @@ export default function CBTTestInterfacePage({
               ) : (
                 <>
                   <WifiOff className="w-3 h-3 text-amber-400" />
-                  <span>Offline (Tersimpan Lokal)</span>
+                  <span>Offline (Tersimpan)</span>
                 </>
               )}
             </div>
 
             {tabSwitchCount > 0 && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded bg-rose-950 text-rose-300 border border-rose-800 animate-pulse">
-                <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-                <span>Pelanggaran: {tabSwitchCount}/3</span>
+              <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded bg-rose-950 text-rose-300 border border-rose-800 animate-pulse">
+                <ShieldAlert className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-rose-400" />
+                <span className="hidden sm:inline">Pelanggaran:</span>
+                <span>{tabSwitchCount}/3</span>
               </span>
             )}
 
             {/* Countdown Timer */}
             <div
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono font-bold text-sm ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border font-mono font-bold text-xs sm:text-sm ${
                 remainingSeconds < 300
                   ? "bg-rose-950/80 border-rose-700 text-rose-300 animate-pulse"
                   : "bg-slate-800 border-slate-700 text-blue-300"
               }`}
             >
-              <Clock className="w-4 h-4 text-blue-400" />
+              <Clock className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-blue-400" />
               <span>{formatTime(remainingSeconds)}</span>
             </div>
 
@@ -505,10 +508,11 @@ export default function CBTTestInterfacePage({
             <button
               type="button"
               onClick={() => setShowSubmitModal(true)}
-              className="px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Selesai Ujian</span>
+              <span className="hidden sm:inline">Selesai Ujian</span>
+              <span className="sm:hidden text-[11px]">Selesai</span>
             </button>
           </div>
         </div>
@@ -516,20 +520,18 @@ export default function CBTTestInterfacePage({
 
       {/* Offline Alert Banner */}
       {!isOnline && (
-        <div className="bg-amber-500 text-slate-950 px-4 py-2 text-xs font-semibold flex items-center justify-center gap-2 shadow-sm">
+        <div className="bg-amber-500 text-slate-950 px-3 py-2 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-2 shadow-sm text-center">
           <WifiOff className="w-4 h-4 shrink-0 text-slate-900" />
           <span>
-            Koneksi terputus. Jangan panik! Jawaban Anda tetap tersimpan
-            otomatis di perangkat ini dan akan disinkronkan saat terhubung
-            kembali.
+            Koneksi terputus. Jawaban Anda tetap tersimpan otomatis di perangkat dan disinkronkan saat online.
           </span>
         </div>
       )}
 
       {/* Main Examination Workspace */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
         {/* Left Column: Question Area (8 cols) */}
-        <div className="lg:col-span-8 bg-white rounded-xl shadow-xs border border-slate-200 p-6 sm:p-7 relative overflow-hidden">
+        <div className="lg:col-span-8 bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-7 relative overflow-hidden">
           {/* Subtle Anti-Photo Watermark */}
           <div className="pointer-events-none select-none absolute inset-0 z-0 flex items-center justify-center overflow-hidden opacity-[0.035]">
             <div className="rotate-[-25deg] text-center font-black tracking-widest text-slate-900 leading-relaxed text-xs sm:text-sm whitespace-pre">
@@ -539,53 +541,56 @@ export default function CBTTestInterfacePage({
             </div>
           </div>
 
-          <div className="relative z-10 space-y-6">
+          <div className="relative z-10 space-y-5 sm:space-y-6">
             {/* Question Header & Font Resizer */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm px-3 py-1 bg-slate-900 text-white rounded-lg">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="font-extrabold text-xs sm:text-sm px-2.5 sm:px-3 py-1 bg-slate-900 text-white rounded-lg whitespace-nowrap">
                   Soal No.{" "}
                   {currentQ ? currentQ.questionNumber : currentIndex + 1}
                 </span>
                 {currentQ?.subject && (
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+                  <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200 truncate">
                     {currentQ.subject}
                   </span>
                 )}
               </div>
 
               {/* Font Size Selector */}
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg text-xs">
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 sm:p-1 rounded-lg text-xs flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => setFontSize("normal")}
-                  className={`px-2 py-0.5 rounded font-bold cursor-pointer ${
+                  className={`px-1.5 sm:px-2 py-0.5 rounded font-bold cursor-pointer ${
                     fontSize === "normal"
                       ? "bg-white text-slate-900 shadow-2xs"
                       : "text-slate-500"
                   }`}
+                  title="Ukuran Font Normal"
                 >
                   A
                 </button>
                 <button
                   type="button"
                   onClick={() => setFontSize("large")}
-                  className={`px-2 py-0.5 rounded font-bold text-sm cursor-pointer ${
+                  className={`px-1.5 sm:px-2 py-0.5 rounded font-bold text-sm cursor-pointer ${
                     fontSize === "large"
                       ? "bg-white text-slate-900 shadow-2xs"
                       : "text-slate-500"
                   }`}
+                  title="Ukuran Font Besar"
                 >
                   A+
                 </button>
                 <button
                   type="button"
                   onClick={() => setFontSize("xlarge")}
-                  className={`px-2 py-0.5 rounded font-bold text-base cursor-pointer ${
+                  className={`px-1.5 sm:px-2 py-0.5 rounded font-bold text-base cursor-pointer ${
                     fontSize === "xlarge"
                       ? "bg-white text-slate-900 shadow-2xs"
                       : "text-slate-500"
                   }`}
+                  title="Ukuran Font Ekstra Besar"
                 >
                   A++
                 </button>
@@ -594,7 +599,7 @@ export default function CBTTestInterfacePage({
 
             {/* Question Text */}
             <div
-              className={`text-slate-900 leading-relaxed ${
+              className={`text-slate-900 leading-relaxed overflow-x-auto ${
                 fontSize === "normal"
                   ? "text-sm sm:text-base"
                   : fontSize === "large"
@@ -609,7 +614,7 @@ export default function CBTTestInterfacePage({
 
             {/* Options A - E */}
             {currentQ && (
-              <div className="space-y-3 pt-2">
+              <div className="space-y-2.5 sm:space-y-3 pt-1 sm:pt-2">
                 {[
                   { key: "A", text: currentQ.optionA },
                   { key: "B", text: currentQ.optionB },
@@ -634,14 +639,14 @@ export default function CBTTestInterfacePage({
                         key={opt.key}
                         type="button"
                         onClick={() => handleSelectOption(opt.key)}
-                        className={`w-full p-3 sm:p-3.5 rounded-xl border text-left flex items-start gap-3.5 transition-all cursor-pointer ${
+                        className={`w-full p-2.5 sm:p-3.5 rounded-xl border text-left flex items-start gap-2.5 sm:gap-3.5 transition-all cursor-pointer min-h-[44px] ${
                           isSelected
                             ? "bg-blue-50 border-blue-600 shadow-2xs text-blue-950"
                             : "bg-slate-50/60 border-slate-200 hover:bg-slate-100/70 text-slate-800"
                         }`}
                       >
                         <span
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
+                          className={`w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0 transition-colors ${
                             isSelected
                               ? "bg-blue-700 text-white shadow-xs"
                               : "bg-white text-slate-700 border border-slate-300"
@@ -649,7 +654,7 @@ export default function CBTTestInterfacePage({
                         >
                           {opt.key}
                         </span>
-                        <div className="pt-0.5 flex-1 text-xs sm:text-sm">
+                        <div className="pt-0.5 flex-1 text-xs sm:text-sm overflow-x-auto">
                           <FormattedQuestionText
                             text={opt.text}
                             isOption={true}
@@ -662,21 +667,22 @@ export default function CBTTestInterfacePage({
             )}
 
             {/* Navigation Controls & Doubtful Button */}
-            <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div className="pt-5 sm:pt-6 border-t border-slate-100 grid grid-cols-3 gap-2 sm:flex sm:items-center sm:justify-between sm:gap-3">
               <button
                 type="button"
                 disabled={currentIndex === 0}
                 onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-                className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                className="py-2.5 px-2 sm:px-4 rounded-lg border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 transition-colors flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer disabled:opacity-40"
               >
                 <ChevronLeft className="w-4 h-4" />
-                <span>Sebelumnya</span>
+                <span className="hidden xs:inline">Sebelumnya</span>
+                <span className="xs:hidden">Prev</span>
               </button>
 
               <button
                 type="button"
                 onClick={handleToggleDoubtful}
-                className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer ${
+                className={`py-2.5 px-2 sm:px-4 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer ${
                   currentAnswer?.isDoubtful
                     ? "bg-amber-500 text-white shadow-xs"
                     : "bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100"
@@ -684,7 +690,7 @@ export default function CBTTestInterfacePage({
               >
                 <Flag className="w-3.5 h-3.5" />
                 <span>
-                  {currentAnswer?.isDoubtful ? "Tandai Yakin" : "Ragu-ragu"}
+                  {currentAnswer?.isDoubtful ? "Yakin" : "Ragu-ragu"}
                 </span>
               </button>
 
@@ -696,17 +702,18 @@ export default function CBTTestInterfacePage({
                     Math.min(questions.length - 1, prev + 1),
                   )
                 }
-                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                className="py-2.5 px-2 sm:px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer disabled:opacity-40"
               >
-                <span>Selanjutnya</span>
+                <span className="hidden xs:inline">Selanjutnya</span>
+                <span className="xs:hidden">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Numbers Navigation Matrix (Compact & Full View - No Scroll) */}
-        <div className="lg:col-span-4 bg-white rounded-xl shadow-xs border border-slate-200 p-4 space-y-3">
+        {/* Right Column: Desktop Numbers Navigation Matrix */}
+        <div className="hidden lg:block lg:col-span-4 bg-white rounded-xl shadow-xs border border-slate-200 p-4 space-y-3 sticky top-20">
           <div className="pb-2.5 border-b border-slate-100 flex items-center justify-between">
             <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
               Nomor Soal ({questions.length})
@@ -732,7 +739,7 @@ export default function CBTTestInterfacePage({
             </span>
           </div>
 
-          {/* Compact Number Grid (10 kolom agar 70 soal terlihat sekaligus dalam 7 baris tanpa scroll) */}
+          {/* Compact Number Grid (10 kolom) */}
           <div className="grid grid-cols-7 sm:grid-cols-10 gap-1.5">
             {questions.map((q, idx) => {
               const ans = answers[q.id];
@@ -804,16 +811,186 @@ export default function CBTTestInterfacePage({
         </div>
       </div>
 
+      {/* Mobile Sticky Bottom Navigation Bar */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 text-white px-3 py-2 flex items-center justify-between gap-2 shadow-2xl safe-area-bottom">
+        <button
+          type="button"
+          disabled={currentIndex === 0}
+          onClick={() => {
+            setCurrentIndex((prev) => Math.max(0, prev - 1));
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-30"
+          title="Soal Sebelumnya"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span className="hidden xs:inline">Prev</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowMobileNav(true)}
+          className="flex-1 max-w-[230px] py-2 px-3 rounded-lg bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer transition-colors"
+          title="Buka Lembar Kisi Nomor Soal"
+        >
+          <LayoutGrid className="w-4 h-4" />
+          <span>
+            Soal No. {currentQ ? currentQ.questionNumber : currentIndex + 1}
+          </span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/80 text-blue-200 font-semibold">
+            {answeredCount + doubtfulCount}/{questions.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          disabled={currentIndex === questions.length - 1}
+          onClick={() => {
+            setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1));
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-30"
+          title="Soal Selanjutnya"
+        >
+          <span className="hidden xs:inline">Next</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Mobile Slide-up Drawer Sheet (Daftar Nomor Soal) */}
+      {showMobileNav && (
+        <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-150">
+          <div
+            className="fixed inset-0"
+            onClick={() => setShowMobileNav(false)}
+          />
+          <div className="relative z-10 bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 max-h-[85vh] flex flex-col animate-in slide-in-from-bottom duration-200">
+            {/* Drag Handle */}
+            <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto mt-2.5 mb-1" />
+
+            {/* Sheet Header */}
+            <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4 text-slate-700" />
+                <h3 className="font-bold text-slate-900 text-sm">
+                  Daftar Nomor Soal ({questions.length})
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
+                  {answeredCount + doubtfulCount}/{questions.length} Terjawab
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowMobileNav(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                  title="Tutup Lembar Nomor"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-around text-[11px] text-slate-600">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded bg-blue-700 inline-block" />
+                Terjawab ({answeredCount})
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded bg-amber-500 inline-block" />
+                Ragu ({doubtfulCount})
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded bg-slate-200 border border-slate-300 inline-block" />
+                Kosong ({unansweredCount})
+              </span>
+            </div>
+
+            {/* Number Matrix Grid */}
+            <div className="p-3 sm:p-4 overflow-y-auto max-h-[50vh] grid grid-cols-6 xs:grid-cols-7 sm:grid-cols-10 gap-1.5">
+              {questions.map((q, idx) => {
+                const ans = answers[q.id];
+                const isCurrent = idx === currentIndex;
+                const isAnswered = ans && ans.selectedOption && !ans.isDoubtful;
+                const isDoubt = ans && ans.isDoubtful;
+
+                let colorClasses =
+                  "bg-slate-50 border-slate-200 text-slate-700 active:bg-slate-200";
+                if (isAnswered) {
+                  colorClasses =
+                    "bg-blue-700 border-blue-700 text-white font-bold";
+                } else if (isDoubt) {
+                  colorClasses =
+                    "bg-amber-500 border-amber-500 text-white font-bold";
+                }
+
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => {
+                      setCurrentIndex(idx);
+                      setShowMobileNav(false);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`h-10 rounded-lg text-xs font-bold border transition-all flex flex-col items-center justify-center cursor-pointer p-0.5 ${colorClasses} ${
+                      isCurrent
+                        ? "ring-2 ring-blue-600 ring-offset-2 scale-105 shadow-md z-10"
+                        : ""
+                    }`}
+                  >
+                    <span className="leading-none text-xs">{q.questionNumber}</span>
+                    {ans?.selectedOption && (
+                      <span className="text-[9px] leading-none font-black opacity-90 mt-0.5">
+                        {ans.selectedOption}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sheet Footer Actions */}
+            <div className="p-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={handleToggleDoubtful}
+                className={`flex-1 py-2.5 rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 border transition-colors cursor-pointer ${
+                  currentAnswer?.isDoubtful
+                    ? "bg-amber-500 text-white border-amber-500"
+                    : "bg-white text-amber-900 border-amber-300"
+                }`}
+              >
+                <Flag className="w-3.5 h-3.5" />
+                <span>{currentAnswer?.isDoubtful ? "Tandai Yakin" : "Tandai Ragu"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMobileNav(false);
+                  setShowSubmitModal(true);
+                }}
+                className="flex-1 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Kumpulkan Ujian</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal Anti-Cheat Proctoring Warning */}
       {tabSwitchAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-rose-300 text-center space-y-4 animate-in fade-in zoom-in duration-150">
-            <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
-              <ShieldAlert className="w-8 h-8" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-rose-300 text-center space-y-4 animate-in fade-in zoom-in duration-150 max-h-[90vh] overflow-y-auto">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+              <ShieldAlert className="w-7 h-7 sm:w-8 sm:h-8" />
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-extrabold text-slate-900">
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-900">
                 {tabSwitchCount >= 3
                   ? "Batas Pelanggaran Terlampaui!"
                   : "Peringatan Pengawasan CBT"}
@@ -857,8 +1034,8 @@ export default function CBTTestInterfacePage({
 
       {/* Modal Konfirmasi Selesai Ujian */}
       {showSubmitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-xl max-w-sm w-full p-6 shadow-xl border border-slate-200 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-3 sm:p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 sm:p-6 shadow-xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center flex-shrink-0">
                 <AlertTriangle className="w-5 h-5" />

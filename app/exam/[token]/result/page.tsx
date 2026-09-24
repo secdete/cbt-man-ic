@@ -126,9 +126,9 @@ export default function ExamResultPage({
   );
 
   return (
-    <div className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full space-y-6">
+    <div className="flex-1 py-5 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full space-y-5 sm:space-y-6">
       {/* Top Action Bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 transition-colors"
@@ -137,20 +137,20 @@ export default function ExamResultPage({
           Kembali ke Beranda
         </Link>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setShowCertificate(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors cursor-pointer"
           >
             <Award className="w-4 h-4 text-amber-400" />
-            <span>Unduh Sertifikat Resmi</span>
+            <span>Unduh Sertifikat</span>
           </button>
 
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Cetak Hasil</span>
@@ -160,17 +160,17 @@ export default function ExamResultPage({
 
       {/* Official Result Banner */}
       <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden">
-        <div className="p-6 bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <CakrawalaLogo className="h-11 w-auto" height={44} />
-            <div className="border-l border-slate-700 pl-3">
+        <div className="p-4 sm:p-6 bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-3.5">
+            <CakrawalaLogo className="h-9 sm:h-11 w-auto flex-shrink-0" height={44} />
+            <div className="border-l border-slate-700 pl-2.5 sm:pl-3">
               <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-900 text-blue-200 border border-blue-700">
                 {exam.category}
               </span>
-              <h1 className="mt-1 text-lg sm:text-xl font-bold tracking-tight text-white">
+              <h1 className="mt-1 text-base sm:text-xl font-bold tracking-tight text-white leading-tight">
                 {exam.title}
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
                 Peserta:{" "}
                 <span className="font-bold text-slate-200">
                   {session.studentName}
@@ -180,7 +180,7 @@ export default function ExamResultPage({
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <span
               className={`inline-block text-xs font-semibold px-2.5 py-1 rounded border tracking-wide uppercase ${
                 session.isPassed
@@ -189,8 +189,8 @@ export default function ExamResultPage({
               }`}
             >
               {session.isPassed
-                ? "LULUS (MEMENUHI PASSING GRADE)"
-                : "SELESAI MENGIKUTI SIMULASI"}
+                ? "LULUS (PASSING GRADE)"
+                : "SELESAI MENGIKUTI"}
             </span>
             <p className="text-[11px] text-slate-400 mt-1">
               Passing Grade: {session.passingScore} Poin
@@ -199,48 +199,48 @@ export default function ExamResultPage({
         </div>
 
         {/* Ringkasan Angka Nilai */}
-        <div className="p-6 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50/50 text-center">
-          <div className="p-3 bg-white rounded-lg border border-slate-200">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase">
+        <div className="p-3 sm:p-6 border-b border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 bg-slate-50/50 text-center">
+          <div className="p-2.5 sm:p-3 bg-white rounded-lg border border-slate-200">
+            <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase">
               Total Skor
             </p>
-            <p className="text-2xl font-black text-slate-900 mt-0.5">
+            <p className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5">
               {session.totalScore}
-              <span className="text-xs font-normal text-slate-400">
+              <span className="text-[10px] sm:text-xs font-normal text-slate-400">
                 {" "}
                 / {session.maxPossibleScore}
               </span>
             </p>
           </div>
 
-          <div className="p-3 bg-white rounded-lg border border-slate-200">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase">
+          <div className="p-2.5 sm:p-3 bg-white rounded-lg border border-slate-200">
+            <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase">
               Akurasi Nilai
             </p>
-            <p className="text-2xl font-black text-blue-800 mt-0.5">
+            <p className="text-xl sm:text-2xl font-black text-blue-800 mt-0.5">
               {session.accuracy}%
             </p>
           </div>
 
-          <div className="p-3 bg-white rounded-lg border border-slate-200">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase">
+          <div className="p-2.5 sm:p-3 bg-white rounded-lg border border-slate-200">
+            <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase">
               Jawaban Benar
             </p>
-            <p className="text-2xl font-black text-emerald-700 mt-0.5">
+            <p className="text-xl sm:text-2xl font-black text-emerald-700 mt-0.5">
               {session.correctCount}
-              <span className="text-xs font-normal text-slate-400">
+              <span className="text-[10px] sm:text-xs font-normal text-slate-400">
                 {" "}
                 / {questions.length}
               </span>
             </p>
           </div>
 
-          <div className="p-3 bg-white rounded-lg border border-slate-200">
-            <p className="text-[11px] font-semibold text-slate-500 uppercase">
+          <div className="p-2.5 sm:p-3 bg-white rounded-lg border border-slate-200">
+            <p className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase">
               Catatan Pengawas
             </p>
             <p
-              className={`text-sm font-bold mt-1.5 ${
+              className={`text-xs sm:text-sm font-bold mt-1 sm:mt-1.5 ${
                 session.tabSwitchCount > 0
                   ? "text-amber-700"
                   : "text-emerald-700"
@@ -254,7 +254,7 @@ export default function ExamResultPage({
         </div>
 
         {/* Banner CTA Kelas Online & Pembahasan Intensif */}
-        <div className="p-6 bg-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-5 border-t border-slate-800">
+        <div className="p-4 sm:p-6 bg-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-5 border-t border-slate-800">
           <div className="space-y-1.5 text-center md:text-left">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -282,10 +282,10 @@ export default function ExamResultPage({
       </div>
 
       {/* Rincian Butir Soal */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-6 space-y-5 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-slate-100">
           <div>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900">
               Evaluasi Lembar Jawaban
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -293,12 +293,12 @@ export default function ExamResultPage({
             </p>
           </div>
 
-          {/* Filter Buttons */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs">
+          {/* Filter Buttons (Swipeable on mobile) */}
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100 rounded-lg text-xs overflow-x-auto max-w-full">
             <button
               type="button"
               onClick={() => setActiveFilter("ALL")}
-              className={`px-2.5 py-1 rounded cursor-pointer ${
+              className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
                 activeFilter === "ALL"
                   ? "bg-white text-slate-900 font-semibold shadow-2xs"
                   : "text-slate-600"
@@ -309,7 +309,7 @@ export default function ExamResultPage({
             <button
               type="button"
               onClick={() => setActiveFilter("CORRECT")}
-              className={`px-2.5 py-1 rounded cursor-pointer ${
+              className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
                 activeFilter === "CORRECT"
                   ? "bg-white text-emerald-800 font-semibold shadow-2xs"
                   : "text-slate-600"
@@ -320,7 +320,7 @@ export default function ExamResultPage({
             <button
               type="button"
               onClick={() => setActiveFilter("INCORRECT")}
-              className={`px-2.5 py-1 rounded cursor-pointer ${
+              className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
                 activeFilter === "INCORRECT"
                   ? "bg-white text-rose-800 font-semibold shadow-2xs"
                   : "text-slate-600"
@@ -331,7 +331,7 @@ export default function ExamResultPage({
             <button
               type="button"
               onClick={() => setActiveFilter("UNANSWERED")}
-              className={`px-2.5 py-1 rounded cursor-pointer ${
+              className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
                 activeFilter === "UNANSWERED"
                   ? "bg-white text-amber-800 font-semibold shadow-2xs"
                   : "text-slate-600"
