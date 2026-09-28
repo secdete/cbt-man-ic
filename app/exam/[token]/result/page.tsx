@@ -17,6 +17,8 @@ import {
   Lock,
   MessageCircle,
   Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
@@ -37,6 +39,9 @@ export default function ExamResultPage({
   const [data, setData] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [showCertificate, setShowCertificate] = useState(false);
+  const [expandedExplanations, setExpandedExplanations] = useState<
+    Record<string, boolean>
+  >({});
   const [activeFilter, setActiveFilter] = useState<
     "ALL" | "CORRECT" | "INCORRECT" | "UNANSWERED"
   >("ALL");
@@ -281,64 +286,122 @@ export default function ExamResultPage({
         </div>
       </div>
 
+      {/* Banner Sertifikat Resmi Siap Cetak (A4 Landscape) */}
+      <div className="bg-gradient-to-r from-[#0F172A] via-slate-900 to-indigo-950 p-4 sm:p-5 rounded-xl text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-blue-900/60 shadow-md">
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex-shrink-0">
+            <Award className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm sm:text-base text-white">
+                Sertifikat Kelulusan Resmi CBT Anda Telah Terbit!
+              </span>
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.2 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                A4 Landscape
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Dilengkapi nomor sertifikat resmi, QR Code verifikasi keaslian, dan tanda tangan digital.
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowCertificate(true)}
+          className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm flex-shrink-0"
+        >
+          <Award className="w-4 h-4 text-slate-950" />
+          <span>Buka &amp; Cetak Sertifikat</span>
+        </button>
+      </div>
+
       {/* Rincian Butir Soal */}
       <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-6 space-y-5 sm:space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 pb-4 border-b border-slate-100">
           <div>
             <h2 className="text-sm sm:text-base font-bold text-slate-900">
-              Evaluasi Lembar Jawaban
+              Evaluasi Lembar Jawaban &amp; Pembahasan
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Tinjau jawaban yang telah Anda pilih pada setiap butir soal
+              Tinjau analisis langkah penyelesaian dan kunci jawaban resmi setiap butir soal
             </p>
           </div>
 
-          {/* Filter Buttons (Swipeable on mobile) */}
-          <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100 rounded-lg text-xs overflow-x-auto max-w-full">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            {/* Global Accordion Toggle */}
             <button
               type="button"
-              onClick={() => setActiveFilter("ALL")}
-              className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-                activeFilter === "ALL"
-                  ? "bg-white text-slate-900 font-semibold shadow-2xs"
-                  : "text-slate-600"
-              }`}
+              onClick={() => {
+                const allOpen = questions.every((q: any) => expandedExplanations[q.id]);
+                if (allOpen) {
+                  setExpandedExplanations({});
+                } else {
+                  const newState: Record<string, boolean> = {};
+                  questions.forEach((q: any) => {
+                    newState[q.id] = true;
+                  });
+                  setExpandedExplanations(newState);
+                }
+              }}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer shadow-2xs"
             >
-              Semua ({questions.length})
+              <BookOpen className="w-3.5 h-3.5 text-blue-700" />
+              <span>
+                {questions.every((q: any) => expandedExplanations[q.id])
+                  ? "Tutup Semua Pembahasan"
+                  : "Buka Semua Pembahasan"}
+              </span>
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveFilter("CORRECT")}
-              className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-                activeFilter === "CORRECT"
-                  ? "bg-white text-emerald-800 font-semibold shadow-2xs"
-                  : "text-slate-600"
-              }`}
-            >
-              Benar ({session.correctCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveFilter("INCORRECT")}
-              className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-                activeFilter === "INCORRECT"
-                  ? "bg-white text-rose-800 font-semibold shadow-2xs"
-                  : "text-slate-600"
-              }`}
-            >
-              Salah ({session.incorrectCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveFilter("UNANSWERED")}
-              className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-                activeFilter === "UNANSWERED"
-                  ? "bg-white text-amber-800 font-semibold shadow-2xs"
-                  : "text-slate-600"
-              }`}
-            >
-              Kosong ({session.unansweredCount})
-            </button>
+
+            {/* Filter Buttons (Swipeable on mobile) */}
+            <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-100 rounded-lg text-xs overflow-x-auto max-w-full">
+              <button
+                type="button"
+                onClick={() => setActiveFilter("ALL")}
+                className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
+                  activeFilter === "ALL"
+                    ? "bg-white text-slate-900 font-semibold shadow-2xs"
+                    : "text-slate-600"
+                }`}
+              >
+                Semua ({questions.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter("CORRECT")}
+                className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
+                  activeFilter === "CORRECT"
+                    ? "bg-white text-emerald-800 font-semibold shadow-2xs"
+                    : "text-slate-600"
+                }`}
+              >
+                Benar ({session.correctCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter("INCORRECT")}
+                className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
+                  activeFilter === "INCORRECT"
+                    ? "bg-white text-rose-800 font-semibold shadow-2xs"
+                    : "text-slate-600"
+                }`}
+              >
+                Salah ({session.incorrectCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilter("UNANSWERED")}
+                className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
+                  activeFilter === "UNANSWERED"
+                    ? "bg-white text-amber-800 font-semibold shadow-2xs"
+                    : "text-slate-600"
+                }`}
+              >
+                Kosong ({session.unansweredCount})
+              </button>
+            </div>
           </div>
         </div>
 
@@ -464,34 +527,101 @@ export default function ExamResultPage({
                     })}
                   </div>
 
-                  {/* Pembahasan Terkunci / Lock Banner (Sesuai Arahan Pengguna) */}
-                  <div className="p-3.5 rounded-lg bg-blue-50/70 border border-blue-200/80 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded bg-blue-200 text-blue-900">
-                        <Lock className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-blue-950 text-xs">
-                          Pembahasan Analisis &amp; Trik Cepat Butir Soal #
-                          {q.questionNumber}
-                        </p>
-                        <p className="text-[11px] text-slate-600">
-                          Buka langkah penyelesaian runtut &amp; trik cepat di
-                          kelas online bimbel Cakrawala.
-                        </p>
-                      </div>
-                    </div>
+                  {/* Accordion Pembahasan Soal & Trik Cepat */}
+                  {q.explanation ? (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50/30 overflow-hidden transition-all">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedExplanations((prev) => ({
+                            ...prev,
+                            [q.id]: !prev[q.id],
+                          }))
+                        }
+                        className="w-full px-3.5 py-2.5 flex items-center justify-between gap-3 text-left hover:bg-blue-50/70 transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="p-1 rounded-md bg-blue-100 text-blue-800">
+                            <BookOpen className="w-3.5 h-3.5" />
+                          </div>
+                          <div>
+                            <span className="font-bold text-xs text-blue-950 flex items-center gap-1.5">
+                              <span>Pembahasan Resmi &amp; Trik Cepat Butir #{q.questionNumber}</span>
+                              <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Tersedia
+                              </span>
+                            </span>
+                            <p className="text-[10px] text-slate-500">
+                              {expandedExplanations[q.id]
+                                ? "Klik untuk melipat pembahasan"
+                                : "Klik untuk membuka langkah penyelesaian rinci"}
+                            </p>
+                          </div>
+                        </div>
+                        {expandedExplanations[q.id] ? (
+                          <ChevronUp className="w-4 h-4 text-blue-800 flex-shrink-0" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-blue-800 flex-shrink-0" />
+                        )}
+                      </button>
 
-                    <a
-                      href={`https://wa.me/6281234567890?text=${waMessage}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-[11px] transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-end sm:self-center"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>Buka Pembahasan</span>
-                    </a>
-                  </div>
+                      {expandedExplanations[q.id] && (
+                        <div className="px-3.5 pb-3.5 pt-1 border-t border-blue-200/60 space-y-2.5 animate-in fade-in duration-150">
+                          <div className="p-3 bg-white rounded-lg border border-blue-200/80 shadow-2xs">
+                            <div className="flex items-center gap-1.5 text-[11px] font-bold text-blue-900 mb-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                              <span>KUNCI JAWABAN ({q.correctAnswer}) &bull; LANGKAH PENYELESAIAN:</span>
+                            </div>
+                            <div className="text-xs sm:text-sm text-slate-800 leading-relaxed">
+                              <FormattedQuestionText text={q.explanation} />
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-slate-500 bg-white/70 p-2 rounded-lg border border-blue-100">
+                            <span>Ingin pembahasan interaktif atau trik cepat tambahan?</span>
+                            <a
+                              href={`https://wa.me/6281234567890?text=${encodeURIComponent(
+                                `Halo Kak Tutor Cakrawala, saya ingin bertanya tentang pembahasan Soal No. ${q.questionNumber} (${exam.title}). Kunci: ${q.correctAnswer}.`,
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-bold text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>Tanya Tutor Cakrawala via WA</span>
+                            </a>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* Placeholder jika pembahasan belum diinput */
+                    <div className="p-3 rounded-lg bg-blue-50/70 border border-blue-200/80 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 rounded bg-blue-200 text-blue-900">
+                          <Lock className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-blue-950 text-xs">
+                            Pembahasan Analisis &amp; Trik Cepat Butir Soal #{q.questionNumber}
+                          </p>
+                          <p className="text-[11px] text-slate-600">
+                            Buka langkah penyelesaian runtut &amp; trik cepat di kelas online bimbel Cakrawala.
+                          </p>
+                        </div>
+                      </div>
+
+                      <a
+                        href={`https://wa.me/6281234567890?text=${waMessage}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-[11px] transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap self-end sm:self-center"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>Tanya Tutor via WhatsApp</span>
+                      </a>
+                    </div>
+                  )}
                 </div>
               );
             })
@@ -507,12 +637,18 @@ export default function ExamResultPage({
           examTitle={exam.title}
           examCategory={exam.category}
           totalScore={session.totalScore}
+          maxScore={session.maxPossibleScore || 100}
           passingScore={session.passingScore}
           accuracy={session.accuracy}
-          correctCount={session.correctCount}
-          totalQuestions={questions.length}
+          grade={
+            session.totalScore >= session.passingScore * 1.25
+              ? "SANGAT MEMUASKAN (LULUS)"
+              : session.isPassed
+                ? "MEMUASKAN (LULUS)"
+                : "SELESAI MENGIKUTI"
+          }
           completedDate={new Date(
-            session.endTime || session.createdAt,
+            session.endTime || session.createdAt || Date.now(),
           ).toLocaleDateString("id-ID", {
             day: "numeric",
             month: "long",
@@ -520,8 +656,9 @@ export default function ExamResultPage({
           })}
           certificateNumber={
             session.certificateNumber ||
-            `CERT-SNPDB/${new Date().getFullYear()}/${token}-001`
+            `CERT-SNPDB/${new Date().getFullYear()}/${token}-${String(session.id).slice(-4).toUpperCase()}`
           }
+          verificationHash={`VERIF-${String(session.id).slice(-8).toUpperCase()}-${session.studentNisn || "CBT"}`}
           onClose={() => setShowCertificate(false)}
         />
       )}

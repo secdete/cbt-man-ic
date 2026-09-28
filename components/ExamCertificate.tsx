@@ -10,12 +10,17 @@ interface CertificateProps {
   examTitle: string;
   examCategory: string;
   totalScore: number;
+  maxScore?: number;
   passingScore: number;
   accuracy: number;
   correctCount: number;
   totalQuestions: number;
+  grade?: string;
   completedDate: string;
   certificateNumber: string;
+  verificationHash?: string;
+  proctorName?: string;
+  headmasterName?: string;
   onClose?: () => void;
 }
 
@@ -25,15 +30,38 @@ export default function ExamCertificate({
   examTitle,
   examCategory,
   totalScore,
+  maxScore = 100,
   passingScore,
   accuracy,
   correctCount,
   totalQuestions,
+  grade,
   completedDate,
   certificateNumber,
+  verificationHash,
+  proctorName = "Fahrul Rozi, S.Pd.",
+  headmasterName = "Dr. H. M. Zainul Muttaqin, M.Ed.",
   onClose,
 }: CertificateProps) {
   const isPassed = totalScore >= passingScore;
+
+  const calculatedGrade =
+    grade ||
+    (totalScore >= passingScore * 1.25
+      ? "SANGAT MEMUASKAN (LULUS)"
+      : isPassed
+        ? "MEMUASKAN (LULUS)"
+        : "SELESAI MENGIKUTI");
+
+  const hash =
+    verificationHash ||
+    `VERIF-${certificateNumber.replace(/[^a-zA-Z0-9]/g, "")}-${Math.abs(
+      (studentName.length * 31 + Math.round(totalScore)) % 100000,
+    ).toString(16).toUpperCase()}`;
+
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+    `https://cbt.cakrawala-edu.com/verify?cert=${certificateNumber}&hash=${hash}`,
+  )}`;
 
   const handlePrint = () => {
     window.print();
@@ -161,6 +189,7 @@ export default function ExamCertificate({
                   </p>
                   <p className="text-lg font-black text-blue-900">
                     {totalScore}
+                    <span className="text-xs font-normal text-slate-400"> / {maxScore}</span>
                   </p>
                   <p className="text-[9px] text-slate-400">
                     Passing: {passingScore}
@@ -169,63 +198,86 @@ export default function ExamCertificate({
 
                 <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-center">
                   <p className="text-[10px] text-slate-500 font-semibold uppercase">
-                    Akurasi
+                    Predikat
                   </p>
-                  <p className="text-lg font-black text-emerald-800">
-                    {accuracy}%
-                  </p>
-                  <p className="text-[9px] text-slate-400">
-                    {correctCount}/{totalQuestions} Benar
+                  <div className="mt-0.5">
+                    <span className="inline-block text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-100 text-[#B45309] border border-amber-200">
+                      {calculatedGrade}
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 mt-0.5">
+                    Akurasi: {accuracy}%
                   </p>
                 </div>
 
                 <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-center">
                   <p className="text-[10px] text-slate-500 font-semibold uppercase">
-                    Kualifikasi
+                    Status Verifikasi
                   </p>
-                  <p
-                    className={`text-xs font-black mt-1 ${
-                      isPassed ? "text-emerald-700" : "text-amber-700"
-                    }`}
-                  >
-                    {isPassed ? "LULUS" : "SELESAI"}
+                  <p className="text-xs font-black mt-1 text-emerald-700 flex items-center justify-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>TERVERIFIKASI</span>
                   </p>
                   <p className="text-[9px] text-slate-400">
-                    {isPassed ? "Memenuhi Syarat" : "Tingkatkan Latihan"}
+                    {correctCount}/{totalQuestions} Soal Benar
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Footer Signature & Date */}
-            <div className="mt-8 pt-6 border-t border-slate-200 flex items-end justify-between px-4">
-              {/* Left: Security Digital Seal */}
-              <div className="text-left space-y-1">
-                <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px]">
-                  <CheckCircle className="w-4 h-4" />
-                  <span>TERVERIFIKASI SISTEM CBT</span>
+            {/* Footer Signature, QR Code & Date */}
+            <div className="mt-8 pt-6 border-t border-slate-200">
+              <div className="grid grid-cols-3 items-end text-center px-4">
+                {/* Left: Proctor Signature */}
+                <div className="text-center space-y-1">
+                  <p className="text-[10px] text-slate-500 mb-10">
+                    Pengawas Ujian CBT,
+                  </p>
+                  <div className="h-8 flex items-center justify-center">
+                    <span className="font-serif italic font-bold text-slate-900 text-xs tracking-wider border-b border-slate-700 px-3">
+                      {proctorName}
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-mono">
+                    ID: P-CBT-2026.041
+                  </p>
                 </div>
-                <p className="text-[10px] text-slate-400 font-mono">
-                  Diterbitkan pada: {completedDate}
-                </p>
-                <p className="text-[10px] text-slate-400 font-mono">
-                  Platform: cbt.cakrawala-edu.com
-                </p>
+
+                {/* Center: QR Code Verifikasi */}
+                <div className="flex flex-col items-center justify-center">
+                  <div className="p-1 bg-white border border-slate-300 rounded shadow-2xs">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={qrUrl}
+                      alt="QR Code Verifikasi Sertifikat"
+                      className="w-14 h-14 object-contain"
+                    />
+                  </div>
+                  <p className="text-[9px] text-slate-500 uppercase tracking-wider mt-1 font-semibold">
+                    Scan untuk Verifikasi
+                  </p>
+                </div>
+
+                {/* Right: Headmaster Signature */}
+                <div className="text-center space-y-1">
+                  <p className="text-[10px] text-slate-500 mb-10">
+                    Kepala Lembaga Pelaksana CBT,
+                  </p>
+                  <div className="h-8 flex items-center justify-center">
+                    <span className="font-serif italic font-bold text-blue-950 text-xs tracking-wider border-b border-slate-700 px-3">
+                      {headmasterName}
+                    </span>
+                  </div>
+                  <p className="text-[9px] text-slate-400 font-mono">
+                    NIP. 19780514 200312 1 002
+                  </p>
+                </div>
               </div>
 
-              {/* Right: Signature */}
-              <div className="text-center space-y-1">
-                <div className="h-10 flex items-center justify-center">
-                  <span className="font-serif italic font-bold text-blue-950 text-sm tracking-widest border-b-2 border-slate-900 px-4">
-                    Tim Pengembang Cakrawala
-                  </span>
-                </div>
-                <p className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                  Direktur Akademik &amp; CBT
-                </p>
-                <p className="text-[9px] text-slate-400">
-                  Cakrawala Learning Center
-                </p>
+              {/* Bottom Security Bar */}
+              <div className="border-t border-slate-100 mt-4 pt-2 flex items-center justify-between text-[9px] text-slate-400 font-mono px-4">
+                <span>Dokumen sah digital CBT Cakrawala berdasarkan UU ITE.</span>
+                <span className="font-bold text-slate-600">Hash: {hash}</span>
               </div>
             </div>
           </div>

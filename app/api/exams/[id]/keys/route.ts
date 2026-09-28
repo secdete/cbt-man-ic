@@ -28,6 +28,7 @@ export async function GET(
             correctAnswer: true,
             subject: true,
             points: true,
+            explanation: true,
           },
         },
       },
@@ -67,7 +68,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    const { keys } = body; // Array<{ id: string; correctAnswer: string }>
+    const { keys } = body; // Array<{ id: string; correctAnswer?: string; explanation?: string | null }>
 
     if (!Array.isArray(keys) || keys.length === 0) {
       return NextResponse.json(
@@ -84,16 +85,29 @@ export async function PUT(
     const updateOperations = [];
 
     for (const item of keys) {
-      if (!item.id || !item.correctAnswer) continue;
-      const upper = String(item.correctAnswer).trim().toUpperCase();
-      if (!validKeys.includes(upper)) continue;
+      if (!item.id) continue;
 
-      updateOperations.push(
-        prisma.question.update({
-          where: { id: item.id },
-          data: { correctAnswer: upper },
-        }),
-      );
+      const dataToUpdate: { correctAnswer?: string; explanation?: string | null } = {};
+
+      if (item.correctAnswer) {
+        const upper = String(item.correctAnswer).trim().toUpperCase();
+        if (validKeys.includes(upper)) {
+          dataToUpdate.correctAnswer = upper;
+        }
+      }
+
+      if (item.explanation !== undefined) {
+        dataToUpdate.explanation = item.explanation ? String(item.explanation).trim() : null;
+      }
+
+      if (Object.keys(dataToUpdate).length > 0) {
+        updateOperations.push(
+          prisma.question.update({
+            where: { id: item.id },
+            data: dataToUpdate,
+          }),
+        );
+      }
     }
 
     if (updateOperations.length === 0) {
@@ -110,7 +124,7 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: `Berhasil memperbarui ${updateOperations.length} kunci jawaban!`,
+      message: `Berhasil memperbarui ${updateOperations.length} kunci jawaban & pembahasan!`,
       count: updateOperations.length,
     });
   } catch (error: any) {
