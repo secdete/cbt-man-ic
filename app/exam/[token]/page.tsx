@@ -33,7 +33,6 @@ export default function ExamConfirmationPage({
     studentSchool: string;
     studentNisn?: string | null;
     studentWhatsapp?: string | null;
-    studentPassword?: string | null;
   } | null>(null);
 
   const [exam, setExam] = useState<any>(null);
@@ -42,14 +41,28 @@ export default function ExamConfirmationPage({
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Ambil data identitas peserta dari sessionStorage
-    const stored = sessionStorage.getItem("cbt_student_data");
-    if (stored) {
+    // Identitas peserta diambil dari sesi login, bukan dari formulir
+    async function loadIdentity() {
       try {
-        const parsed = JSON.parse(stored);
-        setStudentData(parsed);
-      } catch (e) {
-        console.error(e);
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) {
+          setStudentData(null);
+          return;
+        }
+        const json = await res.json();
+        if (json.success && json.data) {
+          setStudentData({
+            token,
+            studentName: json.data.name,
+            studentSchool: json.data.school || "",
+            studentWhatsapp: json.data.phone || "",
+          });
+        } else {
+          setStudentData(null);
+        }
+      } catch (err) {
+        console.error(err);
+        setStudentData(null);
       }
     }
 
@@ -109,23 +122,19 @@ export default function ExamConfirmationPage({
         }
       } catch (err) {
         setErrorMessage("Gagal memuat informasi naskah ujian.");
-      } finally {
-        setLoading(false);
       }
     }
 
-    fetchExamDetails();
+    // Dimuat berbarekan supaya tidak ada kedipan layar saat berganti status login
+    Promise.all([loadIdentity(), fetchExamDetails()]).finally(() =>
+      setLoading(false),
+    );
   }, [token]);
 
   const handleStartExam = async () => {
-    if (
-      !studentData?.studentName ||
-      !studentData?.studentSchool ||
-      !studentData?.studentWhatsapp ||
-      !studentData?.studentPassword
-    ) {
+    if (!studentData?.studentName) {
       setErrorMessage(
-        "Data identitas peserta tidak lengkap. Silakan kembali ke halaman utama untuk melengkapi Nama, No. HP, dan PIN ujian.",
+        "Anda belum login. Silakan login kembali ke halaman utama sebelum memulai ujian.",
       );
       return;
     }
@@ -143,16 +152,11 @@ export default function ExamConfirmationPage({
         console.warn("Fullscreen request bypassed or denied:", fsErr);
       }
 
+      // Identitas & satu kali pengerjaan ditentukan oleh sesi login
       const res = await fetch("/api/session/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          studentName: studentData.studentName,
-          studentSchool: studentData.studentSchool,
-          studentWhatsapp: studentData.studentWhatsapp,
-          studentPassword: studentData.studentPassword,
-        }),
+        body: JSON.stringify({ token }),
       });
 
       const json = await res.json();
@@ -184,7 +188,7 @@ export default function ExamConfirmationPage({
     );
   }
 
-  // Jika siswa belum mengisi identitas di beranda
+  // Jika peserta belum login
   if (!studentData?.studentName) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh] px-4">
@@ -194,19 +198,20 @@ export default function ExamConfirmationPage({
           </div>
           <div>
             <h2 className="text-base font-bold text-slate-900">
-              Identitas Peserta Belum Diisi
+              Anda Belum Login
             </h2>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Silakan kembali ke halaman utama untuk mengisi Nama Lengkap, No. HP,
-              dan PIN Ujian Anda terlebih dahulu sebelum memulai ujian.
+              Silakan login dengan akun peserta Anda terlebih dahulu. Setelah
+              login, data peserta akan terisi otomatis dan Anda tinggal menunggu
+              token ujian dari pengawas.
             </p>
           </div>
           <Link
-            href="/"
+            href="/admin/login"
             className="w-full py-2.5 px-4 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali ke Halaman Masuk</span>
+            <span>Login Peserta</span>
           </Link>
         </div>
       </div>
@@ -388,18 +393,13 @@ export default function ExamConfirmationPage({
                 href="/"
                 className="w-full sm:w-auto px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 text-center transition-colors"
               >
-                Koreksi Data / Token
+                Kembali / Ganti Token
               </Link>
 
               <button
                 type="button"
                 onClick={handleStartExam}
-                disabled={
-                  starting ||
-                  !studentData?.studentName ||
-                  !studentData?.studentWhatsapp ||
-                  !studentData?.studentPassword
-                }
+                disabled={starting || !studentData?.studentName}
                 className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {starting ? (

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, signAdminSession } from "@/lib/admin-auth";
+import {
+  STUDENT_SESSION_COOKIE,
+  signStudentSession,
+} from "@/lib/student-auth";
 import { normalizePhone } from "@/lib/phone";
 import { verifyStudentPassword } from "@/lib/student-password";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const USER_SESSION_COOKIE = "cbt_user_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 7 hari
 
 export async function POST(req: NextRequest) {
@@ -45,11 +48,11 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    // Login peserta: harus cocok dengan data terdaftar (impor Excel / dibuat lewat form ujian).
+    // Login peserta: harus cocok dengan data terdaftar (impor Excel / dibuat lewat panel).
     const phone = normalizePhone(username);
     const student = await prisma.student.findFirst({
       where: { OR: [{ username }, { phone: username }, ...(phone ? [{ phone }] : [])] },
-      select: { username: true, phone: true, password: true, passwordHash: true, salt: true },
+      select: { id: true, username: true, phone: true, password: true, passwordHash: true, salt: true },
     });
 
     if (!student || !verifyStudentPassword(password, student)) {
@@ -66,14 +69,8 @@ export async function POST(req: NextRequest) {
       redirectTo: "/",
     });
     response.cookies.set({
-      name: USER_SESSION_COOKIE,
-      value: Buffer.from(
-        JSON.stringify({
-          username: student.username || student.phone,
-          role: "student",
-          timestamp: Date.now(),
-        }),
-      ).toString("base64"),
+      name: STUDENT_SESSION_COOKIE,
+      value: signStudentSession(student.id),
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

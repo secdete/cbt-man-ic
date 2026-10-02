@@ -1,37 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes } from "node:crypto";
 import prisma from "@/lib/prisma";
-import { normalizePhone } from "@/lib/phone";
-import { hashPassword, verifyStudentPassword } from "@/lib/student-password";
+import { STUDENT_SESSION_COOKIE, verifyStudentSession } from "@/lib/student-auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function POST(req: NextRequest) {
   try {
-    const { token, studentName, studentSchool, studentWhatsapp, studentPassword } =
-      await req.json();
+    const { token } = await req.json();
 
-    if (!token || !studentName) {
+    if (!token || !String(token).trim()) {
       return NextResponse.json(
-        { success: false, message: "Token Ujian dan Nama Siswa wajib diisi." },
+        { success: false, message: "Token Ujian wajib diisi." },
         { status: 400 },
       );
     }
 
-    const phone = normalizePhone(studentWhatsapp);
-    if (phone.length < 10) {
+    // Identitas peserta diambil dari sesi login, bukan dari formulir.
+    // Dengan begini peserta lain tidak bisa memakai No. HP orang untuk mengerjakan.
+    const studentId = verifyStudentSession(req.cookies.get(STUDENT_SESSION_COOKIE)?.value);
+    if (!studentId) {
       return NextResponse.json(
-        { success: false, message: "No. HP yang valid wajib diisi (contoh: 081234567890)." },
-        { status: 400 },
+        { success: false, message: "Silakan login terlebih dahulu sebelum memulai ujian." },
+        { status: 401 },
       );
     }
 
-    const password = String(studentPassword ?? "").trim();
-    if (password.length < 4) {
+    const student = await prisma.student.findUnique({ where: { id: studentId } });
+    if (!student) {
       return NextResponse.json(
-        { success: false, message: "PIN ujian minimal 4 karakter." },
-        { status: 400 },
+        { success: false, message: "Akun Anda tidak ditemukan. Silakan login kembali." },
+        { status: 401 },
       );
     }
 
@@ -117,40 +116,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Identitas peserta: No. HP + PIN. Nomor HP menjadi kunci satu kali pengerjaan.
-    let student = await prisma.student.findUnique({ where: { phone } });
-
-    if (!student) {
-      const salt = randomBytes(16).toString("hex");
-      try {
-        student = await prisma.student.create({
-          data: {
-            name: studentName.trim(),
-            phone,
-            school: studentSchool ? studentSchool.trim() : null,
-            passwordHash: hashPassword(password, salt),
-            salt,
-          },
-        });
-      } catch (createError: any) {
-        // Tabrakan nomor HP pada saat bersamaan: ambil data yang baru terdaftar
-        if (createError?.code !== "P2002") throw createError;
-        student = await prisma.student.findUnique({ where: { phone } });
-        if (!student) throw createError;
-      }
-    }
-
-    if (!verifyStudentPassword(password, student)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No. HP atau PIN tidak sesuai dengan data terdaftar.",
-        },
-        { status: 401 },
-      );
-    }
-
-    // Peserta hanya boleh memiliki satu sesi per paket try out.
+    // 3. Satu sesi per peserta per paket try out (kunci: akun yang sedang login).
     const attemptKey = `${exam.id}:student:${student.id}`;
     const previousSession = await prisma.examSession.findFirst({
       where: {
@@ -205,8 +171,8 @@ export async function POST(req: NextRequest) {
             examId: exam.id,
             studentId: student.id,
             studentName: student.name,
-            studentSchool: studentSchool ? studentSchool.trim() : student.school,
-            studentWhatsapp: phone,
+            studentSchool: student.school,
+            studentWhatsapp: student.phone,
             certificateNumber: certNumber,
             attemptKey,
             status: "IN_PROGRESS",

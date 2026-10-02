@@ -122,17 +122,26 @@ Script sekali jalan: `npx tsx scripts/merge-ic-package.ts` (aman dijalankan ulan
 
 ---
 
-## 👤 Alur Peserta (Identitas + 1x Pengerjaan)
+## 👤 Alur Peserta (Login Wajib + 1x Pengerjaan)
 
-1. Peserta mengisi **Nama, No. HP, Nama Sekolah, Token, dan PIN** di halaman utama.
-2. PIN pertama kali **mendaftarkan** peserta (di-hash scrypt + salt). Kali berikutnya HP yang sama harus cocok dengan PIN yang sudah terdaftar.
-3. **No. HP adalah kunci 1x pengerjaan** (`attemptKey = examId:student:studentId`):
+1. Peserta **wajib login dulu** di `/admin/login` memakai username atau No. HP + password dari kartu peserta.
+   Selama belum login, halaman utama hanya menampilkan panel **"Silakan login terlebih dahulu"** —
+   **tidak ada lagi isian nama/sekolah/No. HP/PIN**.
+2. Setelah login, halaman utama langsung mengisi **Nama, Asal Madrasah, dan No. HP dari akun** (terkunci/readonly)
+   plus badge "Sudah login". Peserta tinggal menunggu **Token** dari pengawas lalu menekan
+   "Konfirmasi & Masuk Ujian".
+3. `POST /api/session/start` hanya menerima `{ token }`; identitas dibaca dari **cookie sesi login**
+   (`cbt_user_session`, ditandatangani HMAC dengan kunci terpisah dari cookie panitia). Jadi orang lain tidak
+   bisa mengerjakan dengan No. HP milik peserta lain, dan cookie panitia tidak bisa dipakai memulai ujian.
+4. **Satu akun = satu kali pengerjaan** (`attemptKey = examId:student:studentId`):
    - Sesi selesai (COMPLETED/TIMEOUT) → **tidak bisa masuk lagi**, muncul pesan "sudah mengerjakan".
    - Sesi masih berjalan → dilanjutkan, bukan sesi baru.
-4. Setelah submit, halaman hasil langsung **otomatis mengunduh Sertifikat + Analisa PDF**.
+5. Setelah submit, halaman hasil langsung **otomatis mengunduh Sertifikat + Analisa PDF**.
+6. Tombol Login di navbar **berubah jadi ikon profil** (inisial + nama) begitu peserta login; menu profil
+   memuat data peserta dan tombol **Keluar**.
 
-> Peserta yang **sudah diimpor panitia lewat Excel** tidak mendaftar sendiri: No. HP mereka sudah ada di database,
-> jadi PIN yang dipakai adalah **password yang tertera di kartu peserta / Excel**. PIN lain akan ditolak.
+> Akun hanya dibuat panitia lewat **impor Excel / menu peserta di panel admin**. Tombol "Daftar Peserta" dan
+> halaman pembayaran sengaja disembunyikan karena alur itu masih purwarupa (tidak pernah membuat akun).
 
 ---
 
@@ -161,14 +170,17 @@ Panel `/admin` punya menu peserta yang terhubung ke tabel `Student`:
 
 **Semua endpoint di atas wajib cookie admin** (dulu terbuka tanpa login — sudah ditutup).
 
-No. HP disimpan seragam format `628xx` supaya peserta yang diimpor dari Excel bisa langsung masuk ujian
-(memakai password dari Excel sebagai PIN) dan tercatat sebagai **satu baris yang sama**.
+No. HP disimpan seragam format `628xx` supaya peserta yang diimpor dari Excel bisa langsung **login dan masuk
+ujian** (memakai password dari Excel) dan tercatat sebagai **satu baris yang sama**.
 
 ---
 
 ## 🔐 Keamanan Panel Admin
 
 - Cookie admin kini **ditandatangani HMAC** (`lib/admin-auth.ts`), bukan cookie polos.
+- Cookie peserta (`cbt_user_session`) juga **ditandatangani HMAC** dengan **kunci terpisah**
+  (`lib/student-auth.ts`) sehingga cookie peserta tidak bisa dipakai membuka `/admin` dan cookie panitia tidak
+  bisa dipakai memulai ujian. Profil peserta login dibaca lewat `GET /api/auth/me` (401 bila belum login).
 - Semua endpoint `/api/admin/**`, buat/ubah/hapus ujian, kunci jawaban, dan upload PDF **wajib login**.
 - `GET /api/exams` daftar publik **tidak lagi membocorkan token**; token hanya untuk admin atau pencarian eksplisit `?token=`.
 - `proxy.ts` melindungi halaman `/admin` (pengganti `middleware.ts` yang sudah deprecated di Next 16).
@@ -177,7 +189,7 @@ No. HP disimpan seragam format `628xx` supaya peserta yang diimpor dari Excel bi
 **Login (`POST /api/admin/auth/login`) melayani dua peran:**
 
 - **Panitia** — username & password cocok dengan `ADMIN_USERNAME`/`ADMIN_PASSWORD` → cookie `cbt_admin_session` bertanda tangan HMAC → redirect `/admin`.
-- **Peserta** — username (atau No. HP) + password **wajib cocok dengan data terdaftar** (impor Excel atau peserta yang dibuat lewat panel). Password diverifikasi sesuai asal data: baris impor memakai HMAC-SHA256(salt), baris pendaftaran lewat form ujian memakai scrypt.
+- **Peserta** — username (atau No. HP) + password **wajib cocok dengan data terdaftar** (impor Excel atau peserta yang dibuat lewat panel). Password diverifikasi sesuai asal data: baris impor/panel memakai HMAC-SHA256(salt), baris lama hasil pendaftaran form memakai scrypt (tetap didukung agar data lama tidak rusak).
 - Akun tidak terdaftar / password salah → **401**, tidak ada cookie yang diterbitkan (sebelumnya login apapun dianggap berhasil).
 - Peserta hanya menerima cookie `cbt_user_session` dan **tidak bisa membuka** endpoint `/api/admin/**` (diuji di `scripts/_e2e.mjs`).
 
@@ -190,8 +202,12 @@ Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_
 ```bash
 npm run build                      # build harus hijau
 npm start                          # jalankan server
-node scripts/_e2e.mjs              # 77 pemeriksaan ujung-ke-ujung
+node scripts/_e2e.mjs              # 84 pemeriksaan ujung-ke-ujung (alur login peserta, jadwal, 1x ujian)
 npx tsx scripts/_pdf-check.ts      # 13 pemeriksaan PDF sertifikat & analisa
 ```
+
+Pemeriksaan tampilan (perlu Chromium Playwright) bisa dipakai untuk memastikan alur login peserta benar-benar
+tampil: panel "Silakan login" saat belum login, nama terisi otomatis + ikon profil setelah login, dan tombol
+**Keluar** mengembalikan tampilan ke kondisi belum login.
 
 Jangan mengubah data ujian asli saat uji coba — jalankan e2e lalu bersihkan sisanya dengan `npx tsx scripts/_cleanup-e2e-students.ts`.

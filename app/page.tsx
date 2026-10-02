@@ -9,15 +9,22 @@ import {
   AlertCircle,
   KeyRound,
   User,
-  School,
   FileCheck2,
   Info,
   Sparkles,
-  ShieldCheck,
-  Phone,
   Lock,
+  LogIn,
 } from "lucide-react";
+import Link from "next/link";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
+
+interface StudentProfile {
+  id: string;
+  name: string;
+  school: string | null;
+  phone: string | null;
+  username: string | null;
+}
 
 interface ExamItem {
   id: string;
@@ -39,17 +46,41 @@ interface ExamItem {
 export default function StudentHomePage() {
   const router = useRouter();
 
-  const [studentName, setStudentName] = useState("");
-  const [studentSchool, setStudentSchool] = useState("");
-  const [studentWhatsapp, setStudentWhatsapp] = useState("");
-  const [studentPassword, setStudentPassword] = useState("");
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // Status login peserta: form hanya muncul setelah akun terkonfirmasi.
+  const [student, setStudent] = useState<StudentProfile | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+
   const [exams, setExams] = useState<ExamItem[]>([]);
   const [loadingExams, setLoadingExams] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadStudent() {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!active) return;
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) setStudent(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to load student profile:", err);
+      } finally {
+        if (active) setAuthChecking(false);
+      }
+    }
+    loadStudent();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     async function loadExams() {
@@ -72,24 +103,8 @@ export default function StudentHomePage() {
     e.preventDefault();
     setErrorMessage("");
 
-    if (!studentName.trim()) {
-      setErrorMessage("Silakan masukkan Nama Lengkap Anda.");
-      return;
-    }
-
-    if (!studentSchool.trim()) {
-      setErrorMessage("Silakan masukkan Asal Madrasah / Sekolah Anda.");
-      return;
-    }
-
-    const cleanPhone = studentWhatsapp.replace(/[^\d]/g, "");
-    if (cleanPhone.length < 9) {
-      setErrorMessage("Silakan masukkan No. HP yang aktif (contoh: 081234567890).");
-      return;
-    }
-
-    if (studentPassword.trim().length < 4) {
-      setErrorMessage("Silakan masukkan PIN ujian yang dibagikan panitia (minimal 4 karakter).");
+    if (!student) {
+      setErrorMessage("Silakan login terlebih dahulu sebelum memulai ujian.");
       return;
     }
 
@@ -102,20 +117,6 @@ export default function StudentHomePage() {
     setLoading(true);
 
     try {
-      // Simpan data identitas siswa ke sessionStorage untuk konfirmasi & sesi ujian
-      const studentPayload = {
-        token: cleanToken,
-        studentName: studentName.trim(),
-        studentSchool: studentSchool.trim(),
-        studentWhatsapp: studentWhatsapp.trim(),
-        studentPassword: studentPassword.trim(),
-      };
-
-      sessionStorage.setItem(
-        "cbt_student_data",
-        JSON.stringify(studentPayload),
-      );
-
       // Verifikasi token & jadwal terlebih dahulu
       const checkRes = await fetch(
         `/api/exams?token=${encodeURIComponent(cleanToken)}`,
@@ -234,7 +235,7 @@ export default function StudentHomePage() {
                   Masuk Ruang Ujian
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Isi identitas peserta dan token yang diarahkan oleh panitia
+                  Login dengan akun peserta, lalu isi token yang diarahkan panitia
                 </p>
               </div>
               <span className="p-2 rounded-lg bg-slate-100 text-slate-700 flex-shrink-0">
@@ -249,145 +250,144 @@ export default function StudentHomePage() {
               </div>
             )}
 
-            <form onSubmit={handleStartExam} className="mt-5 space-y-4">
-              {/* Nama Lengkap */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Nama Lengkap Peserta <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                    placeholder="Ketik nama lengkap Anda"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Asal Sekolah / Madrasah */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Asal Madrasah / Sekolah{" "}
-                  <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <School className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    value={studentSchool}
-                    onChange={(e) => setStudentSchool(e.target.value)}
-                    placeholder="Contoh: MTsN 1 Tangerang Selatan / SMPN 1"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* No. WhatsApp (jadi identitas utama peserta) */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  No. HP / WhatsApp Siswa{" "}
-                  <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="tel"
-                    required
-                    value={studentWhatsapp}
-                    onChange={(e) => setStudentWhatsapp(e.target.value)}
-                    placeholder="Contoh: 081234567890"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors font-mono"
-                  />
-                </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                  Nomor ini menjadi identitas Anda dan hanya boleh dipakai untuk{" "}
-                  <b>satu kali pengerjaan</b>.
+            {authChecking ? (
+              <div className="mt-5 py-8 flex flex-col items-center gap-2.5">
+                <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                <p className="text-xs text-slate-500">
+                  Memeriksa status login Anda...
                 </p>
               </div>
-
-              {/* PIN Ujian dari daftar panitia */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  PIN Ujian <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="password"
-                    required
-                    minLength={4}
-                    autoComplete="off"
-                    value={studentPassword}
-                    onChange={(e) => setStudentPassword(e.target.value)}
-                    placeholder="PIN dari daftar peserta panitia"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors font-mono"
-                  />
+            ) : !student ? (
+              /* Belum login: form identitas tidak ditampilkan sama sekali */
+              <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/70 p-5 sm:p-6 text-center space-y-3">
+                <div className="w-11 h-11 rounded-full bg-white border border-slate-200 text-slate-600 flex items-center justify-center mx-auto">
+                  <LogIn className="w-5 h-5" />
                 </div>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                  PIN pertama kali dipakai untuk mendaftarkan No. HP Anda, lalu wajib sama
-                  setiap ingin membuka sesi.
-                </p>
+                <div className="space-y-1.5">
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Silakan login terlebih dahulu
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
+                    Akun peserta dibuat panitia melalui daftar peserta. Setelah
+                    login, data Anda otomatis terisi dan tinggal menunggu token
+                    ujian dari pengawas.
+                  </p>
+                </div>
+                <Link
+                  href="/admin/login"
+                  className="inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Login Peserta
+                </Link>
               </div>
-
-              {/* Token Ujian (Wajib, diisi manual dari arahan admin) */}
-              <div className="pt-2 border-t border-slate-100">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Token Ujian <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <KeyRound className="w-4 h-4" />
+            ) : (
+              <form onSubmit={handleStartExam} className="mt-5 space-y-4">
+                {/* Identitas dari akun yang login (terkunci, tidak bisa diedit) */}
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Data Peserta
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                      <User className="w-3 h-3" />
+                      Sudah login
+                    </span>
                   </div>
-                  <input
-                    type="text"
-                    required
-                    value={token}
-                    onChange={(e) => {
-                      setToken(e.target.value.toUpperCase());
-                      setErrorMessage("");
-                    }}
-                    placeholder="Masukkan token dari panitia/admin"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-bold text-sm text-slate-900 placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors"
-                  />
-                </div>
-                <div className="mt-1.5 flex items-start gap-1.5 text-[11px] text-amber-700 bg-amber-50/70 p-2 rounded border border-amber-200/60">
-                  <Lock className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-600" />
-                  <span>
-                    Token naskah ujian bersifat rahasia dan dibagikan oleh
-                    panitia/pengawas saat jadwal ujian resmi dibuka.
-                  </span>
-                </div>
-              </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full mt-3 py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <span>Konfirmasi &amp; Masuk Ujian</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                      Nama Lengkap
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      aria-readonly="true"
+                      value={student.name}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                        Asal Madrasah / Sekolah
+                      </label>
+                      <input
+                        type="text"
+                        readOnly
+                        aria-readonly="true"
+                        value={student.school || "-"}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 cursor-not-allowed"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                        No. HP / WhatsApp
+                      </label>
+                      <input
+                        type="tel"
+                        readOnly
+                        aria-readonly="true"
+                        value={student.phone || "-"}
+                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 font-mono cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] leading-relaxed text-slate-500">
+                    Data diambil dari akun Anda dan tidak bisa diubah. Satu akun
+                    hanya berlaku untuk <b>satu kali pengerjaan</b>.
+                  </p>
+                </div>
+
+                {/* Token Ujian (Wajib, diisi manual dari arahan admin) */}
+                <div className="pt-2 border-t border-slate-100">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Token Ujian <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <KeyRound className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      required
+                      value={token}
+                      onChange={(e) => {
+                        setToken(e.target.value.toUpperCase());
+                        setErrorMessage("");
+                      }}
+                      placeholder="Masukkan token dari panitia/admin"
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg font-mono font-bold text-sm text-slate-900 placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors"
+                    />
+                  </div>
+                  <div className="mt-1.5 flex items-start gap-1.5 text-[11px] text-amber-700 bg-amber-50/70 p-2 rounded border border-amber-200/60">
+                    <Lock className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-600" />
+                    <span>
+                      Token naskah ujian bersifat rahasia dan dibagikan oleh
+                      panitia/pengawas saat jadwal ujian resmi dibuka.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-3 py-3 px-4 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span>Konfirmasi &amp; Masuk Ujian</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Right Column: Daftar Paket Tryout (Tokens Hidden) & Petunjuk (5 cols) */}

@@ -34,9 +34,6 @@ async function call(method, path, { body, cookie } = {}) {
 
 const STAMP = Date.now();
 const TEST_NAME = `Siswa Uji E2E ${STAMP}`;
-const TEST_PHONE = `0819${String(STAMP).slice(-8)}`;
-const TEST_PASSWORD = "pin-uji-1234";
-const SCHEDULE_PHONE = `0818${String(STAMP).slice(-8)}`;
 
 async function waitForServer(timeoutMs = 60000) {
   const startedAt = Date.now();
@@ -255,6 +252,8 @@ async function main() {
     importedLogin.status === 200 && importedLogin.json?.role === "student",
     `status=${importedLogin.status} msg=${importedLogin.json?.message}`,
   );
+  const importedSetCookie = importedLogin.headers.get("set-cookie") || "";
+  const importedCookie = importedSetCookie.split(";")[0];
 
   const exportRes = await fetch(`${BASE}/api/admin/students/export`, { headers: { cookie: adminCookie } });
   check(
@@ -279,7 +278,8 @@ async function main() {
   check("Admin mengatur jadwal buka", setSchedule.status === 200, `status=${setSchedule.status} ${JSON.stringify(setSchedule.json)}`);
 
   const startBeforeOpen = await call("POST", "/api/session/start", {
-    body: { token: "IC-PAKET-UTUH", studentName: TEST_NAME, studentSchool: "MTsN Uji", studentWhatsapp: SCHEDULE_PHONE, studentPassword: "pin-jadwal-1234" },
+    cookie: studentCookie,
+    body: { token: "IC-PAKET-UTUH" },
   });
   check("Peserta diblokir sebelum jadwal buka", startBeforeOpen.status === 403 && /belum dibuka/i.test(startBeforeOpen.json?.message || ""), `status=${startBeforeOpen.status} msg=${startBeforeOpen.json?.message}`);
 
@@ -288,36 +288,45 @@ async function main() {
   check("Admin mengatur jadwal kedaluwarsa", setExpired.status === 200, `status=${setExpired.status}`);
 
   const startExpired = await call("POST", "/api/session/start", {
-    body: { token: "IC-PAKET-UTUH", studentName: TEST_NAME, studentSchool: "MTsN Uji", studentWhatsapp: SCHEDULE_PHONE, studentPassword: "pin-jadwal-1234" },
+    cookie: studentCookie,
+    body: { token: "IC-PAKET-UTUH" },
   });
   check("Peserta diblokir setelah jadwal selesai", startExpired.status === 403 && /berakhir/i.test(startExpired.json?.message || ""), `status=${startExpired.status} msg=${startExpired.json?.message}`);
 
   const clearSchedule = await call("PATCH", `/api/exams/${pkg.id}`, { cookie: adminCookie, body: { openTime: null, closeTime: null } });
   check("Admin membersihkan jadwal", clearSchedule.status === 200 && !clearSchedule.json?.data?.openTime, JSON.stringify(clearSchedule.json)?.slice(0, 160));
 
-  // --- Peserta hasil impor Excel terhubung ke sesi ujian (satu kali pengerjaan) ---
-  const rosterWrongPin = await call("POST", "/api/session/start", {
-    body: { token: "IC-PAKET-UTUH", studentName: TEST_NAME, studentSchool: "MTsN Uji", studentWhatsapp: rosterPhone, studentPassword: "pin-lain-9999" },
-  });
+  // --- Ujian hanya bisa dimulai lewat sesi login (tanpa PIN / isian manual) ---
+  const startNoLogin = await call("POST", "/api/session/start", { body: { token: "IC-PAKET-UTUH" } });
   check(
-    "PIN berbeda dari data terdaftar ditolak (peserta terhubung ke data impor)",
-    rosterWrongPin.status === 401,
-    `status=${rosterWrongPin.status} msg=${rosterWrongPin.json?.message}`,
+    "Mulai ujian tanpa login ditolak",
+    startNoLogin.status === 401 && /login/i.test(startNoLogin.json?.message || ""),
+    `status=${startNoLogin.status} msg=${startNoLogin.json?.message}`,
   );
 
-  const rosterStart = await call("POST", "/api/session/start", {
-    body: { token: "IC-PAKET-UTUH", studentName: TEST_NAME, studentSchool: "MTsN Uji", studentWhatsapp: rosterPhone, studentPassword: rosterPassword },
+  const startForged = await call("POST", "/api/session/start", {
+    cookie: "cbt_user_session=1700000000000.YWJj.foresight",
+    body: { token: "IC-PAKET-UTUH" },
   });
-  check(
-    "Peserta impor bisa masuk ujian dengan password dari Excel",
-    rosterStart.status === 200 && rosterStart.json?.data?.questions?.length === 123,
-    `status=${rosterStart.status} msg=${rosterStart.json?.message} jumlah=${rosterStart.json?.data?.questions?.length}`,
-  );
-  const rosterSessionId = rosterStart.json?.data?.session?.id;
+  check("Cookie peserta palsu ditolak", startForged.status === 401, `status=${startForged.status} msg=${startForged.json?.message}`);
 
-  // --- Alur peserta ---
+  const startWithAdminCookie = await call("POST", "/api/session/start", { cookie: adminCookie, body: { token: "IC-PAKET-UTUH" } });
+  check("Cookie panitia tidak bisa dipakai memulai ujian", startWithAdminCookie.status === 401, `status=${startWithAdminCookie.status} msg=${startWithAdminCookie.json?.message}`);
+
+  const meAnonymous = await call("GET", "/api/auth/me");
+  check("Profil peserta ditolak tanpa login", meAnonymous.status === 401, `status=${meAnonymous.status}`);
+
+  const meStudent = await call("GET", "/api/auth/me", { cookie: studentCookie });
+  check(
+    "Profil peserta terisi setelah login",
+    meStudent.status === 200 && meStudent.json?.data?.name === TEST_NAME && meStudent.json?.data?.phone === `62817${String(STAMP).slice(-8)}`,
+    `status=${meStudent.status} data=${JSON.stringify(meStudent.json?.data)}`,
+  );
+
+  // --- Alur peserta: mulai, jawab, submit, lalu dikunci satu kali ---
   const start = await call("POST", "/api/session/start", {
-    body: { token: "IC-PAKET-UTUH", studentName: TEST_NAME, studentSchool: "MTsN Uji", studentWhatsapp: TEST_PHONE, studentPassword: TEST_PASSWORD },
+    cookie: studentCookie,
+    body: { token: "IC-PAKET-UTUH" },
   });
   check("Mulai tryout sukses", start.status === 200 && start.json?.success, JSON.stringify(start.json)?.slice(0, 240));
   check("Soal yang dikirim berjumlah 123", start.json?.data?.questions?.length === 123, `jumlah=${start.json?.data?.questions?.length}`);
@@ -325,15 +334,16 @@ async function main() {
     Array.isArray(start.json?.data?.questions) && start.json.data.questions.every((q) => q.correctAnswer === undefined && q.explanation === undefined),
     JSON.stringify(Object.keys(start.json?.data?.questions?.[0] || {})));
   check("Sisa waktu terisi", typeof start.json?.data?.remainingSeconds === "number" && start.json.data.remainingSeconds > 0, `remaining=${start.json?.data?.remainingSeconds}`);
+  check(
+    "Identitas sesi diambil dari akun yang login",
+    start.json?.data?.session?.studentName === TEST_NAME && start.json?.data?.session?.studentWhatsapp === `62817${String(STAMP).slice(-8)}`,
+    `nama=${start.json?.data?.session?.studentName} hp=${start.json?.data?.session?.studentWhatsapp}`,
+  );
   const sessionId = start.json?.data?.session?.id;
 
-  const wrongPin = await call("POST", "/api/session/start", {
-    body: { token: "IC-PAKET-UTUH", studentName: TEST_NAME, studentSchool: "MTsN Uji", studentWhatsapp: TEST_PHONE, studentPassword: "pin-salah-9999" },
-  });
-  check("PIN salah ditolak", wrongPin.status === 401, `status=${wrongPin.status} msg=${wrongPin.json?.message}`);
-
   const resume = await call("POST", "/api/session/start", {
-    body: { token: "IC-PAKET-UTUH", studentName: TEST_NAME, studentSchool: "MTsN Uji", studentWhatsapp: TEST_PHONE, studentPassword: TEST_PASSWORD },
+    cookie: studentCookie,
+    body: { token: "IC-PAKET-UTUH" },
   });
   check("Percobaan kedua melanjutkan sesi yang sama (bukan sesi baru)", resume.status === 200 && resume.json?.data?.session?.id === sessionId, `sessionId=${resume.json?.data?.session?.id} vs ${sessionId}`);
 
@@ -351,9 +361,27 @@ async function main() {
   check("Submit ujian sukses", submit.status === 200 && submit.json?.success, JSON.stringify(submit.json)?.slice(0, 240));
 
   const restart = await call("POST", "/api/session/start", {
-    body: { token: "IC-PAKET-UTUH", studentName: `${TEST_NAME} Baru`, studentSchool: "MTsN Uji", studentWhatsapp: TEST_PHONE, studentPassword: TEST_PASSWORD },
+    cookie: studentCookie,
+    body: { token: "IC-PAKET-UTUH" },
   });
   check("Setelah submit, peserta TIDAK BISA mengerjakan lagi (1x pengerjaan)", restart.status === 403, `status=${restart.status} msg=${restart.json?.message}`);
+
+  // --- Peserta hasil impor Excel bisa memulai ujian dengan akunnya sendiri ---
+  const importedStart = await call("POST", "/api/session/start", {
+    cookie: importedCookie,
+    body: { token: "IC-PAKET-UTUH" },
+  });
+  check(
+    "Peserta hasil impor Excel bisa memulai ujian",
+    importedStart.status === 200 && importedStart.json?.data?.questions?.length === 123,
+    `status=${importedStart.status} msg=${importedStart.json?.message}`,
+  );
+  check(
+    "Sesi peserta impor memakai nama dari hasil impor",
+    importedStart.json?.data?.session?.studentName === `${TEST_NAME} Impor`,
+    `nama=${importedStart.json?.data?.session?.studentName}`,
+  );
+  const importedSessionId = importedStart.json?.data?.session?.id;
 
   const result = await call("GET", `/api/session/${sessionId}/result`);
   check("Hasil ujian bisa diambil", result.status === 200 && result.json?.success, JSON.stringify(result.json)?.slice(0, 200));
@@ -378,7 +406,24 @@ async function main() {
   check("Halaman konfirmasi peserta terbuka", entryPage.status === 200, `status=${entryPage.status}`);
   const homePage = await fetch(`${BASE}/`);
   const homeHtml = await homePage.text();
-  check("Halaman utama punya kolom PIN ujian", homeHtml.includes("PIN Ujian"), "kolom PIN tidak ditemukan");
+  check(
+    "Halaman utama tidak lagi punya kolom PIN / isian identitas manual",
+    !homeHtml.includes("PIN Ujian") && !homeHtml.includes("Ketik nama lengkap Anda"),
+    `PIN=${homeHtml.includes("PIN Ujian")} isianNama=${homeHtml.includes("Ketik nama lengkap Anda")}`,
+  );
+  check(
+    "Halaman utama menunggu status login sebelum menampilkan form",
+    homeHtml.includes("Memeriksa status login Anda"),
+    "panel status login tidak ditemukan di HTML awal",
+  );
+
+  const loginPage = await fetch(`${BASE}/admin/login`);
+  const loginHtml = await loginPage.text();
+  check(
+    "Halaman login tidak lagi menawarkan pendaftaran mandiri (akun dari panitia)",
+    !loginHtml.includes("Daftar Peserta"),
+    "tombol Daftar Peserta masih ada",
+  );
 
   // --- Proteksi halaman admin (proxy.ts) ---
   const adminNoCookie = await fetch(`${BASE}/admin`, { redirect: "manual" });
@@ -400,9 +445,9 @@ async function main() {
   // Bersihkan data uji coba
   const cleanupSession = await call("DELETE", `/api/admin/sessions/${sessionId}`, { cookie: adminCookie });
   console.log(`cleanup sesi: ${cleanupSession.status}`);
-  if (rosterSessionId) {
-    const cleanupRoster = await call("DELETE", `/api/admin/sessions/${rosterSessionId}`, { cookie: adminCookie });
-    console.log(`cleanup sesi impor: ${cleanupRoster.status}`);
+  if (importedSessionId) {
+    const cleanupImported = await call("DELETE", `/api/admin/sessions/${importedSessionId}`, { cookie: adminCookie });
+    console.log(`cleanup sesi impor: ${cleanupImported.status}`);
   }
   await call("DELETE", `/api/admin/sessions/x`, { cookie: adminCookie });
 }
