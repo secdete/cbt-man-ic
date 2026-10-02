@@ -684,10 +684,12 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex flex-col gap-4">
+        <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Kelola Peserta Ujian</h2>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">
+                Kelola Peserta Ujian
+              </h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Buat peserta baru, impor dari Excel, unduh kartu peserta ke PDF
                 A4, atau hapus peserta yang keliru.
@@ -1083,42 +1085,44 @@ export default function AdminDashboardPage() {
                       {exam._count?.sessions || 0} Siswa
                     </td>
 
-                    <td className="py-4 px-6 text-right space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => openAnswerKeyModal(exam)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium text-xs transition-colors cursor-pointer"
-                        title="Kelola Kunci Jawaban Soal"
-                      >
-                        <KeyRound className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Kunci Jawaban</span>
-                      </button>
+                    <td className="py-4 px-6">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openAnswerKeyModal(exam)}
+                          className="inline-flex min-h-11 md:min-h-0 items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium text-xs transition-colors cursor-pointer"
+                          title="Kelola Kunci Jawaban Soal"
+                        >
+                          <KeyRound className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Kunci Jawaban</span>
+                        </button>
 
-                      <Link
-                        href={`/admin/exams/${exam.id}/monitoring`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs transition-colors shadow-2xs"
-                        title="Pantau Peserta Ujian Real-Time (Live Proctoring)"
-                      >
-                        <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-                        <span>Live Monitor</span>
-                      </Link>
+                        <Link
+                          href={`/admin/exams/${exam.id}/monitoring`}
+                          className="inline-flex min-h-11 md:min-h-0 items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs transition-colors shadow-2xs"
+                          title="Pantau Peserta Ujian Real-Time (Live Proctoring)"
+                        >
+                          <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+                          <span>Live Monitor</span>
+                        </Link>
 
-                      <Link
-                        href={`/admin/exams/${exam.id}/results`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors"
-                      >
-                        <BarChart2 className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Rekap Nilai</span>
-                      </Link>
+                        <Link
+                          href={`/admin/exams/${exam.id}/results`}
+                          className="inline-flex min-h-11 md:min-h-0 items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors"
+                        >
+                          <BarChart2 className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Rekap Nilai</span>
+                        </Link>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteExam(exam.id, exam.title)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                        title="Hapus Ujian"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteExam(exam.id, exam.title)}
+                          className="inline-flex min-h-11 md:min-h-0 items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          title="Hapus Ujian"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

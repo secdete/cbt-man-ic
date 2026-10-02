@@ -11,12 +11,18 @@
     "db:sqlite": "node scripts/switch-db.js sqlite && npx prisma generate",
     "db:supabase": "node scripts/switch-db.js supabase && npx prisma generate",
     "seed": "prisma db seed",
-    "import:pdf": "npx tsx scripts/import-pdf.ts"
+    "import:pdf": "npx tsx scripts/import-pdf.ts",
+    "verify:pdf": "tsx scripts/verify-pdf.ts",
+    "verify:api": "node scripts/verify-api.mjs",
+    "verify:e2e": "node scripts/verify-e2e.mjs",
+    "verify:docs": "tsx scripts/verify-documents.ts",
+    "cleanup:e2e": "tsx scripts/cleanup-e2e.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@napi-rs/canvas": "0.1.80",
     "@prisma/client": "^6.19.3",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
@@ -25,6 +31,7 @@
     "nodemailer": "^10.0.13",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "5.4.296",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "tailwind-merge": "^3.7.0",

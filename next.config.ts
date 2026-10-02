@@ -17,7 +17,10 @@ if (!fs.existsSync(envPath) && fs.existsSync(examplePath)) {
 }
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // pdfjs-dist (import literal) dan @napi-rs/canvas (native) harus di-resolve
+  // dari node_modules, bukan dibundel — kalau dibundel, path worker pdf.js jadi
+  // salah dan seluruh ekstraksi PDF gagal hanya di production build.
+  serverExternalPackages: ["pdfjs-dist", "@napi-rs/canvas"],
 };
 
 export default nextConfig;

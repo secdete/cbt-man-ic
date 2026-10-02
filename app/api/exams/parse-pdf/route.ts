@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { extractTextFromPDF, parseQuestionsFromText } from "@/lib/pdf-parser";
+import {
+  extractTextFromPDF,
+  parseQuestionsDetailed,
+  parseQuestionsFromText,
+} from "@/lib/pdf-parser";
+import { extractStructuredFromPDF, extractTextOnlyFromPDF } from "@/lib/pdf-extract";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
@@ -30,7 +35,40 @@ export async function POST(req: NextRequest) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
-      const extractedText = await extractTextFromPDF(buffer);
+      // Ekstraksi terstruktur: urutan baris mengikuti tata letak halaman dan
+      // gambar soal ikut tertanam sebagai markdown.
+      let extractedText = "";
+      const notes: string[] = [];
+      let imageCount = 0;
+      let pageCount = 0;
+      try {
+        const ext = await extractStructuredFromPDF(buffer);
+        extractedText = ext.text;
+        notes.push(...ext.notes);
+        imageCount = ext.imageCount;
+        pageCount = ext.pageCount;
+      } catch (error: any) {
+        notes.push(
+          `Ekstraksi terstruktur gagal (${error?.message || error}); memakai teks mentah biasa.`,
+        );
+      }
+
+      if (!extractedText || extractedText.trim().length === 0) {
+        try {
+          extractedText = await extractTextOnlyFromPDF(buffer);
+          if (extractedText.trim()) {
+            notes.push("Gambar gagal diekstrak, hanya teks yang dipakai.");
+          }
+        } catch (error: any) {
+          notes.push(
+            `Ekstraksi teks gagal (${error?.message || error}); mencoba pembaca PDF cadangan.`,
+          );
+        }
+      }
+
+      if (!extractedText || extractedText.trim().length === 0) {
+        extractedText = await extractTextFromPDF(buffer);
+      }
 
       if (!extractedText || extractedText.trim().length === 0) {
         return NextResponse.json(
@@ -43,14 +81,19 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const questions = parseQuestionsFromText(extractedText);
+      const parsed = parseQuestionsDetailed(extractedText);
 
       return NextResponse.json({
         success: true,
         fileName: file.name,
-        totalQuestionsParsed: questions.length,
+        totalQuestionsParsed: parsed.questions.length,
         extractedTextPreview: extractedText.slice(0, 1000),
-        questions,
+        questions: parsed.questions,
+        strategy: parsed.strategy,
+        warnings: parsed.warnings,
+        notes,
+        imageCount,
+        pageCount,
       });
     }
 

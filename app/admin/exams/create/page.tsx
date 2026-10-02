@@ -63,6 +63,7 @@ export default function CreateExamPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [parseDetails, setParseDetails] = useState<{ text: string; warn: boolean }[]>([]);
 
   // Step 2: Butir Soal
   const [questions, setQuestions] = useState<EditableQuestion[]>([]);
@@ -91,6 +92,26 @@ export default function CreateExamPage() {
     setToken(res);
   };
 
+  // Ringkasan proses ekstraksi agar admin bisa menilai hasilnya sendiri.
+  const collectParseDetails = (json: any): { text: string; warn: boolean }[] => {
+    const details: { text: string; warn: boolean }[] = [];
+    if (json.pageCount) details.push({ text: `${json.pageCount} halaman terbaca.`, warn: false });
+    if (typeof json.imageCount === "number") {
+      details.push({
+        text: `${json.imageCount} gambar soal disematkan ke dalam naskah.`,
+        warn: false,
+      });
+    }
+    if (json.strategy) {
+      details.push({ text: `Strategi pemetaan: ${json.strategy}.`, warn: false });
+    }
+    for (const note of json.notes || []) details.push({ text: note, warn: false });
+    for (const warning of json.warnings || []) {
+      details.push({ text: warning, warn: true });
+    }
+    return details;
+  };
+
   // Handle Upload & Ekstraksi PDF
   const handleParsePDF = async () => {
     if (!selectedFile) {
@@ -103,6 +124,7 @@ export default function CreateExamPage() {
 
     setParsing(true);
     setParseMessage(null);
+    setParseDetails([]);
 
     try {
       const formData = new FormData();
@@ -123,6 +145,7 @@ export default function CreateExamPage() {
           });
         } else {
           setQuestions(json.questions);
+          setParseDetails(collectParseDetails(json));
           setParseMessage({
             type: "success",
             text: `Berhasil mengekstrak ${json.questions.length} butir soal dari berkas "${selectedFile.name}"! Silakan tinjau dan perbaiki di bawah.`,
@@ -166,6 +189,7 @@ export default function CreateExamPage() {
 
     setParsing(true);
     setParseMessage(null);
+    setParseDetails([]);
 
     try {
       const res = await fetch("/api/exams/parse-pdf", {
@@ -178,6 +202,7 @@ export default function CreateExamPage() {
 
       if (json.success && Array.isArray(json.questions)) {
         setQuestions(json.questions);
+        setParseDetails(collectParseDetails(json));
         setParseMessage({
           type: "success",
           text: `Berhasil mengekstrak ${json.questions.length} butir soal dari teks!`,
@@ -298,9 +323,9 @@ export default function CreateExamPage() {
     .reduce((total, subtest) => total + subtest._count.questions, 0);
 
   return (
-    <div className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full space-y-8">
+    <div className="flex-1 py-6 sm:py-10 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-6 sm:space-y-8">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 sm:pb-6 border-b border-slate-200">
         <div>
           <Link
             href="/admin"
@@ -337,7 +362,7 @@ export default function CreateExamPage() {
 
       {/* Grid: Form Setting Ujian & Ekstraksi PDF */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Kolom Kiri: Metadata Ujian (4 cols) */}
+        {/* Kolom Kiri: Metadata Ujian (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <h2 className="font-bold text-slate-900 text-base pb-3 border-b border-slate-100 flex items-center gap-2">
@@ -500,7 +525,7 @@ export default function CreateExamPage() {
             {/* Tabs Mode */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <FileUp className="w-5 h-5 text-blue-600" />
+                <FileUp className="w-4 h-4 text-blue-700" />
                 <h2 className="font-bold text-slate-900 text-base">
                   Modul Ekstraksi Soal
                 </h2>
@@ -559,6 +584,26 @@ export default function CreateExamPage() {
                   )}
                 </div>
               </div>
+            )}
+
+            {parseDetails.length > 0 && (
+              <ul className="rounded-lg border border-slate-200 bg-slate-50 divide-y divide-slate-200/70 text-[11px]">
+                {parseDetails.map((detail, index) => (
+                  <li
+                    key={`${index}:${detail.text}`}
+                    className={`px-3.5 py-2 flex items-start gap-2 ${
+                      detail.warn ? "text-[#8A6100] bg-[#FFF8E6]" : "text-slate-600"
+                    }`}
+                  >
+                    {detail.warn ? (
+                      <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-px" />
+                    ) : (
+                      <FileText className="w-3.5 h-3.5 flex-shrink-0 mt-px text-slate-400" />
+                    )}
+                    <span>{detail.text}</span>
+                  </li>
+                ))}
+              </ul>
             )}
 
             {/* TAB 1: UPLOAD PDF */}

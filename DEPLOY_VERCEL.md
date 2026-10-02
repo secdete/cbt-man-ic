@@ -201,9 +201,34 @@ ujian** (memakai password dari Excel) dan tercatat sebagai **satu baris yang sam
 - **Panitia** — username & password cocok dengan `ADMIN_USERNAME`/`ADMIN_PASSWORD` → cookie `cbt_admin_session` bertanda tangan HMAC → redirect `/admin`.
 - **Peserta** — username (atau No. HP) + password **wajib cocok dengan data terdaftar** (impor Excel atau peserta yang dibuat lewat panel). Password diverifikasi sesuai asal data: baris impor/panel memakai HMAC-SHA256(salt), baris lama hasil pendaftaran form memakai scrypt (tetap didukung agar data lama tidak rusak).
 - Akun tidak terdaftar / password salah → **401**, tidak ada cookie yang diterbitkan (sebelumnya login apapun dianggap berhasil).
-- Peserta hanya menerima cookie `cbt_user_session` dan **tidak bisa membuka** endpoint `/api/admin/**` (diuji di `scripts/_e2e.mjs`).
+- Peserta hanya menerima cookie `cbt_user_session` dan **tidak bisa membuka** endpoint `/api/admin/**` (diuji di `scripts/verify-e2e.mjs`).
 
 Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_KEY` = `cakrawala_admin_secret_2025`. **Segera ganti** di Environment Variables Vercel.
+
+---
+
+## 📄 Ekstraksi Naskah PDF
+
+`POST /api/exams/parse-pdf` (wajib login admin) membaca PDF dengan `pdfjs-dist`:
+
+- **Teks disusun seperti yang terlihat di halaman** — posisi tiap baris diambil dari
+  koordinat halaman, lalu halaman dua kolom dipisah otomatis lewat celah horizontal
+  yang konsisten (`detectColumnSplit` di `lib/pdf-extract.ts`). Tanpa ini, baris kiri
+  dan kanan tercampur menjadi "10. … 11. …" dan parser hanya menemukan 1 soal.
+- **Gambar soal ikut diekstrak** dari daftar operator halaman lalu ditanam sebagai
+  markdown `![Gambar Soal](data:image/jpeg;base64,…)` di dalam `questionText`/opsi —
+  sama seperti yang dilakukan pipeline Python lama. Gambar dikodekan JPEG dan
+  dibatasi total ±3 MB agar respons tetap di bawah limit body 4,5 MB Vercel.
+- **Respons memuat `strategy`, `warnings`, `notes`, `imageCount`, `pageCount`**;
+  panel admin menampilkannya di bawah pesan ekstraksi supaya panitia bisa
+  menilai hasilnya sebelum menerbitkan paket.
+- Bila ekstraksi bergambar gagal, endpoint otomatis turun ke mode teks saja
+  (`extractTextOnlyFromPDF`), baru terakhir ke `pdf-parse`.
+- `pdfjs-dist` dan `@napi-rs/canvas` adalah **dependency langsung** dan didaftarkan di
+  `serverExternalPackages` (`next.config.ts`). Jangan mengimpor modul tersebut lewat
+  variabel — impor literal wajib, kalau tidak bundler membungkusnya dan path worker
+  pdf.js jadi salah sehingga seluruh ekstraksi gagal di production build.
+- `maxDuration` route ini 60 detik; naskah terberat ±7 detik di server produksi.
 
 ---
 
@@ -212,12 +237,14 @@ Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_
 ```bash
 npm run build                      # build harus hijau
 npm start                          # jalankan server
-node scripts/_e2e.mjs              # 94 pemeriksaan ujung-ke-ujung (alur login peserta, jadwal, 1x ujian, hapus peserta)
-npx tsx scripts/_pdf-check.ts      # 13 pemeriksaan PDF sertifikat & analisa
+npm run verify:pdf                 # 16 naskah di modul/ = 713 soal, tanpa soal hampa, gambar ikut terbaca
+npm run verify:api                 # ekstraksi lewat HTTP (login + unggah multipart) harus hijau
+npm run verify:e2e                 # 94 pemeriksaan ujung-ke-ujung (alur login peserta, jadwal, 1x ujian, hapus peserta)
+npm run verify:docs                # 13 pemeriksaan PDF sertifikat & analisa
 ```
 
 Pemeriksaan tampilan (perlu Chromium Playwright) bisa dipakai untuk memastikan alur login peserta benar-benar
 tampil: panel "Silakan login" saat belum login, nama terisi otomatis + ikon profil setelah login, dan tombol
 **Keluar** mengembalikan tampilan ke kondisi belum login.
 
-Jangan mengubah data ujian asli saat uji coba — jalankan e2e lalu bersihkan sisanya dengan `npx tsx scripts/_cleanup-e2e-students.ts`.
+Jangan mengubah data ujian asli saat uji coba — jalankan e2e lalu bersihkan sisanya dengan `npm run cleanup:e2e`.

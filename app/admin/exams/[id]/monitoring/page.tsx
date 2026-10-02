@@ -201,7 +201,7 @@ export default function AdminLiveMonitoringPage({
   });
 
   return (
-    <div className="flex-1 py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-6">
+    <div className="flex-1 py-6 sm:py-10 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full space-y-6 sm:space-y-8">
       {toastMessage && (
         <div className="fixed top-4 right-4 z-50 p-3.5 rounded-xl bg-emerald-900 text-white text-xs font-medium shadow-2xl flex items-center gap-2 animate-in slide-in-from-top-3">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
@@ -210,7 +210,7 @@ export default function AdminLiveMonitoringPage({
       )}
 
       {/* Top Header Bar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-5 sm:pb-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <Link
             href="/admin"

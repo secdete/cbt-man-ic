@@ -291,93 +291,412 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   }
 }
 
+/* ------------------------------------------------------------ baris sampah */
+
+const JUNK_LINE_KEYS = [
+  "MATERI UJIAN SNPDB",
+  "MATA UJI",
+  "Version 1.0",
+  "Pengawas Ruang",
+  "UIN Sunan Ampel",
+  "DOKUMEN RAHASIA",
+  "CBT Master Panel",
+  "NASKAH SOAL TRYOUT",
+  "Pengawas ujian",
+];
+
+/** Baris kop/footers naskah yang tidak boleh ikut jadi soal. */
+export function isJunkExamLine(rawText: string): boolean {
+  const t = (rawText || "").trim();
+  if (!t) return true;
+  if (JUNK_LINE_KEYS.some((k) => t.includes(k))) return true;
+  if (/^--\s*\d+\s*(of|dari)\s*\d+\s*--$/i.test(t)) return true;
+  if (/^halaman\s+\d+(\s*dari\s+\d+)?$/i.test(t)) return true;
+  if (/^page\s+\d+(\s*of\s*\d+)?$/i.test(t)) return true;
+  return false;
+}
+
+/* -------------------------------------------------- deteksi awal soal/opsi */
+
+// "1." / "1)" / "1 - " / "1.Makna" / "Soal 3." — termasuk nomor tanpa tanda
+// ("1" di baris sendiri). "1.5" sengaja ditolak agar angka desimal tak jadi nomor.
+const HEADER_LINE_RE =
+  /^(?:soal\s*(?:nomor|no)?\.?\s*)?(\d{1,3})(?:\s*[.)\-–]\s*(?!\d)|\s*$)/i;
+
+// "(A) teks" / "A. teks" / "A) teks" di awal baris
+const OPTION_LINE_RE = /^\s*(\()?([A-Ea-e])\s*([.)])\s*/;
+
+interface HeaderLine {
+  line: number;
+  number: number;
+  rest: string;
+}
+
+function collectHeaders(lines: string[]): HeaderLine[] {
+  const candidates: HeaderLine[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(HEADER_LINE_RE);
+    if (!m) continue;
+    candidates.push({
+      line: i,
+      number: parseInt(m[1], 10),
+      rest: lines[i].slice(m[0].length).trim(),
+    });
+  }
+
+  // Buang nomor palsu (tahun, catatan kaki, daftar isi) dengan validasi berurutan.
+  const kept: HeaderLine[] = [];
+  let expected = -1;
+  for (const c of candidates) {
+    if (c.number < 1 || c.number > 300) continue;
+    if (expected === -1) {
+      kept.push(c);
+      expected = c.number + 1;
+      continue;
+    }
+    if (c.number === expected || (c.number === 1 && expected > 2)) {
+      kept.push(c);
+      expected = c.number + 1;
+      continue;
+    }
+    if (c.number > expected && c.number - expected <= 2) {
+      kept.push(c);
+      expected = c.number + 1;
+    }
+    // selain itu: nomor palsu → lepas
+  }
+  return kept;
+}
+
+function collectOptionAnchors(
+  lines: string[],
+): { line: number; letter: string }[] {
+  const raw: { line: number; letter: string; wrapped: boolean }[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(OPTION_LINE_RE);
+    if (!m) continue;
+    // "(A)" / "A)" dianggap gaya berkurung; "A." adalah gaya titik yang sering
+    // muncul sebagai label daftar di tengah naskah (bukan pilihan jawaban).
+    const wrapped = Boolean(m[1]) || m[3] === ")";
+    raw.push({ line: i, letter: m[2].toUpperCase(), wrapped });
+  }
+
+  const wrappedA = raw.filter((a) => a.letter === "A" && a.wrapped).length;
+  const bareA = raw.filter((a) => a.letter === "A" && !a.wrapped).length;
+  const useWrappedOnly = wrappedA > 0 && wrappedA >= bareA;
+  const kept = useWrappedOnly ? raw.filter((a) => a.wrapped) : raw;
+  return kept.map(({ line, letter }) => ({ line, letter }));
+}
+
+/* --------------------------------------------------------- skor kualitas */
+
+const DUMMY_OPTION_RE = /^(pilihan|opsi)\s*[a-e]$/i;
+const IMAGE_MARKER_RE = /!\[[^\]]*\]\([^)]*\)/g;
+
+function scoreQuestions(questions: ParsedQuestion[]): number {
+  if (questions.length === 0) return 0;
+  let score = questions.length > 1 ? 10 : 0;
+  for (const q of questions) {
+    const realOptions = [q.optionA, q.optionB, q.optionC, q.optionD].filter(
+      (o) => o && !DUMMY_OPTION_RE.test(o.trim()),
+    ).length;
+    if (realOptions >= 3) score += 12;
+    else if (realOptions >= 2) score += 6;
+    const stemLen = q.questionText.replace(IMAGE_MARKER_RE, "").trim().length;
+    if (stemLen >= 20) score += 4;
+    else if (stemLen >= 5) score += 1;
+  }
+  return score;
+}
+
+/* ------------------------------------------------------- strategi parsing */
+
+function detectBottomKeys(text: string): Map<number, string> {
+  const map = new Map<number, string>();
+  const keyMatch = text.match(
+    /(?:kunci\s*jawaban|daftar\s*kunci|kunci\s*soal)[\s\S]*$/i,
+  );
+  if (!keyMatch) return map;
+  const itemKeyRegex = /(?:(\d+)\s*[\.\:\-\)]\s*([A-Ea-e]))/g;
+  let ikm: RegExpExecArray | null;
+  while ((ikm = itemKeyRegex.exec(keyMatch[0])) !== null) {
+    map.set(parseInt(ikm[1], 10), ikm[2].toUpperCase());
+  }
+  return map;
+}
+
+/** Strategi 1: satu blok per nomor soal berurutan. */
+function parseByHeaders(
+  lines: string[],
+  headers: HeaderLine[],
+  keys: Map<number, string>,
+): ParsedQuestion[] {
+  const out: ParsedQuestion[] = [];
+  for (let i = 0; i < headers.length; i++) {
+    const h = headers[i];
+    const endLine = i + 1 < headers.length ? headers[i + 1].line : lines.length;
+    const parts: string[] = [];
+    if (h.rest) parts.push(h.rest);
+    for (let l = h.line + 1; l < endLine; l++) parts.push(lines[l]);
+    const parsed = parseSingleQuestionBlock(
+      h.number,
+      parts.join("\n").trim(),
+      keys.get(h.number),
+    );
+    if (parsed) out.push(parsed);
+  }
+  return out;
+}
+
 /**
- * Parsing teks ujian menjadi butir-butir soal terstruktur (Nomor, Soal, Opsi A-E, Kunci, Pembahasan)
+ * Strategi 2: pasangkan nomor soal ke-i dengan grup opsi A ke-i.
+ * Penting untuk naskah yang urutan stream PDF-nya "opsi dulu, nomor belakangan".
+ */
+function parseByPairing(
+  lines: string[],
+  headers: HeaderLine[],
+  anchorsA: number[],
+  keys: Map<number, string>,
+): ParsedQuestion[] {
+  if (anchorsA.length === 0) return [];
+  const out: ParsedQuestion[] = [];
+
+  for (let k = 0; k < anchorsA.length; k++) {
+    const optStart = anchorsA[k];
+    let optEnd = k + 1 < anchorsA.length ? anchorsA[k + 1] : lines.length;
+    const nextHeader = headers[k + 1];
+    if (nextHeader && nextHeader.line > optStart && nextHeader.line < optEnd) {
+      optEnd = nextHeader.line;
+    }
+    // Batas wajar: 4-5 opsi + gambar ≈ 12 baris.
+    if (optEnd - optStart > 12) optEnd = optStart + 12;
+    const optionsText = lines.slice(optStart, optEnd).join("\n").trim();
+
+    let stemParts: string[] = [];
+    let number = k + 1;
+    const h = headers[k];
+    if (h) {
+      number = h.number;
+      if (h.line < optStart) {
+        // Normal: nomor + stem sebelum opsi sendiri.
+        stemParts = [h.rest, ...lines.slice(h.line + 1, optStart)];
+      } else {
+        // Stem belakangan: hentikan sebelum grup opsi berikutnya.
+        let endStem = headers[k + 1] ? headers[k + 1].line : lines.length;
+        const nextAnchor = anchorsA.find((a) => a > h.line);
+        if (nextAnchor !== undefined && nextAnchor < endStem) {
+          endStem = nextAnchor;
+        }
+        endStem = Math.min(endStem, h.line + 40);
+        stemParts = [h.rest, ...lines.slice(h.line + 1, endStem)];
+      }
+    }
+
+    const block = [...stemParts, optionsText]
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join("\n");
+    const parsed = parseSingleQuestionBlock(
+      number,
+      block,
+      keys.get(number),
+    );
+    if (parsed) out.push(parsed);
+  }
+  return out;
+}
+
+/**
+ * Strategi 3: tanpa nomor sama sekali — kelompokkan opsi A-E berurutan,
+ * stem adalah baris di antara isi opsi terakhir dengan opsi A berikutnya.
+ */
+function parseByOptionGroups(
+  lines: string[],
+  anchors: { line: number; letter: string }[],
+  keys: Map<number, string>,
+): ParsedQuestion[] {
+  if (anchors.length < 2) return [];
+  const clusters: number[][] = [];
+  for (const a of anchors) {
+    const cur = clusters[clusters.length - 1];
+    if (cur && cur.length > 0) {
+      const prevIdx = anchors.findIndex((x) => x.line === cur[cur.length - 1]);
+      const prevLetter = anchors[prevIdx]?.letter ?? "";
+      if (a.letter === String.fromCharCode(prevLetter.charCodeAt(0) + 1)) {
+        cur.push(a.line);
+        continue;
+      }
+    }
+    if (!cur || a.letter === "A" || cur.length >= 5) clusters.push([a.line]);
+    else cur.push(a.line);
+  }
+
+  const anchorLineSet = new Set(anchors.map((a) => a.line));
+  const out: ParsedQuestion[] = [];
+  for (let k = 0; k < clusters.length; k++) {
+    const cluster = clusters[k];
+    const start = cluster[0];
+    const last = cluster[cluster.length - 1];
+    const optEnd = Math.min(last + 2, lines.length);
+    const stemEnd = start;
+    const stemStart = k === 0 ? 0 : (clusters[k - 1][clusters[k - 1].length - 1] + 2);
+    const stemLines = lines.slice(Math.min(stemStart, stemEnd), stemEnd);
+    const optLines = lines.slice(start, optEnd).filter((_, idx) => {
+      const lineIdx = start + idx;
+      return lineIdx <= last || !anchorLineSet.has(lineIdx);
+    });
+    const block = [...stemLines, ...optLines].join("\n").trim();
+    const parsed = parseSingleQuestionBlock(k + 1, block, keys.get(k + 1));
+    if (parsed) out.push(parsed);
+  }
+  return out;
+}
+
+/* -------------------------------------------------------------- utama */
+
+export interface ParseQuestionsResult {
+  questions: ParsedQuestion[];
+  strategy: string;
+  warnings: string[];
+}
+
+/**
+ * Parsing teks ujian menjadi butir-butir soal terstruktur.
+ * Mencoba beberapa strategi segmentasi lalu memilih yang paling lengkap,
+ * supaya naskah berpola aneh (opsi duluan, nomor tanpa spasi, tanpa nomor)
+ * tidak berakhir cuma 1 soal.
  */
 export function parseQuestionsFromText(rawText: string): ParsedQuestion[] {
+  return parseQuestionsDetailed(rawText).questions;
+}
+
+export function parseQuestionsDetailed(
+  rawText: string,
+): ParseQuestionsResult {
+  const warnings: string[] = [];
   if (!rawText || rawText.trim().length === 0) {
-    return [];
+    return {
+      questions: [],
+      strategy: "kosong",
+      warnings: ["Teks naskah kosong."],
+    };
   }
 
-  // Bersihkan karakter aneh, null bytes, dan standarisasi baris baru
+  // Bersihkan karakter aneh dan standarisasi baris, buang kop/footers.
   const cleanText = rawText
     .replace(/\0/g, "")
-    .replace(/[\x00]/g, "")
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
-    .replace(/\t/g, " ")
-    .trim();
+    .replace(/\t/g, " ");
+  const lines = cleanText
+    .split("\n")
+    .map((l) => l.replace(/[ \u00a0]+/g, " ").trim())
+    .filter((l) => !isJunkExamLine(l));
+  const text = lines.join("\n").trim();
+  if (!text) {
+    return {
+      questions: [],
+      strategy: "kosong",
+      warnings: ["Teks naskah hanya berisi kop/footers, tidak ada isi soal."],
+    };
+  }
 
-  // 1. Cek apakah ada tabel/daftar kunci jawaban di bagian akhir dokumen
-  const bottomKeysMap = new Map<number, string>();
-  const keySectionRegex =
-    /(?:kunci\s*jawaban|daftar\s*kunci|kunci\s*soal)[\s\S]*$/i;
-  const keyMatch = cleanText.match(keySectionRegex);
-  if (keyMatch) {
-    const keySectionText = keyMatch[0];
-    const itemKeyRegex = /(?:(\d+)\s*[\.\:\-\)]\s*([A-Ea-e]))/g;
-    let ikm: RegExpExecArray | null;
-    while ((ikm = itemKeyRegex.exec(keySectionText)) !== null) {
-      const qNum = parseInt(ikm[1], 10);
-      const qAns = ikm[2].toUpperCase();
-      bottomKeysMap.set(qNum, qAns);
+  const keys = detectBottomKeys(text);
+  const headers = collectHeaders(lines);
+  const anchors = collectOptionAnchors(lines);
+  const anchorsA = anchors.filter((a) => a.letter === "A").map((a) => a.line);
+
+  const strategies: { name: string; run: () => ParsedQuestion[] }[] = [
+    { name: "penomoran", run: () => parseByHeaders(lines, headers, keys) },
+    {
+      name: "pasang-opsi",
+      run: () => parseByPairing(lines, headers, anchorsA, keys),
+    },
+    {
+      name: "grup-opsi",
+      run: () => parseByOptionGroups(lines, anchors, keys),
+    },
+  ];
+
+  let best: { name: string; questions: ParsedQuestion[]; score: number } | null =
+    null;
+  for (const s of strategies) {
+    let qs: ParsedQuestion[] = [];
+    try {
+      qs = s.run();
+    } catch {
+      qs = [];
+    }
+    const score = scoreQuestions(qs);
+    if (!best || score > best.score) {
+      best = { name: s.name, questions: qs, score };
     }
   }
 
-  // 2. Pisahkan teks soal berdasarkan nomor soal di awal baris (misal: "1. ", "1) ", "Soal 1. ", dll)
-  // Membagi teks dengan lookahead regex
-  const questionBlocks: { number: number; text: string }[] = [];
-
-  // Regex mendeteksi awal soal: misal "\n1. " atau awal teks "1. "
-  const questionHeaderRegex =
-    /(?:^|\n)\s*(?:soal\s*(?:nomor|no)?\.?\s*)?(\d+)\s*[\.\)\-]\s+/gi;
-
-  const matches: { index: number; number: number; length: number }[] = [];
-  let match: RegExpExecArray | null;
-  while ((match = questionHeaderRegex.exec(cleanText)) !== null) {
-    matches.push({
-      index: match.index,
-      number: parseInt(match[1], 10),
-      length: match[0].length,
-    });
-  }
-
-  if (matches.length === 0) {
-    // Jika tidak ditemukan penomoran baku, coba parsing baris demi baris
-    return fallbackParser(cleanText);
-  }
-
-  for (let i = 0; i < matches.length; i++) {
-    const current = matches[i];
-    const startIndex = current.index + current.length;
-    const endIndex =
-      i + 1 < matches.length
-        ? matches[i + 1].index
-        : keyMatch
-          ? keyMatch.index
-          : cleanText.length;
-    const blockContent = cleanText.slice(startIndex, endIndex).trim();
-
-    questionBlocks.push({
-      number: current.number,
-      text: blockContent,
-    });
-  }
-
-  const results: ParsedQuestion[] = [];
-
-  for (const block of questionBlocks) {
-    const parsed = parseSingleQuestionBlock(
-      block.number,
-      block.text,
-      bottomKeysMap.get(block.number),
+  if (!best || best.questions.length === 0) {
+    warnings.push(
+      "Struktur naskah tidak terbaca otomatis (tidak ada penomoran maupun grup opsi). Seluruh teks dimasukkan ke 1 soal — silakan pisahkan manual di editor.",
     );
-    if (parsed) {
-      results.push(parsed);
-    }
+    return { questions: fallbackParser(text), strategy: "fallback", warnings };
   }
 
-  return results;
+  let questions = best.questions;
+  const numbers = questions.map((q) => q.questionNumber);
+  const unique = new Set(numbers).size === numbers.length;
+  const increasing = numbers.every((n, i) => i === 0 || n > numbers[i - 1]);
+  if (!unique || !increasing) {
+    questions = questions.map((q, i) => ({ ...q, questionNumber: i + 1 }));
+  }
+
+  questions = promoteImageOptions(questions);
+
+  const withoutOptions = questions.filter((q) =>
+    [q.optionA, q.optionB, q.optionC, q.optionD].every((o) =>
+      DUMMY_OPTION_RE.test((o || "").trim()),
+    ),
+  ).length;
+  if (questions.length === 1) {
+    warnings.push(
+      "Hanya 1 soal terdeteksi dari naskah ini. Periksa apakah penomoran/opsi berbeda dari format umum, lalu tambahkan soal manual bila perlu.",
+    );
+  }
+  if (withoutOptions > 0) {
+    warnings.push(
+      `${withoutOptions} soal belum punya opsi A-D terbaca otomatis (ditandai "Pilihan A" dst). Lengkapi sebelum disimpan.`,
+    );
+  }
+
+  return { questions, strategy: best.name, warnings };
+}
+
+/**
+ * Soal bergambar murni: bila seluruh opsi masih placeholder sedangkan teks
+ * memuat ≥4 gambar, gambar terakhir dialihkan jadi opsi A-D (sama perilaku
+ * dengan ekstraktor Python lama).
+ */
+function promoteImageOptions(questions: ParsedQuestion[]): ParsedQuestion[] {
+  return questions.map((q) => {
+    const hasRealOptions = [q.optionA, q.optionB, q.optionC, q.optionD].some(
+      (o) => o && !DUMMY_OPTION_RE.test(o.trim()),
+    );
+    if (hasRealOptions) return q;
+    const markers = q.questionText.match(new RegExp(IMAGE_MARKER_RE.source, "g"));
+    if (!markers || markers.length < 4) return q;
+    const [a, b, c, d] = markers.slice(-4);
+    const remaining = q.questionText
+      .replace(new RegExp(IMAGE_MARKER_RE.source, "g"), "")
+      .replace(/[ \t]+$/gm, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    return {
+      ...q,
+      questionText: remaining || `Soal nomor ${q.questionNumber}`,
+      optionA: a,
+      optionB: b,
+      optionC: c,
+      optionD: d,
+    };
+  });
 }
 
 function parseSingleQuestionBlock(
@@ -586,11 +905,13 @@ function detectSubject(text: string): string {
 }
 
 function fallbackParser(text: string): ParsedQuestion[] {
-  // Jika tidak beraturan, buat 1 soal dari teks yang ada agar admin bisa merevisi
+  // Jika struktur naskah tak terbaca sama sekali, satu blok teks penuh agar
+  // admin masih bisa memotongnya manual di editor.
+  const body = text.trim().slice(0, 4000);
   return [
     {
       questionNumber: 1,
-      questionText: text.slice(0, 300),
+      questionText: body || "Teks naskah kosong",
       optionA: "Opsi A",
       optionB: "Opsi B",
       optionC: "Opsi C",
