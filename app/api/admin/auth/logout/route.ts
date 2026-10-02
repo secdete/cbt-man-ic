@@ -7,6 +7,7 @@ export async function POST() {
   });
 
   response.cookies.delete("cbt_admin_session");
+  response.cookies.delete("cbt_user_session");
 
   return response;
 }

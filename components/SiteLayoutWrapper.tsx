@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShieldCheck, BookOpen } from "lucide-react";
+import { LogIn } from "lucide-react";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
 
 export default function SiteLayoutWrapper({
@@ -52,22 +52,12 @@ export default function SiteLayoutWrapper({
           {/* Navigation Links */}
           <nav className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             <Link
-              href="/"
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-blue-700 hover:bg-slate-100 transition-colors"
-              title="Ruang Ujian Siswa"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-slate-500" />
-              <span className="hidden sm:inline">Ruang Ujian</span>
-              <span className="sm:hidden text-[11px]">Siswa</span>
-            </Link>
-            <Link
-              href="/admin"
+              href="/admin/login"
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white shadow-xs transition-colors"
-              title="Panel Panitia CBT"
+              title="Login pengguna"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-slate-300" />
-              <span className="hidden sm:inline">Panel Panitia</span>
-              <span className="sm:hidden text-[11px]">Admin</span>
+              <LogIn className="w-3.5 h-3.5 text-slate-300" />
+              <span>Login</span>
             </Link>
           </nav>
         </div>

@@ -1,32 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import prisma from "@/lib/prisma";
+import { normalizePhone } from "@/lib/phone";
+import { hashPassword, verifyStudentPassword } from "@/lib/student-password";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
-const SCRYPT_OPTIONS = { N: 8192, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
-
-// 0812-xxxx / +62 812 / 812 semuanya diubah menjadi format 628xx
-function normalizePhone(raw: unknown): string {
-  let digits = String(raw ?? "").replace(/\D/g, "");
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  if (digits.startsWith("0")) digits = `62${digits.slice(1)}`;
-  else if (digits.startsWith("8")) digits = `62${digits}`;
-  while (digits.startsWith("6262")) digits = digits.slice(2);
-  return digits;
-}
-
-function hashPassword(password: string, salt: string): string {
-  return scryptSync(password, salt, 64, SCRYPT_OPTIONS).toString("hex");
-}
-
-function verifyPassword(password: string, salt: string, expectedHash: string): boolean {
-  const actual = Buffer.from(hashPassword(password, salt), "hex");
-  const expected = Buffer.from(expectedHash, "hex");
-  if (actual.length !== expected.length) return false;
-  return timingSafeEqual(actual, expected);
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -161,7 +140,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!verifyPassword(password, student.salt, student.passwordHash)) {
+    if (!verifyStudentPassword(password, student)) {
       return NextResponse.json(
         {
           success: false,

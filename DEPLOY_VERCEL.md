@@ -95,11 +95,12 @@ Buka browser di:
 
 Build di Vercel menjalankan migrasi Prisma yang tercatat di `prisma/migrations` sebelum build aplikasi (`scripts/deploy-migrations.js` → `prisma migrate deploy`). Pastikan variabel `DATABASE_URL` dan `DIRECT_URL` tersedia di environment Vercel. Migrasi awal untuk versi ini menambahkan relasi paket subtest, kunci percobaan peserta, dan indeks pencarian tanpa menghapus data lama.
 
-Migrasi terbaru `20261003_student_identity_sortorder` menambahkan:
+Migrasi terbaru:
 
-- `Exam.sortOrder` — urutan seksi/subtest dalam satu paket.
-- `Student.phone` (unique) — nomor HP peserta sebagai kunci **1x pengerjaan**.
-- `Student.nisn` diubah menjadi **nullable** (data lama tetap aman).
+- `20261003_student_identity_sortorder` — `Exam.sortOrder` (urutan seksi), `Student.phone` (unique, kunci 1x pengerjaan), `Student.nisn` jadi nullable.
+- `20261003_student_roster_fields` — kolom data peserta panitia: `username` (unique), `email`, `parentWhatsapp`, `dreamCity`, `registrationTimestamp`, `password`, plus default `passwordHash`/`salt`.
+
+Ketiganya sudah dijalankan ke Supabase dan tercatat di `_prisma_migrations` (jangan jalankan `db push`, cukup `migrate deploy`).
 
 ---
 
@@ -130,6 +131,9 @@ Script sekali jalan: `npx tsx scripts/merge-ic-package.ts` (aman dijalankan ulan
    - Sesi masih berjalan → dilanjutkan, bukan sesi baru.
 4. Setelah submit, halaman hasil langsung **otomatis mengunduh Sertifikat + Analisa PDF**.
 
+> Peserta yang **sudah diimpor panitia lewat Excel** tidak mendaftar sendiri: No. HP mereka sudah ada di database,
+> jadi PIN yang dipakai adalah **password yang tertera di kartu peserta / Excel**. PIN lain akan ditolak.
+
 ---
 
 ## ⏰ Jadwal dari Panel Admin
@@ -144,6 +148,24 @@ Semua pengaturan waktu ada di panel admin (`/admin/exams/[id]`) — **Waktu Mula
 
 ---
 
+## 🗂️ Data Peserta (Impor Excel, Kartu, Ekspor)
+
+Panel `/admin` punya menu peserta yang terhubung ke tabel `Student`:
+
+| Aksi | Endpoint | Keterangan |
+|---|---|---|
+| Daftar / tambah peserta | `GET` `POST /api/admin/students` | No. HP otomatis diformat `628xx`; nomor ganda ditolak (409) |
+| Impor Excel | `POST /api/admin/students/import` | Kolom: Nama Siswa, Asal Sekolah, WA Siswa, WA Orang Tua, password, NISN |
+| Ekspor Excel | `GET /api/admin/students/export` | `?template=1` hanya mengunduh template kosong |
+| Cetak kartu peserta | `GET /api/admin/students/card-pdf` | 6 kartu per halaman, memuat username & password |
+
+**Semua endpoint di atas wajib cookie admin** (dulu terbuka tanpa login — sudah ditutup).
+
+No. HP disimpan seragam format `628xx` supaya peserta yang diimpor dari Excel bisa langsung masuk ujian
+(memakai password dari Excel sebagai PIN) dan tercatat sebagai **satu baris yang sama**.
+
+---
+
 ## 🔐 Keamanan Panel Admin
 
 - Cookie admin kini **ditandatangani HMAC** (`lib/admin-auth.ts`), bukan cookie polos.
@@ -151,6 +173,13 @@ Semua pengaturan waktu ada di panel admin (`/admin/exams/[id]`) — **Waktu Mula
 - `GET /api/exams` daftar publik **tidak lagi membocorkan token**; token hanya untuk admin atau pencarian eksplisit `?token=`.
 - `proxy.ts` melindungi halaman `/admin` (pengganti `middleware.ts` yang sudah deprecated di Next 16).
 - Cookie admin lama **tidak berlaku lagi** → admin cukup login ulang sekali.
+
+**Login (`POST /api/admin/auth/login`) melayani dua peran:**
+
+- **Panitia** — username & password cocok dengan `ADMIN_USERNAME`/`ADMIN_PASSWORD` → cookie `cbt_admin_session` bertanda tangan HMAC → redirect `/admin`.
+- **Peserta** — username (atau No. HP) + password **wajib cocok dengan data terdaftar** (impor Excel atau peserta yang dibuat lewat panel). Password diverifikasi sesuai asal data: baris impor memakai HMAC-SHA256(salt), baris pendaftaran lewat form ujian memakai scrypt.
+- Akun tidak terdaftar / password salah → **401**, tidak ada cookie yang diterbitkan (sebelumnya login apapun dianggap berhasil).
+- Peserta hanya menerima cookie `cbt_user_session` dan **tidak bisa membuka** endpoint `/api/admin/**` (diuji di `scripts/_e2e.mjs`).
 
 Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_KEY` = `cakrawala_admin_secret_2025`. **Segera ganti** di Environment Variables Vercel.
 
@@ -161,7 +190,7 @@ Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_
 ```bash
 npm run build                      # build harus hijau
 npm start                          # jalankan server
-node scripts/_e2e.mjs              # 55 pemeriksaan ujung-ke-ujung
+node scripts/_e2e.mjs              # 72 pemeriksaan ujung-ke-ujung
 npx tsx scripts/_pdf-check.ts      # 13 pemeriksaan PDF sertifikat & analisa
 ```
 
