@@ -763,6 +763,21 @@ export async function extractStructuredFromPDF(
       );
       imageCount += images.length;
 
+      if (process.env.PDF_DEBUG && pageIndex + 1 === Number(process.env.PDF_DEBUG_PAGE || 1)) {
+        console.log(`--- halaman ${pageIndex + 1} splitX=${splitX}`);
+        for (const l of allLines) {
+          console.log(
+            `  teks top=${l.top.toFixed(1)} ${JSON.stringify(l.text.slice(0, 70))}`,
+          );
+        }
+        for (const im of images) {
+          console.log(
+            `  gambar top=${im.top.toFixed(1)} bottom=${im.bottom.toFixed(1)} ` +
+              `left=${im.left.toFixed(1)} right=${im.right.toFixed(1)}`,
+          );
+        }
+      }
+
       const placedImages = new Set<number>();
       const chunks: string[] = [];
       for (const lines of columns) {

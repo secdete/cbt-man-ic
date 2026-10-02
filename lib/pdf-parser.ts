@@ -326,6 +326,26 @@ const HEADER_LINE_RE =
 // "(A) teks" / "A. teks" / "A) teks" di awal baris
 const OPTION_LINE_RE = /^\s*(\()?([A-Ea-e])\s*([.)])\s*/;
 
+// Baris yang hanya berisi satu markdown gambar
+const IMAGE_LINE_RE = /^!\[[^\]]*\]\([^)]*\)$/;
+
+/**
+ * Gambar yang berdiri sendiri tepat di atas nomor soal adalah gambar untuk soal
+ * itu sendiri (bacaan/gambar ilustrasi), bukan pelengkap soal sebelumnya.
+ * Dalam aliran teks PDF gambar semacam ini selalu muncul sebelum angka soalnya,
+ * sehingga tanpa dipindah ia jatuh ke opsi terakhir butir sebelumnya.
+ */
+function hoistImagesAboveHeaders(lines: string[]): string[] {
+  const out = lines.slice();
+  for (let i = out.length - 2; i >= 0; i--) {
+    if (!IMAGE_LINE_RE.test(out[i])) continue;
+    if (!HEADER_LINE_RE.test(out[i + 1] || "")) continue;
+    const [image] = out.splice(i, 1);
+    out.splice(i + 1, 0, image);
+  }
+  return out;
+}
+
 interface HeaderLine {
   line: number;
   number: number;
@@ -460,17 +480,25 @@ function parseByPairing(
 ): ParsedQuestion[] {
   if (anchorsA.length === 0) return [];
   const out: ParsedQuestion[] = [];
+  const headerLines = headers.map((h) => h.line);
+
+  // Batas opsi dihitung dulu untuk semua soal, lalu stem tiap soal mulai setelah
+  // batas opsi soal sebelumnya — baris yang sama (termasuk gambar) tidak boleh
+  // ikut dua kali ke dua butir karena rentangnya saling tumpang tindih.
+  const optEnds = anchorsA.map((optStart, k) => {
+    let optEnd = k + 1 < anchorsA.length ? anchorsA[k + 1] : lines.length;
+    const nextHeader = headerLines.find((l) => l > optStart);
+    if (nextHeader !== undefined && nextHeader < optEnd) optEnd = nextHeader;
+    // Batas wajar: 4-5 opsi + gambar ≈ 12 baris.
+    if (optEnd - optStart > 12) optEnd = optStart + 12;
+    return optEnd;
+  });
 
   for (let k = 0; k < anchorsA.length; k++) {
     const optStart = anchorsA[k];
-    let optEnd = k + 1 < anchorsA.length ? anchorsA[k + 1] : lines.length;
-    const nextHeader = headers[k + 1];
-    if (nextHeader && nextHeader.line > optStart && nextHeader.line < optEnd) {
-      optEnd = nextHeader.line;
-    }
-    // Batas wajar: 4-5 opsi + gambar ≈ 12 baris.
-    if (optEnd - optStart > 12) optEnd = optStart + 12;
+    const optEnd = optEnds[k];
     const optionsText = lines.slice(optStart, optEnd).join("\n").trim();
+    const prevEnd = k === 0 ? 0 : optEnds[k - 1];
 
     let stemParts: string[] = [];
     let number = k + 1;
@@ -479,16 +507,22 @@ function parseByPairing(
       number = h.number;
       if (h.line < optStart) {
         // Normal: nomor + stem sebelum opsi sendiri.
-        stemParts = [h.rest, ...lines.slice(h.line + 1, optStart)];
+        stemParts = [
+          h.rest,
+          ...lines.slice(Math.max(h.line + 1, prevEnd), optStart),
+        ];
       } else {
         // Stem belakangan: hentikan sebelum grup opsi berikutnya.
-        let endStem = headers[k + 1] ? headers[k + 1].line : lines.length;
+        let endStem = headerLines.find((l) => l > h.line) ?? lines.length;
         const nextAnchor = anchorsA.find((a) => a > h.line);
         if (nextAnchor !== undefined && nextAnchor < endStem) {
           endStem = nextAnchor;
         }
         endStem = Math.min(endStem, h.line + 40);
-        stemParts = [h.rest, ...lines.slice(h.line + 1, endStem)];
+        stemParts = [
+          h.rest,
+          ...lines.slice(Math.max(h.line + 1, prevEnd), endStem),
+        ];
       }
     }
 
@@ -588,10 +622,12 @@ export function parseQuestionsDetailed(
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
     .replace(/\t/g, " ");
-  const lines = cleanText
-    .split("\n")
-    .map((l) => l.replace(/[ \u00a0]+/g, " ").trim())
-    .filter((l) => !isJunkExamLine(l));
+  const lines = hoistImagesAboveHeaders(
+    cleanText
+      .split("\n")
+      .map((l) => l.replace(/[ \u00a0]+/g, " ").trim())
+      .filter((l) => !isJunkExamLine(l)),
+  );
   const text = lines.join("\n").trim();
   if (!text) {
     return {

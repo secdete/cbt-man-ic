@@ -81,13 +81,16 @@ async function main() {
     const imgInQuestions = (strJson.match(/!\[[^\]]*\]\(data:image\//g) || []).length;
     const jpegCount = (strJson.match(/data:image\/jpeg/g) || []).length;
     const pngCount = (strJson.match(/data:image\/png/g) || []).length;
+    const uniqueImages = new Set(
+      strJson.match(/data:image\/[a-z+]+;base64,[A-Za-z0-9+/=]+/g) || [],
+    ).size;
     totalQuestions += got;
     totalImages += json.imageCount ?? 0;
     totalJpeg += jpegCount;
     totalPng += pngCount;
 
     console.log(
-      `${ok ? "OK  " : "FAIL"} ${file.padEnd(40)} soal=${got}/${expected ?? "?"} gambar=${json.imageCount} (di soal=${imgInQuestions}, jpeg=${jpegCount} png=${pngCount}) metode=${json.strategy} ${ms}ms res=${Math.round(strJson.length / 1024)}KB`,
+      `${ok ? "OK  " : "FAIL"} ${file.padEnd(40)} soal=${got}/${expected ?? "?"} gambar=${json.imageCount} (di soal=${imgInQuestions}, jpeg=${jpegCount} png=${pngCount}, unik=${uniqueImages}) metode=${json.strategy} ${ms}ms res=${Math.round(strJson.length / 1024)}KB`,
     );
     for (const w of json.warnings || []) console.log(`       ⚠ ${w}`);
     for (const n of json.notes || []) console.log(`       ℹ ${n}`);
@@ -96,7 +99,86 @@ async function main() {
   console.log(
     `\nTOTAL ${totalQuestions} soal, ${totalImages} gambar (jpeg=${totalJpeg}, png=${totalPng}), gagal=${fail}`,
   );
+
+  // Putaran penuh: hasil ekstraksi harus tetap utuh setelah disimpan dan dibaca
+  // lagi lewat endpoint yang dipakai halaman pengerjaan siswa.
+  fail += await checkRoundTrip(cookie);
+
   process.exit(fail > 0 ? 1 : 0);
+}
+
+async function checkRoundTrip(cookie) {
+  const file = "IPA 44-48.pdf";
+  const tag = `TMP-IMG-${Date.now()}`;
+  let examId = null;
+  try {
+    const form = new FormData();
+    form.append(
+      "file",
+      new Blob([fs.readFileSync(path.resolve(process.cwd(), "modul", file))], {
+        type: "application/pdf",
+      }),
+      file,
+    );
+    const parsed = await (
+      await fetch(`${BASE}/api/exams/parse-pdf`, {
+        method: "POST",
+        headers: { Cookie: cookie },
+        body: form,
+      })
+    ).json();
+
+    const source = JSON.stringify(parsed.questions || []);
+    const sourceImages = (source.match(/!\[[^\]]*\]\(data:image\/[a-z]+;base64,/g) || [])
+      .length;
+
+    const created = await (
+      await fetch(`${BASE}/api/exams`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: cookie },
+        body: JSON.stringify({
+          title: "Uji putaran gambar (otomatis)",
+          description: "Dibuat skrip verifikasi dan dihapus kembali.",
+          category: "Verifikasi",
+          durationMinutes: 10,
+          token: tag,
+          passingScore: 65,
+          questions: parsed.questions,
+          subtestIds: [],
+        }),
+      })
+    ).json();
+    examId = created?.data?.id || created?.id;
+    if (!examId) {
+      console.log(`FAIL putaran gambar -> gagal membuat ujian: ${JSON.stringify(created).slice(0, 300)}`);
+      return 1;
+    }
+
+    const stored = await (
+      await fetch(`${BASE}/api/exams/${examId}`, { headers: { Cookie: cookie } })
+    ).json();
+    const saved = JSON.stringify(stored?.questions || stored?.data?.questions || []);
+    const savedImages = (saved.match(/!\[[^\]]*\]\(data:image\/[a-z]+;base64,/g) || [])
+      .length;
+
+    const ok = sourceImages > 0 && savedImages === sourceImages;
+    console.log(
+      `${ok ? "OK  " : "FAIL"} putaran gambar ${file.padEnd(25)} ekstraksi=${sourceImages} gambar, tersimpan=${savedImages}, soal=${parsed.totalQuestionsParsed}`,
+    );
+    if (!ok) {
+      console.log(
+        "       gambar hilang setelah disimpan — periksa batas body / penyimpanan soal",
+      );
+    }
+    return ok ? 0 : 1;
+  } finally {
+    if (examId) {
+      await fetch(`${BASE}/api/exams/${examId}`, {
+        method: "DELETE",
+        headers: { Cookie: cookie },
+      });
+    }
+  }
 }
 
 main().catch((e) => {

@@ -26,6 +26,7 @@ import {
   KeyRound,
   Sparkles,
 } from "lucide-react";
+import { imageSources, stripImageMarkdown } from "@/lib/question-images";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
 
 interface Exam {
@@ -1339,8 +1340,21 @@ export default function AdminDashboardPage() {
                                 )}
                               </div>
                               <p className="text-xs text-slate-700 truncate max-w-xl">
-                                {q.questionText}
+                                {stripImageMarkdown(q.questionText) ||
+                                  "Butir ini hanya berisi gambar, lihat pratinjaunya di bawah."}
                               </p>
+                              {imageSources(q.questionText).length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                  {imageSources(q.questionText).map((src, imgIndex) => (
+                                    <img
+                                      key={imgIndex}
+                                      src={src}
+                                      alt={`Gambar soal #${q.questionNumber} (${imgIndex + 1})`}
+                                      className="h-14 w-14 rounded-lg border border-slate-200 bg-white object-contain p-0.5"
+                                    />
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
 

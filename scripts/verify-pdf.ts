@@ -15,6 +15,34 @@ import { parseQuestionsDetailed } from "../lib/pdf-parser";
 
 const DUMMY = /^(pilihan|opsi)\s*[a-e]$/i;
 
+type Extracted = {
+  questionText: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  optionE?: string | null;
+};
+
+const IMAGE_MD = /!\[[^\]]*\]\([^)]*\)/;
+
+/** Bidang yang bisa memuat gambar, sesuai urutan tampil di naskah. */
+const IMAGE_FIELDS = [
+  "questionText",
+  "optionA",
+  "optionB",
+  "optionC",
+  "optionD",
+  "optionE",
+] as const;
+
+/** Mana saja dari pertanyaan/pilihan yang membawa gambar. */
+function imageSlots(q: Partial<Extracted>): string[] {
+  return IMAGE_FIELDS.filter((field) =>
+    IMAGE_MD.test((q[field as keyof Extracted] as string) || ""),
+  );
+}
+
 const EXPECTED: Record<string, number> = {
   "Bahasa Arab 2-4.pdf": 15,
   "Bahasa Indonesia 5-6.pdf": 10,
@@ -33,6 +61,13 @@ const EXPECTED: Record<string, number> = {
   "Tes Akademik Ips 211-240.pdf": 75,
   "Tes Keislaman 241-265.pdf": 70,
 };
+
+/**
+ * Jumlah butir yang penempatan gambarnya sudah sama persis dengan keluaran
+ * referensi master_extractor.py. Dipakai sebagai pagar regresi: bila angkanya
+ * turun, berarti gambar mulai jatuh ke soal/pilihan yang salah lagi.
+ */
+const MIN_PLACEMENT_MATCH = 663;
 
 /** Berkas berikut memang punya gambar soal (kop/logo sudah otomatis dibuang). */
 const MIN_IMAGES: Record<string, number> = {
@@ -57,6 +92,8 @@ async function main() {
   let totalQuestions = 0;
   let totalImages = 0;
   let slowest = 0;
+  /** Hasil per berkas, dipakai untuk membandingkan penempatan gambar. */
+  const oursByFile = new Map<string, Extracted[]>();
 
   for (const file of targets) {
     const name = path.basename(file);
@@ -70,6 +107,7 @@ async function main() {
       slowest = Math.max(slowest, ms);
       totalQuestions += qs.length;
       totalImages += ext.imageCount;
+      oursByFile.set(name, qs as unknown as Extracted[]);
 
       const tanpaOpsi = qs.filter((q) =>
         [q.optionA, q.optionB, q.optionC, q.optionD].every((o) =>
@@ -135,6 +173,82 @@ async function main() {
     } catch (error: any) {
       failures.push(`${name}: ${error?.message || error}`);
       console.log(`FAIL ${name} -> ${error?.message || error}`);
+    }
+  }
+
+  // Penempatan gambar dibandingkan dengan keluaran referensi master_extractor.py:
+  // bukan cuma jumlah gambarnya, tapi soal/pilihan mana yang memuat gambar juga
+  // harus sama supaya hasil ekstraksi selaras dengan isi PDF.
+  const refDir = path.join("scripts", "extracted_exams");
+  let slotCompared = 0;
+  let slotMismatches = 0;
+  let slotFiles = 0;
+  const slotKinds: Record<string, number> = {};
+  const slotPatterns: Record<string, number> = {};
+
+  if (args.length === 0 && fs.existsSync(refDir)) {
+    for (const refFile of fs.readdirSync(refDir).filter((f) => f.endsWith(".json"))) {
+      let ref: any;
+      try {
+        ref = JSON.parse(fs.readFileSync(path.join(refDir, refFile), "utf8"));
+      } catch {
+        continue;
+      }
+      const name = path.basename(ref?.config?.file || "");
+      const mine = oursByFile.get(name);
+      if (!mine || !Array.isArray(ref?.questions)) continue;
+
+      slotFiles++;
+      if (mine.length !== ref.questions.length) {
+        failures.push(
+          `${name}: jumlah soal ${mine.length}, referensi ${ref.questions.length}`,
+        );
+      }
+      const shared = Math.min(mine.length, ref.questions.length);
+      for (let i = 0; i < shared; i++) {
+        slotCompared++;
+        const expectedSlots = imageSlots(ref.questions[i]);
+        const actualSlots = imageSlots(mine[i]);
+        if (expectedSlots.join(",") === actualSlots.join(",")) continue;
+        slotMismatches++;
+        const kind =
+          expectedSlots.length > 0 && actualSlots.length === 0
+            ? "hilang"
+            : expectedSlots.length === 0 && actualSlots.length > 0
+              ? "tambahan"
+              : "geser";
+        slotKinds[kind] = (slotKinds[kind] || 0) + 1;
+        const pattern = `${kind}: [${expectedSlots.join(",") || "-"}] -> [${actualSlots.join(",") || "-"}]`;
+        slotPatterns[pattern] = (slotPatterns[pattern] || 0) + 1;
+        if (slotPatterns[pattern] <= 3) {
+          console.log(`     ${name} soal #${i + 1}  ${pattern}`);
+        }
+      }
+    }
+  }
+
+  const kindsText = Object.entries(slotKinds)
+    .map(([k, v]) => `${k}=${v}`)
+    .join(" ");
+  if (slotFiles > 0) {
+    const matched = slotCompared - slotMismatches;
+    console.log(
+      `\nPenempatan gambar: ${matched}/${slotCompared} butir` +
+        ` tepat di ${slotFiles} berkas` +
+        (slotMismatches ? ` (selisih ${slotMismatches}: ${kindsText})` : ""),
+    );
+    for (const [pattern, count] of Object.entries(slotPatterns)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 12)) {
+      console.log(`   ${String(count).padStart(3)}x ${pattern}`);
+    }
+    // Pagar regresi: penempatan gambar per butir harus tetap minimal sebaik
+    // sekarang, bukan kembali seperti dulu (gambar menempel di opsi terakhir
+    // butir sebelumnya).
+    if (matched < MIN_PLACEMENT_MATCH) {
+      failures.push(
+        `penempatan gambar hanya ${matched}/${slotCompared} butir, minimal ${MIN_PLACEMENT_MATCH}`,
+      );
     }
   }
 

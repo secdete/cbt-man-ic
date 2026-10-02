@@ -219,6 +219,16 @@ Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_
   markdown `![Gambar Soal](data:image/jpeg;base64,…)` di dalam `questionText`/opsi —
   sama seperti yang dilakukan pipeline Python lama. Gambar dikodekan JPEG dan
   dibatasi total ±3 MB agar respons tetap di bawah limit body 4,5 MB Vercel.
+- **Gambar ditanam pada soal yang benar.** Dalam aliran teks PDF, gambar bacaan/gambar
+  ilustrasi selalu muncul *sebelum* angka soalnya, sehingga baris gambar yang tepat
+  berada di atas nomor soal dipindah ke bawah nomornya (`hoistImagesAboveHeaders` di
+  `lib/pdf-parser.ts`). Tanpa langkah ini gambar menempel pada opsi terakhir butir
+  sebelumnya dan butir pertama kehilangan gambarnya.
+- **Panel admin memakai pratinjau tampilan peserta.** Kolom edit hanya memuat teks
+  (marka gambar jadi `‹gambar 1›`), sedangkan gambarnya ditampilkan lewat
+  `FormattedQuestionText` — jadi hasil ekstraksi bisa dibandingkan langsung dengan PDF
+  sebelum paket diterbitkan. Modal "Kunci Jawaban" juga membuang markdown base64
+  dan menampilkan thumbnail gambar.
 - **Respons memuat `strategy`, `warnings`, `notes`, `imageCount`, `pageCount`**;
   panel admin menampilkannya di bawah pesan ekstraksi supaya panitia bisa
   menilai hasilnya sebelum menerbitkan paket.
@@ -237,8 +247,8 @@ Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_
 ```bash
 npm run build                      # build harus hijau
 npm start                          # jalankan server
-npm run verify:pdf                 # 16 naskah di modul/ = 713 soal, tanpa soal hampa, gambar ikut terbaca
-npm run verify:api                 # ekstraksi lewat HTTP (login + unggah multipart) harus hijau
+npm run verify:pdf                 # 16 naskah di modul/ = 713 soal + penempatan gambar per butir (pagar 612/713)
+npm run verify:api                 # ekstraksi lewat HTTP (login + unggah multipart) + putaran gambar tersimpan
 npm run verify:e2e                 # 94 pemeriksaan ujung-ke-ujung (alur login peserta, jadwal, 1x ujian, hapus peserta)
 npm run verify:docs                # 13 pemeriksaan PDF sertifikat & analisa
 ```

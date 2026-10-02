@@ -19,6 +19,14 @@ import {
   FileUp,
   Check,
 } from "lucide-react";
+import FormattedQuestionText from "@/components/FormattedQuestionText";
+import {
+  countImages,
+  hasImageMarkdown,
+  hideImageMarkdown,
+  imageSources,
+  restoreImageMarkdown,
+} from "@/lib/question-images";
 
 interface EditableQuestion {
   questionNumber: number;
@@ -33,6 +41,18 @@ interface EditableQuestion {
   subject?: string;
   points: number;
 }
+
+const OPTION_FIELDS = ["A", "B", "C", "D", "E"] as const;
+
+/** Total gambar tertanam pada satu butir (pertanyaan + seluruh pilihan jawaban). */
+const questionImageCount = (q: EditableQuestion) =>
+  countImages(q.questionText) +
+  OPTION_FIELDS.reduce(
+    (sum, letter) =>
+      sum +
+      countImages((q[`option${letter}` as keyof EditableQuestion] as string) || ""),
+    0,
+  );
 
 interface SubtestOption {
   id: string;
@@ -836,16 +856,22 @@ export default function CreateExamPage() {
                   </label>
                   <textarea
                     rows={3}
-                    value={q.questionText}
+                    value={hideImageMarkdown(q.questionText)}
                     onChange={(e) =>
                       handleUpdateQuestion(
                         qIndex,
                         "questionText",
-                        e.target.value,
+                        restoreImageMarkdown(e.target.value, q.questionText),
                       )
                     }
                     className="w-full p-3.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 leading-relaxed"
                   />
+                  {hasImageMarkdown(q.questionText) && (
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      Gambar tertanam ({countImages(q.questionText)}) — lihat
+                      pratinjau di bawah.
+                    </p>
+                  )}
                 </div>
 
                 {/* Opsi Jawaban A, B, C, D, E & Kunci */}
@@ -896,17 +922,25 @@ export default function CreateExamPage() {
 
                         <input
                           type="text"
-                          value={val}
+                          value={hideImageMarkdown(val)}
                           onChange={(e) =>
                             handleUpdateQuestion(
                               qIndex,
                               fieldKey,
-                              e.target.value,
+                              restoreImageMarkdown(e.target.value, val),
                             )
                           }
                           placeholder={`Teks pilihan ${letter}...`}
-                          className="flex-1 bg-transparent border-0 text-xs sm:text-sm text-slate-800 focus:outline-none"
+                          className="flex-1 min-w-0 bg-transparent border-0 text-xs sm:text-sm text-slate-800 focus:outline-none"
                         />
+
+                        {hasImageMarkdown(val) && (
+                          <img
+                            src={imageSources(val)[0]}
+                            alt={`Gambar pilihan ${letter}`}
+                            className="h-12 w-12 flex-shrink-0 rounded-lg border border-slate-200 bg-white object-contain p-0.5"
+                          />
+                        )}
 
                         {isCorrect && (
                           <span className="text-[10px] uppercase font-bold text-blue-800 bg-blue-200/80 px-2 py-0.5 rounded mr-1">
@@ -917,6 +951,48 @@ export default function CreateExamPage() {
                     );
                   })}
                 </div>
+
+                {/* Pratinjau tampilan peserta — hanya muncul bila ada gambar
+                    tertanam, supaya hasil ekstraksi bisa dibandingkan langsung
+                    dengan isi PDF. */}
+                {questionImageCount(q) > 0 && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        Pratinjau tampilan peserta
+                      </span>
+                      <span className="text-[10px] font-semibold text-slate-600 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
+                        {questionImageCount(q)} gambar
+                      </span>
+                    </div>
+
+                    <FormattedQuestionText
+                      text={q.questionText}
+                      className="text-sm text-slate-800"
+                    />
+
+                    <div className="space-y-1 pt-2 border-t border-slate-200">
+                      {OPTION_FIELDS.map((letter) => {
+                        const optionText =
+                          (q[`option${letter}` as keyof EditableQuestion] as string) || "";
+                        if (!optionText.trim()) return null;
+                        return (
+                          <div
+                            key={letter}
+                            className="flex items-start gap-2 text-xs text-slate-700"
+                          >
+                            <span className="font-bold text-slate-500">{letter}.</span>
+                            <FormattedQuestionText
+                              text={optionText}
+                              isOption
+                              className="flex-1 min-w-0 text-xs"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Pembahasan */}
                 <div>
