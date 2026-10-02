@@ -139,6 +139,9 @@ Script sekali jalan: `npx tsx scripts/merge-ic-package.ts` (aman dijalankan ulan
 5. Setelah submit, halaman hasil langsung **otomatis mengunduh Sertifikat + Analisa PDF**.
 6. Tombol Login di navbar **berubah jadi ikon profil** (inisial + nama) begitu peserta login; menu profil
    memuat data peserta dan tombol **Keluar**.
+7. Kolom kanan halaman utama **tidak lagi menampilkan daftar naskah ujian** (judul paket, kategori, dan jumlah
+   soal tidak dipublikasikan). Diganti kartu **"Tata Tertib & Tata Cara Pelaksanaan Ujian"**: 5 langkah alur
+   pelaksanaan (login → token → fullscreen → submit → unduh PDF) dan 6 butir tata tertib peserta.
 
 > Akun hanya dibuat panitia lewat **impor Excel / menu peserta di panel admin**. Tombol "Daftar Peserta" dan
 > halaman pembayaran sengaja disembunyikan karena alur itu masih purwarupa (tidak pernah membuat akun).
@@ -202,7 +205,7 @@ Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_
 ```bash
 npm run build                      # build harus hijau
 npm start                          # jalankan server
-node scripts/_e2e.mjs              # 84 pemeriksaan ujung-ke-ujung (alur login peserta, jadwal, 1x ujian)
+node scripts/_e2e.mjs              # 86 pemeriksaan ujung-ke-ujung (alur login peserta, jadwal, 1x ujian)
 npx tsx scripts/_pdf-check.ts      # 13 pemeriksaan PDF sertifikat & analisa
 ```
 

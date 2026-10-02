@@ -416,6 +416,20 @@ async function main() {
     homeHtml.includes("Memeriksa status login Anda"),
     "panel status login tidak ditemukan di HTML awal",
   );
+  check(
+    "Daftar naskah ujian diganti tata tertib & tata cara pelaksanaan",
+    !homeHtml.includes("Daftar Naskah Ujian Resmi") &&
+      !homeHtml.includes("Paket Ujian") &&
+      homeHtml.includes("Tata Tertib") &&
+      homeHtml.includes("Tata Cara Pelaksanaan"),
+    `naskah=${homeHtml.includes("Daftar Naskah Ujian Resmi")} paket=${homeHtml.includes("Paket Ujian")} tataTertib=${homeHtml.includes("Tata Tertib")} tataCara=${homeHtml.includes("Tata Cara Pelaksanaan")}`,
+  );
+  check(
+    "Isi tata cara pelaksanaan mencakup alur login → token → submit → PDF",
+    homeHtml.includes("tunggu token dari pengawas") &&
+      homeHtml.includes("Sertifikat dan Analisa PDF terunduh otomatis"),
+    "alur pelaksanaan tidak lengkap",
+  );
 
   const loginPage = await fetch(`${BASE}/admin/login`);
   const loginHtml = await loginPage.text();

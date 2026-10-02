@@ -4,12 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
-  Clock,
-  HelpCircle,
   AlertCircle,
   KeyRound,
   User,
-  FileCheck2,
+  ClipboardList,
+  ListOrdered,
   Info,
   Sparkles,
   Lock,
@@ -26,23 +25,6 @@ interface StudentProfile {
   username: string | null;
 }
 
-interface ExamItem {
-  id: string;
-  title: string;
-  description: string | null;
-  category: string;
-  durationMinutes: number;
-  passingScore: number;
-  isActive: boolean;
-  isLocked: boolean;
-  openTime: string | null;
-  closeTime: string | null;
-  _count: {
-    questions: number;
-    sessions: number;
-  };
-}
-
 export default function StudentHomePage() {
   const router = useRouter();
 
@@ -53,10 +35,6 @@ export default function StudentHomePage() {
   // Status login peserta: form hanya muncul setelah akun terkonfirmasi.
   const [student, setStudent] = useState<StudentProfile | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
-
-  const [exams, setExams] = useState<ExamItem[]>([]);
-  const [loadingExams, setLoadingExams] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
 
   useEffect(() => {
     let active = true;
@@ -80,23 +58,6 @@ export default function StudentHomePage() {
     return () => {
       active = false;
     };
-  }, []);
-
-  useEffect(() => {
-    async function loadExams() {
-      try {
-        const res = await fetch("/api/exams");
-        const json = await res.json();
-        if (json.success && Array.isArray(json.data)) {
-          setExams(json.data);
-        }
-      } catch (err) {
-        console.error("Failed to load exams:", err);
-      } finally {
-        setLoadingExams(false);
-      }
-    }
-    loadExams();
   }, []);
 
   const handleStartExam = async (e: React.FormEvent) => {
@@ -390,142 +351,107 @@ export default function StudentHomePage() {
             )}
           </div>
 
-          {/* Right Column: Daftar Paket Tryout (Tokens Hidden) & Petunjuk (5 cols) */}
+          {/* Right Column: Tata Tertib & Tata Cara Pelaksanaan Ujian (5 cols) */}
           <div className="lg:col-span-5 space-y-4 sm:space-y-5">
-            {/* Paket Tryout Tersedia */}
-            <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-5">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <FileCheck2 className="w-4 h-4 text-slate-700" />
-                  <h3 className="font-bold text-slate-900 text-sm">
-                    Daftar Naskah Ujian Resmi
-                  </h3>
-                </div>
-                <span className="text-[11px] px-2 py-0.5 rounded font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                  {exams.length} Paket Ujian
-                </span>
+            {/* Tata Tertib & Tata Cara Pelaksanaan Ujian */}
+            <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-5 space-y-4">
+              <div className="pb-3 border-b border-slate-100">
+                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                  <span className="p-1.5 rounded-lg bg-slate-100 text-slate-700 flex-shrink-0">
+                    <ClipboardList className="w-4 h-4" />
+                  </span>
+                  Tata Tertib &amp; Tata Cara Pelaksanaan Ujian
+                </h3>
+                <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
+                  Baca sebelum mengikuti try out. Peserta dianggap sudah membaca
+                  dan menyetujui seluruh ketentuan di bawah ini.
+                </p>
               </div>
 
-              {/* Category Filter Tabs (Swipeable on mobile) */}
-              <div className="mt-3 flex overflow-x-auto gap-1.5 border-b border-slate-100 pb-2.5 sm:flex-wrap">
-                {[
-                  { key: "ALL", label: "Semua" },
-                  { key: "SNPDB 2023", label: "SNPDB 2023" },
-                  { key: "SNPDB 2022", label: "SNPDB 2022" },
-                  { key: "SNPDB 2021", label: "SNPDB 2021" },
-                  { key: "SNPDB 2020", label: "SNPDB 2020" },
-                  { key: "Tryout Mandiri", label: "Mandiri" },
-                ].map((cat) => (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.key)}
-                    className={`whitespace-nowrap flex-shrink-0 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
-                      selectedCategory === cat.key
-                        ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
+              {/* Tata cara pelaksanaan */}
+              <div className="space-y-2.5">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+                  <ListOrdered className="w-3.5 h-3.5 text-blue-700" />
+                  Tata Cara Pelaksanaan
+                </h4>
+                <ol className="space-y-2 text-xs text-slate-600 leading-relaxed">
+                  {[
+                    "Login di halaman login memakai username atau No. HP serta password yang tertera pada kartu peserta.",
+                    "Setelah login, nama, asal madrasah, dan No. HP Anda terisi otomatis. Pastikan datanya benar, lalu tunggu token dari pengawas.",
+                    "Saat jadwal dibuka, masukkan token pada kolom Token Ujian lalu tekan Konfirmasi & Masuk Ujian.",
+                    "Ujian berjalan dalam mode fullscreen. Jawaban tersimpan otomatis — pantau sisa waktu yang tampil di layar.",
+                    "Tekan Selesai & Submit bila sudah yakin. Setelah submit, Sertifikat dan Analisa PDF terunduh otomatis ke perangkat Anda.",
+                  ].map((step, index) => (
+                    <li key={step} className="flex items-start gap-2">
+                      <span className="w-4 h-4 rounded bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {index + 1}
+                      </span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
               </div>
 
-              <div className="mt-3.5 space-y-2.5 max-h-[460px] overflow-y-auto pr-0.5 sm:pr-1">
-                {loadingExams ? (
-                  <div className="py-6 text-center text-slate-400 text-xs">
-                    Memuat daftar paket naskah...
-                  </div>
-                ) : exams.length === 0 ? (
-                  <div className="py-6 text-center text-slate-400 text-xs">
-                    Belum ada paket ujian aktif saat ini.
-                  </div>
-                ) : (
-                  exams
-                    .filter(
-                      (e) =>
-                        selectedCategory === "ALL" ||
-                        e.category === selectedCategory,
-                    )
-                    .map((exam) => (
-                      <div
-                        key={exam.id}
-                        className="p-3 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <h4 className="font-bold text-xs text-slate-900 line-clamp-1">
-                              {exam.title}
-                            </h4>
-                            <span className="inline-block mt-0.5 text-[10px] font-semibold text-blue-800 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
-                              {exam.category}
-                            </span>
-                          </div>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-200 text-slate-700 flex-shrink-0">
-                            <Lock className="w-3 h-3 text-slate-500" />
-                            Wajib Token
-                          </span>
-                        </div>
-
-                        <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-200/80">
-                          <div className="flex items-center gap-3 text-[11px]">
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-slate-400" />
-                              {exam.durationMinutes} Menit
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <HelpCircle className="w-3 h-3 text-slate-400" />
-                              {exam._count.questions} Soal
-                            </span>
-                          </div>
-
-                          <span className="text-[11px] text-slate-400 italic">
-                            Arahan Panitia
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                )}
+              {/* Tata tertib peserta */}
+              <div className="space-y-2.5 pt-3 border-t border-slate-100">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-blue-700" />
+                  Tata Tertib Peserta
+                </h4>
+                <ul className="space-y-2 text-xs text-slate-600 leading-relaxed">
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                    <span>
+                      Hadir dan login paling lambat 15 menit sebelum jadwal.
+                      Di luar <b>Waktu Mulai/Selesai</b> yang ditetapkan panitia,
+                      ujian tetap terkunci.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                    <span>
+                      Satu akun hanya berlaku untuk{" "}
+                      <b>satu kali pengerjaan</b> dan tidak boleh dipinjamkan
+                      kepada peserta lain.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                    <span>
+                      Peserta wajib tetap dalam mode fullscreen: dilarang
+                      berpindah tab/jendela, membuka aplikasi lain, atau membuka
+                      situs lain selama ujian berlangsung.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
+                    <span className="text-amber-900 font-medium">
+                      Pelanggaran membuka tab lain lebih dari 3 kali akan
+                      menyebabkan ujian di-submit otomatis oleh sistem.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                    <span>
+                      Dilarang berbuat curang dan meminta bantuan orang lain.
+                      Kerjakan sendiri agar hasil try out mencerminkan kemampuan
+                      Anda.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
+                    <span>
+                      Gangguan teknis (listrik/jaringan) segera dilaporkan ke
+                      pengawas. Sesi dapat dilanjutkan selama waktu ujian belum
+                      habis.
+                    </span>
+                  </li>
+                </ul>
+                <p className="text-[11px] leading-relaxed text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-2.5">
+                  Token naskah hanya dibagikan pengawas saat jadwal resmi dibuka
+                  dan tidak dipublikasikan di halaman ini.
+                </p>
               </div>
-            </div>
-
-            {/* Petunjuk Teknis Ringkas */}
-            <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-5 space-y-3">
-              <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center gap-1.5 text-blue-900">
-                <Info className="w-3.5 h-3.5 text-blue-700" />
-                Ketentuan &amp; Tata Tertib CBT
-              </h3>
-              <ul className="space-y-2 text-xs text-slate-600 leading-relaxed">
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <span>
-                    Jadwal ujian diatur oleh Panitia. Pastikan Anda masuk tepat
-                    pada jam yang ditentukan.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <span>
-                    Sistem pengawasan (anti-curang) aktif: peserta wajib mode
-                    Fullscreen dan dilarang berpindah tab.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                  <span>
-                    Setelah menyelesaikan ujian, Anda akan mendapatkan{" "}
-                    <b>Sertifikat Hasil Tryout Resmi</b> yang dapat diunduh
-                    langsung.
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
-                  <span className="text-amber-900 font-medium">
-                    Pelanggaran membuka tab lain lebih dari 3 kali akan
-                    menyebabkan ujian di-submit otomatis.
-                  </span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
