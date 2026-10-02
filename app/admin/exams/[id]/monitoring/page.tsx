@@ -19,9 +19,9 @@ import {
 interface MonitoringSession {
   id: string;
   studentName: string;
-  studentNisn: string;
+  studentNisn: string | null;
   studentSchool: string;
-  studentWhatsapp: string;
+  studentWhatsapp: string | null;
   status: "IN_PROGRESS" | "COMPLETED";
   startTime: string;
   endTime: string | null;
@@ -194,9 +194,9 @@ export default function AdminLiveMonitoringPage({
     const q = searchQuery.toLowerCase();
     return (
       s.studentName.toLowerCase().includes(q) ||
-      s.studentNisn.toLowerCase().includes(q) ||
-      s.studentSchool.toLowerCase().includes(q) ||
-      s.studentWhatsapp.toLowerCase().includes(q)
+      (s.studentNisn || "").toLowerCase().includes(q) ||
+      (s.studentSchool || "").toLowerCase().includes(q) ||
+      (s.studentWhatsapp || "").toLowerCase().includes(q)
     );
   });
 
@@ -419,7 +419,7 @@ export default function AdminLiveMonitoringPage({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama, NISN, sekolah..."
+              placeholder="Cari nama, no. HP, sekolah..."
               className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
             />
           </div>

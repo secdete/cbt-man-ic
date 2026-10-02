@@ -14,6 +14,7 @@ export async function POST(
         exam: {
           include: {
             questions: true,
+            subtests: { orderBy: { sortOrder: "asc" }, include: { questions: true } },
           },
         },
         submissions: true,
@@ -35,7 +36,10 @@ export async function POST(
       });
     }
 
-    const questions = session.exam.questions;
+    const questions = [
+      ...session.exam.questions,
+      ...session.exam.subtests.flatMap((subtest) => subtest.questions),
+    ];
     const submissionMap = new Map<string, string | null>();
     session.submissions.forEach((sub) => {
       submissionMap.set(sub.questionId, sub.selectedOption);

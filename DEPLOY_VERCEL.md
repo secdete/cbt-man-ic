@@ -86,7 +86,83 @@ npm run dev
 
 Buka browser di:
 
-- **Portal Siswa**: [http://localhost:3000](http://localhost:3000) (Token contoh: `MANIC2025`)
+- **Portal Siswa**: [http://localhost:3000](http://localhost:3000) (Token contoh: `IC-PAKET-UTUH`)
 - **Panel Admin**: [http://localhost:3000/admin](http://localhost:3000/admin)
 - **Upload Naskah PDF**: [http://localhost:3000/admin/exams/create](http://localhost:3000/admin/exams/create)
 - File contoh PDF siap uji coba: `sample-naskah/naskah-soal-man-ic.pdf`
+
+## Perubahan Skema Database
+
+Build di Vercel menjalankan migrasi Prisma yang tercatat di `prisma/migrations` sebelum build aplikasi (`scripts/deploy-migrations.js` → `prisma migrate deploy`). Pastikan variabel `DATABASE_URL` dan `DIRECT_URL` tersedia di environment Vercel. Migrasi awal untuk versi ini menambahkan relasi paket subtest, kunci percobaan peserta, dan indeks pencarian tanpa menghapus data lama.
+
+Migrasi terbaru `20261003_student_identity_sortorder` menambahkan:
+
+- `Exam.sortOrder` — urutan seksi/subtest dalam satu paket.
+- `Student.phone` (unique) — nomor HP peserta sebagai kunci **1x pengerjaan**.
+- `Student.nisn` diubah menjadi **nullable** (data lama tetap aman).
+
+---
+
+## 🧩 Paket Try Out Utuh (Satu Paket, 8 Subtest)
+
+Satu paket gabungan untuk seluruh subtest IC:
+
+| | |
+|---|---|
+| Judul | **Paket Try Out Utuh SNPDB MAN Insan Cendekia** |
+| Token | `IC-PAKET-UTUH` |
+| Kategori | SNPDB 2023 |
+| Isi | **123 soal / 8 seksi** (INDO, ARAB, INGG, MTK, IPA, IPS, AGAMA, ANALITIK) |
+| Durasi | 150 menit, KKM 70 |
+
+Subtest aslinya otomatis dikunci (`isActive=false, isLocked=true`) dan tampil sebagai **seksi di dalam paket**, bukan ujian terpisah. Ujian lain (SNPDB 2021/2022, Paket 1 Lengkap) tetap berdiri sendiri.
+
+Script sekali jalan: `npx tsx scripts/merge-ic-package.ts` (aman dijalankan ulang, ada penjaga idempoten).
+
+---
+
+## 👤 Alur Peserta (Identitas + 1x Pengerjaan)
+
+1. Peserta mengisi **Nama, No. HP, Nama Sekolah, Token, dan PIN** di halaman utama.
+2. PIN pertama kali **mendaftarkan** peserta (di-hash scrypt + salt). Kali berikutnya HP yang sama harus cocok dengan PIN yang sudah terdaftar.
+3. **No. HP adalah kunci 1x pengerjaan** (`attemptKey = examId:student:studentId`):
+   - Sesi selesai (COMPLETED/TIMEOUT) → **tidak bisa masuk lagi**, muncul pesan "sudah mengerjakan".
+   - Sesi masih berjalan → dilanjutkan, bukan sesi baru.
+4. Setelah submit, halaman hasil langsung **otomatis mengunduh Sertifikat + Analisa PDF**.
+
+---
+
+## ⏰ Jadwal dari Panel Admin
+
+Semua pengaturan waktu ada di panel admin (`/admin/exams/[id]`) — **Waktu Mulai** dan **Waktu Selesai**:
+
+- Sebelum buka → peserta diblokir ("ujian belum dibuka").
+- Setelah selesai → peserta diblokir ("jadwal sudah berakhir").
+- Kosong = selalu terbuka.
+
+> ⚠️ **Sebelum membagikan token `IC-PAKET-UTUH` ke peserta, admin WAJIB mengatur Waktu Mulai/Selesai dulu.** Saat ini kedua field masih kosong (ujian selalu terbuka).
+
+---
+
+## 🔐 Keamanan Panel Admin
+
+- Cookie admin kini **ditandatangani HMAC** (`lib/admin-auth.ts`), bukan cookie polos.
+- Semua endpoint `/api/admin/**`, buat/ubah/hapus ujian, kunci jawaban, dan upload PDF **wajib login**.
+- `GET /api/exams` daftar publik **tidak lagi membocorkan token**; token hanya untuk admin atau pencarian eksplisit `?token=`.
+- `proxy.ts` melindungi halaman `/admin` (pengganti `middleware.ts` yang sudah deprecated di Next 16).
+- Cookie admin lama **tidak berlaku lagi** → admin cukup login ulang sekali.
+
+Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_KEY` = `cakrawala_admin_secret_2025`. **Segera ganti** di Environment Variables Vercel.
+
+---
+
+## ✅ Cara Verifikasi Sebelum Rilis
+
+```bash
+npm run build                      # build harus hijau
+npm start                          # jalankan server
+node scripts/_e2e.mjs              # 55 pemeriksaan ujung-ke-ujung
+npx tsx scripts/_pdf-check.ts      # 13 pemeriksaan PDF sertifikat & analisa
+```
+
+Jangan mengubah data ujian asli saat uji coba — jalankan e2e lalu bersihkan sisanya dengan `npx tsx scripts/_cleanup-e2e-students.ts`.

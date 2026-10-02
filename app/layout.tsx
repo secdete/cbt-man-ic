@@ -1,12 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import SiteLayoutWrapper from "@/components/SiteLayoutWrapper";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "Cakrawala CBT - Seleksi Nasional MAN Insan Cendekia",
@@ -26,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={`${inter.variable} h-full`}>
+    <html lang="id" className="h-full">
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 antialiased font-sans">
         <SiteLayoutWrapper>{children}</SiteLayoutWrapper>
       </body>

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ADMIN_SESSION_COOKIE, signAdminSession } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,19 +15,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Buat response dan set cookie session
+    // Buat response dan set cookie session (ditandatangani HMAC agar tidak bisa dipalsukan)
     const response = NextResponse.json({
       success: true,
       message: "Login admin berhasil.",
     });
 
-    const tokenValue = Buffer.from(`${username}:${Date.now()}`).toString(
-      "base64",
-    );
-
     response.cookies.set({
-      name: "cbt_admin_session",
-      value: tokenValue,
+      name: ADMIN_SESSION_COOKIE,
+      value: await signAdminSession(username),
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

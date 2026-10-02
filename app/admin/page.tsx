@@ -88,6 +88,22 @@ export default function AdminDashboardPage() {
     Record<string, boolean>
   >({});
 
+  const toJakartaInput = (value: string) => {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Jakarta",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(new Date(value));
+    const part = (type: string) => parts.find((item) => item.type === type)?.value || "";
+    return `${part("year")}-${part("month")}-${part("day")}T${part("hour")}:${part("minute")}`;
+  };
+  const fromJakartaInput = (value: string) =>
+    value ? new Date(`${value}:00+07:00`).toISOString() : null;
+
   const toggleAdminExplanation = (id: string) => {
     setExpandedExplanationAdmin((prev) => ({ ...prev, [id]: !prev[id] }));
   };
@@ -285,14 +301,13 @@ export default function AdminDashboardPage() {
 
   const openScheduleModal = (exam: Exam) => {
     setEditingExam(exam);
-    // Format YYYY-MM-DDTHH:mm untuk datetime-local
     if (exam.openTime) {
-      setSchedOpenTime(new Date(exam.openTime).toISOString().slice(0, 16));
+      setSchedOpenTime(toJakartaInput(exam.openTime));
     } else {
       setSchedOpenTime("");
     }
     if (exam.closeTime) {
-      setSchedCloseTime(new Date(exam.closeTime).toISOString().slice(0, 16));
+      setSchedCloseTime(toJakartaInput(exam.closeTime));
     } else {
       setSchedCloseTime("");
     }
@@ -308,12 +323,8 @@ export default function AdminDashboardPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          openTime: schedOpenTime
-            ? new Date(schedOpenTime).toISOString()
-            : null,
-          closeTime: schedCloseTime
-            ? new Date(schedCloseTime).toISOString()
-            : null,
+          openTime: fromJakartaInput(schedOpenTime),
+          closeTime: fromJakartaInput(schedCloseTime),
         }),
       });
 
@@ -324,17 +335,15 @@ export default function AdminDashboardPage() {
             e.id === editingExam.id
               ? {
                   ...e,
-                  openTime: schedOpenTime
-                    ? new Date(schedOpenTime).toISOString()
-                    : null,
-                  closeTime: schedCloseTime
-                    ? new Date(schedCloseTime).toISOString()
-                    : null,
+                  openTime: json.data.openTime,
+                  closeTime: json.data.closeTime,
                 }
               : e,
           ),
         );
         setEditingExam(null);
+      } else {
+        alert(json.message || "Jadwal ujian gagal disimpan.");
       }
     } catch (err) {
       alert("Gagal menyimpan jadwal ujian.");
@@ -578,6 +587,7 @@ export default function AdminDashboardPage() {
                                   {new Date(exam.openTime).toLocaleDateString(
                                     "id-ID",
                                     {
+                                      timeZone: "Asia/Jakarta",
                                       day: "numeric",
                                       month: "short",
                                       hour: "2-digit",
@@ -594,6 +604,7 @@ export default function AdminDashboardPage() {
                                   {new Date(exam.closeTime).toLocaleDateString(
                                     "id-ID",
                                     {
+                                      timeZone: "Asia/Jakarta",
                                       day: "numeric",
                                       month: "short",
                                       hour: "2-digit",
@@ -692,6 +703,7 @@ export default function AdminDashboardPage() {
             <p className="text-xs text-slate-600">
               Paket: <b>{editingExam.title}</b>
             </p>
+            <p className="text-[11px] text-slate-500">Jadwal memakai zona waktu WIB (UTC+7), dengan tanggal mulai dan kedaluwarsa yang pasti.</p>
 
             <form onSubmit={handleSaveSchedule} className="space-y-4">
               <div>

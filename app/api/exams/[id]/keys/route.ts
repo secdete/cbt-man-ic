@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-auth";
 
+// Kunci jawaban & pembahasan hanya boleh diakses panitia (admin login).
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 
@@ -31,6 +36,21 @@ export async function GET(
             explanation: true,
           },
         },
+        subtests: {
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          select: {
+            title: true,
+            questions: {
+              orderBy: { questionNumber: "asc" },
+              select: {
+                id: true, questionNumber: true, questionText: true,
+                optionA: true, optionB: true, optionC: true, optionD: true,
+                optionE: true, correctAnswer: true, subject: true,
+                points: true, explanation: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -49,7 +69,15 @@ export async function GET(
           title: exam.title,
           category: exam.category,
         },
-        questions: exam.questions,
+        questions: [
+          ...exam.questions,
+          ...exam.subtests.flatMap((subtest) =>
+            subtest.questions.map((question) => ({
+              ...question,
+              subject: question.subject && question.subject !== "Umum" ? question.subject : subtest.title,
+            })),
+          ),
+        ].map((question, index) => ({ ...question, questionNumber: index + 1 })),
       },
     });
   } catch (error: any) {
@@ -65,6 +93,9 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const body = await req.json();

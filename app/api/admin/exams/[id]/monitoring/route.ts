@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 
@@ -17,6 +21,14 @@ export async function GET(
             questionNumber: true,
             points: true,
             correctAnswer: true,
+          },
+        },
+        subtests: {
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          select: {
+            questions: {
+              select: { id: true, questionNumber: true, points: true, correctAnswer: true },
+            },
           },
         },
         sessions: {
@@ -44,7 +56,9 @@ export async function GET(
     }
 
     const now = Date.now();
-    const totalQuestions = exam.questions.length;
+    const totalQuestions =
+      exam.questions.length +
+      exam.subtests.reduce((sum, subtest) => sum + subtest.questions.length, 0);
 
     const sessionList = exam.sessions.map((s) => {
       const answeredSubmissions = s.submissions.filter(
@@ -125,6 +139,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { id: examId } = await params;
     const body = await req.json();
@@ -142,7 +159,7 @@ export async function POST(
         where: { id: sessionId },
         include: {
           exam: {
-            include: { questions: true },
+            include: { questions: true, subtests: { select: { questions: true } } },
           },
           submissions: true,
         },
@@ -162,7 +179,10 @@ export async function POST(
         });
       }
 
-      const questions = session.exam.questions;
+      const questions = [
+        ...session.exam.questions,
+        ...session.exam.subtests.flatMap((subtest) => subtest.questions),
+      ];
       const subMap = new Map<string, string | null>();
       session.submissions.forEach((sub) => {
         subMap.set(sub.questionId, sub.selectedOption);

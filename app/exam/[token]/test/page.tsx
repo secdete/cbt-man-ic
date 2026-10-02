@@ -112,11 +112,28 @@ export default function CBTTestInterfacePage({
           return;
         }
 
+        const now = Date.now();
+        const elapsed = Math.floor((now - new Date(statusJson.data.startTime).getTime()) / 1000);
+        const durationRemaining = active.exam.durationMinutes * 60 - elapsed;
+        const scheduleRemaining = statusJson.data.exam.closeTime
+          ? Math.floor((new Date(statusJson.data.exam.closeTime).getTime() - now) / 1000)
+          : durationRemaining;
+        const serverRemaining = Math.max(0, Math.min(durationRemaining, scheduleRemaining));
+        if (serverRemaining <= 0) {
+          const submitResponse = await fetch(`/api/session/${active.session.id}/submit`, { method: "POST" });
+          const submitJson = await submitResponse.json();
+          if (submitJson.success) {
+            localStorage.removeItem("cbt_active_session");
+            router.replace(`/exam/${encodeURIComponent(token)}/result?sessionId=${active.session.id}`);
+            return;
+          }
+        }
+
         setSessionData(active.session);
         setQuestions(active.questions || []);
         setAnswers(active.savedAnswers || {});
         setRemainingSeconds(
-          active.remainingSeconds || active.exam.durationMinutes * 60,
+          serverRemaining,
         );
         setTabSwitchCount(statusJson.data.tabSwitchCount || 0);
 

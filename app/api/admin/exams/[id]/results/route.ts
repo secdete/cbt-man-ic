@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 
@@ -18,6 +22,10 @@ export async function GET(
             points: true,
             correctAnswer: true,
           },
+        },
+        subtests: {
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          select: { questions: { select: { id: true, questionNumber: true, points: true, correctAnswer: true } } },
         },
         sessions: {
           orderBy: { totalScore: "desc" },
@@ -63,7 +71,7 @@ export async function GET(
           token: exam.token,
           durationMinutes: exam.durationMinutes,
           passingScore: exam.passingScore,
-          totalQuestions: exam.questions.length,
+          totalQuestions: exam.questions.length + exam.subtests.reduce((sum, subtest) => sum + subtest.questions.length, 0),
         },
         analytics: {
           totalParticipants,

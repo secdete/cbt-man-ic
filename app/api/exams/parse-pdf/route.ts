@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractTextFromPDF, parseQuestionsFromText } from "@/lib/pdf-parser";
+import { requireAdmin } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  const denied = await requireAdmin(req);
+  if (denied) return denied;
+
   try {
     const contentType = req.headers.get("content-type") || "";
 

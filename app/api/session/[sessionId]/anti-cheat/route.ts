@@ -9,7 +9,13 @@ export async function GET(
     const { sessionId } = await params;
     const session = await prisma.examSession.findUnique({
       where: { id: sessionId },
-      select: { id: true, status: true, tabSwitchCount: true },
+      select: {
+        id: true,
+        status: true,
+        tabSwitchCount: true,
+        startTime: true,
+        exam: { select: { closeTime: true, durationMinutes: true } },
+      },
     });
 
     if (!session) {
@@ -54,16 +60,6 @@ export async function POST(
         },
       },
     });
-
-    if (updated.tabSwitchCount >= 3) {
-      await prisma.examSession.update({
-        where: { id: sessionId },
-        data: {
-          status: 'COMPLETED',
-          endTime: new Date(),
-        },
-      });
-    }
 
     return NextResponse.json({
       success: true,

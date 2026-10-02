@@ -1,12 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const SCRYPT_OPTIONS = { N: 8192, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+
+// 0812-xxxx / +62 812 / 812 semuanya diubah menjadi format 628xx
+function normalizePhone(raw: unknown): string {
+  let digits = String(raw ?? "").replace(/\D/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = `62${digits.slice(1)}`;
+  else if (digits.startsWith("8")) digits = `62${digits}`;
+  while (digits.startsWith("6262")) digits = digits.slice(2);
+  return digits;
+}
+
+function hashPassword(password: string, salt: string): string {
+  return scryptSync(password, salt, 64, SCRYPT_OPTIONS).toString("hex");
+}
+
+function verifyPassword(password: string, salt: string, expectedHash: string): boolean {
+  const actual = Buffer.from(hashPassword(password, salt), "hex");
+  const expected = Buffer.from(expectedHash, "hex");
+  if (actual.length !== expected.length) return false;
+  return timingSafeEqual(actual, expected);
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { token, studentName, studentSchool, studentWhatsapp, studentNisn } =
+    const { token, studentName, studentSchool, studentWhatsapp, studentPassword } =
       await req.json();
 
     if (!token || !studentName) {
@@ -16,14 +40,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const phone = normalizePhone(studentWhatsapp);
+    if (phone.length < 10) {
+      return NextResponse.json(
+        { success: false, message: "No. HP yang valid wajib diisi (contoh: 081234567890)." },
+        { status: 400 },
+      );
+    }
+
+    const password = String(studentPassword ?? "").trim();
+    if (password.length < 4) {
+      return NextResponse.json(
+        { success: false, message: "PIN ujian minimal 4 karakter." },
+        { status: 400 },
+      );
+    }
+
     const cleanToken = token.trim().toUpperCase();
 
     // Cari ujian berdasarkan token
-    const exam = await prisma.exam.findUnique({
+    const exam = await prisma.exam.findFirst({
       where: { token: cleanToken },
       include: {
         questions: {
           orderBy: { questionNumber: "asc" },
+        },
+        subtests: {
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          include: { questions: { orderBy: { questionNumber: "asc" } } },
         },
       },
     });
@@ -43,17 +87,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Ujian ini sedang ditutup atau belum diaktifkan oleh panitia.",
+          message: "Ujian ini sedang ditutup atau belum diaktifkan oleh panitia.",
         },
         { status: 403 },
       );
     }
 
-    // 2. Cek jadwal jam buka dan jam tutup ujian
+    if (exam.parentExamId) {
+      return NextResponse.json(
+        { success: false, message: "Subtest ini telah digabung. Gunakan token paket tryout." },
+        { status: 403 },
+      );
+    }
+
+    // 2. Cek jadwal jam buka dan jam tutup ujian (dikontrol penuh oleh admin)
     const now = new Date();
     if (exam.openTime && new Date(exam.openTime) > now) {
       const formattedOpen = new Date(exam.openTime).toLocaleString("id-ID", {
+        timeZone: "Asia/Jakarta",
         day: "numeric",
         month: "short",
         year: "numeric",
@@ -69,24 +120,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (exam.closeTime && new Date(exam.closeTime) < now) {
-      const formattedClose = new Date(exam.closeTime).toLocaleString("id-ID", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Waktu pelaksanaan ujian ini telah berakhir pada: ${formattedClose}.`,
-        },
-        { status: 403 },
-      );
-    }
+    const scheduleExpired = Boolean(exam.closeTime && exam.closeTime <= now);
 
-    if (exam.questions.length === 0) {
+    const allQuestions = [
+      ...exam.questions.map((question) => ({ ...question, packageSubject: null as string | null })),
+      ...exam.subtests.flatMap((subtest) =>
+        subtest.questions.map((question) => ({ ...question, packageSubject: subtest.title })),
+      ),
+    ];
+    if (allQuestions.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -96,12 +138,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Peserta hanya boleh memiliki satu sesi agar sesi yang sudah selesai
-    // tidak dapat dibuka ulang melalui tombol mulai atau browser back.
+    // 3. Identitas peserta: No. HP + PIN. Nomor HP menjadi kunci satu kali pengerjaan.
+    let student = await prisma.student.findUnique({ where: { phone } });
+
+    if (!student) {
+      const salt = randomBytes(16).toString("hex");
+      try {
+        student = await prisma.student.create({
+          data: {
+            name: studentName.trim(),
+            phone,
+            school: studentSchool ? studentSchool.trim() : null,
+            passwordHash: hashPassword(password, salt),
+            salt,
+          },
+        });
+      } catch (createError: any) {
+        // Tabrakan nomor HP pada saat bersamaan: ambil data yang baru terdaftar
+        if (createError?.code !== "P2002") throw createError;
+        student = await prisma.student.findUnique({ where: { phone } });
+        if (!student) throw createError;
+      }
+    }
+
+    if (!verifyPassword(password, student.salt, student.passwordHash)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No. HP atau PIN tidak sesuai dengan data terdaftar.",
+        },
+        { status: 401 },
+      );
+    }
+
+    // Peserta hanya boleh memiliki satu sesi per paket try out.
+    const attemptKey = `${exam.id}:student:${student.id}`;
     const previousSession = await prisma.examSession.findFirst({
       where: {
         examId: exam.id,
-        studentName: studentName.trim(),
+        OR: [{ attemptKey }, { studentId: student.id }],
       },
       orderBy: { createdAt: "desc" },
       select: { id: true, status: true },
@@ -111,45 +186,70 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: "Sesi ujian Anda sudah berakhir dan tidak dapat dibuka kembali.",
+          message: "Tryout ini hanya berlaku satu kali pengerjaan. Sesi Anda sudah diselesaikan dan tidak dapat dibuka kembali.",
         },
         { status: 403 },
       );
     }
 
     // Cek apakah siswa ini sudah memiliki sesi aktif untuk ujian ini
-    let session = await prisma.examSession.findFirst({
-      where: {
-        examId: exam.id,
-        studentName: studentName.trim(),
-        status: "IN_PROGRESS",
-      },
-      include: {
-        submissions: true,
-      },
-    });
+    let session = previousSession
+      ? await prisma.examSession.findUnique({
+          where: { id: previousSession.id },
+          include: { submissions: true },
+        })
+      : null;
+
+    if (scheduleExpired && !session) {
+      const formattedClose = new Date(exam.closeTime!).toLocaleString("id-ID", {
+        timeZone: "Asia/Jakarta",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      return NextResponse.json(
+        { success: false, message: `Waktu pelaksanaan ujian ini telah berakhir pada: ${formattedClose}.` },
+        { status: 403 },
+      );
+    }
 
     if (!session) {
-      // Buat nomor sertifikat unik untuk siswa ini
-      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-      const certNumber = `CERT-SNPDB/${new Date().getFullYear()}/${cleanToken.replace(/[^A-Z0-9]/g, "")}-${randomSuffix}`;
+      // Nomor sertifikat deterministik per peserta agar tidak pernah bentrok
+      const certSuffix = student.id.replace(/-/g, "").slice(0, 6).toUpperCase();
+      const certNumber = `CERT-SNPDB/${new Date().getFullYear()}/${cleanToken.replace(/[^A-Z0-9]/g, "")}-${certSuffix}`;
 
-      // Buat sesi ujian baru
-      session = await prisma.examSession.create({
-        data: {
-          examId: exam.id,
-          studentName: studentName.trim(),
-          studentSchool: studentSchool ? studentSchool.trim() : null,
-          studentWhatsapp: studentWhatsapp ? studentWhatsapp.trim() : null,
-          studentNisn: studentNisn ? studentNisn.trim() : null,
-          certificateNumber: certNumber,
-          status: "IN_PROGRESS",
-          startTime: new Date(),
-        },
-        include: {
-          submissions: true,
-        },
-      });
+      try {
+        session = await prisma.examSession.create({
+          data: {
+            examId: exam.id,
+            studentId: student.id,
+            studentName: student.name,
+            studentSchool: studentSchool ? studentSchool.trim() : student.school,
+            studentWhatsapp: phone,
+            certificateNumber: certNumber,
+            attemptKey,
+            status: "IN_PROGRESS",
+            startTime: new Date(),
+          },
+          include: { submissions: true },
+        });
+      } catch (createError: any) {
+        if (createError?.code !== "P2002") throw createError;
+        const existing = await prisma.examSession.findUnique({
+          where: { attemptKey },
+          include: { submissions: true },
+        });
+        if (!existing) throw createError;
+        if (existing.status !== "IN_PROGRESS") {
+          return NextResponse.json(
+            { success: false, message: "Tryout ini hanya berlaku satu kali pengerjaan. Sesi Anda sudah diselesaikan." },
+            { status: 403 },
+          );
+        }
+        session = existing;
+      }
     }
 
     // Hitung sisa waktu ujian (dalam detik)
@@ -157,37 +257,23 @@ export async function POST(req: NextRequest) {
     const nowMs = Date.now();
     const elapsedSeconds = Math.floor((nowMs - startTimeMs) / 1000);
     const totalDurationSeconds = exam.durationMinutes * 60;
-    const remainingSeconds = Math.max(0, totalDurationSeconds - elapsedSeconds);
-
-    if (remainingSeconds <= 0) {
-      // Waktu sudah habis
-      await prisma.examSession.update({
-        where: { id: session.id },
-        data: { status: "TIMEOUT", endTime: new Date() },
-      });
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Waktu ujian untuk sesi Anda telah berakhir.",
-          sessionId: session.id,
-          isExpired: true,
-        },
-        { status: 400 },
-      );
-    }
+    const durationRemaining = totalDurationSeconds - elapsedSeconds;
+    const scheduleRemaining = exam.closeTime
+      ? Math.floor((new Date(exam.closeTime).getTime() - nowMs) / 1000)
+      : durationRemaining;
+    const remainingSeconds = Math.max(0, Math.min(durationRemaining, scheduleRemaining));
 
     // Amankan data butir soal: HAPUS correctAnswer dan explanation sebelum dikirim ke siswa!
-    const sanitizedQuestions = exam.questions.map((q) => ({
+    const sanitizedQuestions = allQuestions.map((q, index) => ({
       id: q.id,
-      questionNumber: q.questionNumber,
+      questionNumber: index + 1,
       questionText: q.questionText,
       optionA: q.optionA,
       optionB: q.optionB,
       optionC: q.optionC,
       optionD: q.optionD,
       optionE: q.optionE,
-      subject: q.subject,
+      subject: q.subject && q.subject !== "Umum" ? q.subject : q.packageSubject || q.subject,
       points: q.points,
     }));
 
@@ -222,7 +308,7 @@ export async function POST(req: NextRequest) {
           category: exam.category,
           durationMinutes: exam.durationMinutes,
           passingScore: exam.passingScore,
-          totalQuestions: exam.questions.length,
+          totalQuestions: allQuestions.length,
         },
         questions: sanitizedQuestions,
         savedAnswers,

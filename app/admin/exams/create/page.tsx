@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -34,6 +34,14 @@ interface EditableQuestion {
   points: number;
 }
 
+interface SubtestOption {
+  id: string;
+  title: string;
+  category: string;
+  durationMinutes: number;
+  _count: { questions: number; sessions: number };
+}
+
 export default function CreateExamPage() {
   const router = useRouter();
 
@@ -59,6 +67,19 @@ export default function CreateExamPage() {
   // Step 2: Butir Soal
   const [questions, setQuestions] = useState<EditableQuestion[]>([]);
   const [saving, setSaving] = useState(false);
+  const [subtestOptions, setSubtestOptions] = useState<SubtestOption[]>([]);
+  const [selectedSubtestIds, setSelectedSubtestIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/exams?subtests=true")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setSubtestOptions(json.data.filter((exam: SubtestOption) => exam._count.questions > 0));
+        }
+      })
+      .catch((error) => console.error("Gagal memuat subtest:", error));
+  }, []);
 
   // Generate acak token unik
   const generateRandomToken = () => {
@@ -228,9 +249,9 @@ export default function CreateExamPage() {
       return;
     }
 
-    if (questions.length === 0) {
+    if (questions.length === 0 && selectedSubtestIds.length === 0) {
       alert(
-        "Harap masukkan atau ekstrak minimal 1 butir soal sebelum menerbitkan tryout.",
+        "Tambahkan soal atau pilih minimal satu subtest untuk paket tryout.",
       );
       return;
     }
@@ -246,6 +267,7 @@ export default function CreateExamPage() {
         token: token.trim().toUpperCase(),
         passingScore: parseInt(passingScore.toString(), 10) || 65,
         questions,
+        subtestIds: selectedSubtestIds,
       };
 
       const res = await fetch("/api/exams", {
@@ -271,6 +293,10 @@ export default function CreateExamPage() {
     }
   };
 
+  const totalQuestionCount = questions.length + subtestOptions
+    .filter((subtest) => selectedSubtestIds.includes(subtest.id))
+    .reduce((total, subtest) => total + subtest._count.questions, 0);
+
   return (
     <div className="flex-1 py-10 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full space-y-8">
       {/* Top Header */}
@@ -295,7 +321,7 @@ export default function CreateExamPage() {
         <button
           type="button"
           onClick={handleSaveExam}
-          disabled={saving || questions.length === 0}
+          disabled={saving || totalQuestionCount === 0}
           className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40"
         >
           {saving ? (
@@ -303,7 +329,7 @@ export default function CreateExamPage() {
           ) : (
             <>
               <CheckCircle2 className="w-5 h-5" />
-              <span>Terbitkan Tryout ({questions.length} Soal)</span>
+              <span>Terbitkan Tryout ({totalQuestionCount} Soal)</span>
             </>
           )}
         </button>
@@ -356,6 +382,39 @@ export default function CreateExamPage() {
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono font-bold text-base text-blue-800 tracking-wider placeholder:font-sans placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+
+            {/* Kategori */}
+            {subtestOptions.length > 0 && (
+              <div className="space-y-2 rounded-lg border border-slate-200 p-3">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-800">Gabungkan subtest yang sudah dibuat</h3>
+                  <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                    Subtest terpilih menjadi seksi dalam satu paket. Riwayat lama tetap tersimpan; peserta memakai token paket ini untuk seluruh seksi.
+                  </p>
+                </div>
+                <div className="max-h-48 space-y-1 overflow-y-auto">
+                  {subtestOptions.map((subtest) => {
+                    const selected = selectedSubtestIds.includes(subtest.id);
+                    return (
+                      <label key={subtest.id} className="flex cursor-pointer items-start gap-2 rounded-md px-2 py-2 hover:bg-slate-50">
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={(event) => setSelectedSubtestIds((current) =>
+                            event.target.checked
+                              ? [...current, subtest.id]
+                              : current.filter((id) => id !== subtest.id),
+                          )}
+                          className="mt-0.5 accent-blue-700"
+                        />
+                        <span className="min-w-0 flex-1 text-xs text-slate-700">{subtest.title}</span>
+                        <span className="shrink-0 text-[10px] text-slate-500">{subtest._count.questions} soal</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Kategori */}
             <div>
@@ -669,8 +728,7 @@ export default function CreateExamPage() {
               Belum ada butir soal pada paket ini.
             </p>
             <p className="text-xs text-slate-400">
-              Unggah file PDF atau tempelkan teks naskah soal di modul atas
-              untuk mengekstrak secara otomatis.
+              Tambahkan soal di modul atas atau gabungkan subtest yang sudah tersedia.
             </p>
           </div>
         ) : (
@@ -840,7 +898,7 @@ export default function CreateExamPage() {
         )}
 
         {/* Bottom Action Bar */}
-        {questions.length > 0 && (
+        {(questions.length > 0 || selectedSubtestIds.length > 0) && (
           <div className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
             <button
               type="button"

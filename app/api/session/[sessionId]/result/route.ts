@@ -16,6 +16,10 @@ export async function GET(
             questions: {
               orderBy: { questionNumber: 'asc' },
             },
+            subtests: {
+              orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+              include: { questions: { orderBy: { questionNumber: 'asc' } } },
+            },
           },
         },
         submissions: true,
@@ -41,11 +45,17 @@ export async function GET(
     // Breakdown per subtes
     const subjectStats: Record<string, { total: number; correct: number; points: number }> = {};
 
-    const reviewQuestions = session.exam.questions.map((q) => {
+    const questions = [
+      ...session.exam.questions.map((question) => ({ ...question, packageSubject: null as string | null })),
+      ...session.exam.subtests.flatMap((subtest) =>
+        subtest.questions.map((question) => ({ ...question, packageSubject: subtest.title })),
+      ),
+    ];
+    const reviewQuestions = questions.map((q, index) => {
       const sub = subMap.get(q.id);
       const studentAns = sub?.selectedOption || null;
       const isCorrect = studentAns !== null && studentAns.toUpperCase() === q.correctAnswer.toUpperCase();
-      const subject = q.subject || 'Umum';
+      const subject = q.subject && q.subject !== 'Umum' ? q.subject : q.packageSubject || q.subject || 'Umum';
 
       if (!subjectStats[subject]) {
         subjectStats[subject] = { total: 0, correct: 0, points: 0 };
@@ -58,7 +68,7 @@ export async function GET(
 
       return {
         id: q.id,
-        questionNumber: q.questionNumber,
+        questionNumber: index + 1,
         questionText: q.questionText,
         optionA: q.optionA,
         optionB: q.optionB,
@@ -70,12 +80,12 @@ export async function GET(
         isCorrect,
         isDoubtful: sub?.isDoubtful || false,
         explanation: q.explanation,
-        subject: q.subject,
+        subject,
         points: q.points,
       };
     });
 
-    const maxPossibleScore = session.exam.questions.reduce((acc, curr) => acc + curr.points, 0);
+    const maxPossibleScore = questions.reduce((acc, curr) => acc + curr.points, 0);
     const isPassed = session.totalScore >= session.exam.passingScore;
 
     return NextResponse.json({
@@ -83,9 +93,11 @@ export async function GET(
       data: {
         session: {
           id: session.id,
+          status: session.status,
           studentName: session.studentName,
           studentNisn: session.studentNisn,
           studentSchool: session.studentSchool,
+          studentWhatsapp: session.studentWhatsapp,
           startTime: session.startTime,
           endTime: session.endTime,
           totalScore: session.totalScore,
@@ -96,6 +108,7 @@ export async function GET(
           correctCount: session.correctCount,
           incorrectCount: session.incorrectCount,
           unansweredCount: session.unansweredCount,
+          certificateNumber: session.certificateNumber,
           tabSwitchCount: session.tabSwitchCount,
         },
         exam: {
@@ -122,4 +135,3 @@ export async function GET(
     );
   }
 }
-

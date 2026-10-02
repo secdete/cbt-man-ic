@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   XCircle,
   ArrowLeft,
-  Printer,
   BookOpen,
   BarChart3,
   Check,
@@ -24,6 +23,7 @@ import confetti from "canvas-confetti";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
 import FormattedQuestionText from "@/components/FormattedQuestionText";
 import ExamCertificate from "@/components/ExamCertificate";
+import { downloadExamAnalysisPdf, downloadExamCertificatePdf } from "@/lib/exam-pdf";
 
 export default function ExamResultPage({
   params,
@@ -39,6 +39,8 @@ export default function ExamResultPage({
   const [data, setData] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [showCertificate, setShowCertificate] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState(false);
+  const [downloadingCertificate, setDownloadingCertificate] = useState(false);
   const [expandedExplanations, setExpandedExplanations] = useState<
     Record<string, boolean>
   >({});
@@ -79,6 +81,22 @@ export default function ExamResultPage({
 
     loadResult();
   }, [sessionId]);
+
+  useEffect(() => {
+    if (!data || !sessionId || !["COMPLETED", "TIMEOUT"].includes(data.session.status)) return;
+    const downloadKey = `cbt-reports-downloaded-${sessionId}`;
+    if (sessionStorage.getItem(downloadKey)) return;
+    sessionStorage.setItem(downloadKey, "1");
+    void (async () => {
+      try {
+        await downloadExamCertificatePdf(data);
+        await new Promise((resolve) => window.setTimeout(resolve, 400));
+        await downloadExamAnalysisPdf(data, token);
+      } catch (error) {
+        console.error("Gagal mengunduh PDF hasil otomatis:", error);
+      }
+    })();
+  }, [data, sessionId, token]);
 
   if (loading) {
     return (
@@ -130,6 +148,30 @@ export default function ExamResultPage({
     `Halo Admin Cakrawala Learning, saya *${session.studentName}* (${session.studentSchool}).\n\nSaya telah selesai mengerjakan simulasi *${exam.title}* di CBT SNPDB MAN IC dengan Skor: *${session.totalScore}* (Akurasi: ${session.accuracy}%).\n\nSaya ingin berkonsultasi dan mendaftar *Kelas Online Pembahasan Lengkap & Trik Lolos SNPDB MAN IC*. Terima kasih!`,
   );
 
+  const downloadAnalysisPdf = async () => {
+    setDownloadingReport(true);
+    try {
+      await downloadExamAnalysisPdf(data, token);
+    } catch (error) {
+      console.error("Gagal membuat PDF analisis:", error);
+      window.alert("PDF analisis belum berhasil dibuat. Silakan coba lagi.");
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
+
+  const downloadCertificatePdf = async () => {
+    setDownloadingCertificate(true);
+    try {
+      await downloadExamCertificatePdf(data);
+    } catch (error) {
+      console.error("Gagal membuat PDF sertifikat:", error);
+      window.alert("PDF sertifikat belum berhasil dibuat. Silakan coba lagi.");
+    } finally {
+      setDownloadingCertificate(false);
+    }
+  };
+
   return (
     <div className="flex-1 py-5 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full space-y-5 sm:space-y-6">
       {/* Top Action Bar */}
@@ -145,20 +187,22 @@ export default function ExamResultPage({
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             type="button"
-            onClick={() => setShowCertificate(true)}
+            onClick={downloadCertificatePdf}
+            disabled={downloadingCertificate}
             className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors cursor-pointer"
           >
             <Award className="w-4 h-4 text-amber-400" />
-            <span>Unduh Sertifikat</span>
+            <span>{downloadingCertificate ? "Menyiapkan sertifikat..." : "Unduh Sertifikat PDF"}</span>
           </button>
 
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={downloadAnalysisPdf}
+            disabled={downloadingReport}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 text-slate-700 font-medium text-xs hover:bg-slate-50 transition-colors cursor-pointer"
           >
-            <Printer className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Cetak Hasil</span>
+            <FileText className="w-3.5 h-3.5" />
+            <span>{downloadingReport ? "Menyiapkan PDF..." : "Unduh Analisis PDF"}</span>
           </button>
         </div>
       </div>
@@ -640,6 +684,8 @@ export default function ExamResultPage({
           maxScore={session.maxPossibleScore || 100}
           passingScore={session.passingScore}
           accuracy={session.accuracy}
+          correctCount={session.correctCount}
+          totalQuestions={questions.length}
           grade={
             session.totalScore >= session.passingScore * 1.25
               ? "SANGAT MEMUASKAN (LULUS)"
@@ -658,7 +704,7 @@ export default function ExamResultPage({
             session.certificateNumber ||
             `CERT-SNPDB/${new Date().getFullYear()}/${token}-${String(session.id).slice(-4).toUpperCase()}`
           }
-          verificationHash={`VERIF-${String(session.id).slice(-8).toUpperCase()}-${session.studentNisn || "CBT"}`}
+          verificationHash={`VERIF-${String(session.id).slice(-8).toUpperCase()}-${String(session.studentWhatsapp || session.studentNisn || "CBT").replace(/[^\w]/g, "").slice(-6).toUpperCase()}`}
           onClose={() => setShowCertificate(false)}
         />
       )}

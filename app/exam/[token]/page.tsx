@@ -31,7 +31,9 @@ export default function ExamConfirmationPage({
     token: string;
     studentName: string;
     studentSchool: string;
+    studentNisn?: string | null;
     studentWhatsapp?: string | null;
+    studentPassword?: string | null;
   } | null>(null);
 
   const [exam, setExam] = useState<any>(null);
@@ -53,7 +55,7 @@ export default function ExamConfirmationPage({
 
     async function fetchExamDetails() {
       try {
-        const res = await fetch("/api/exams");
+        const res = await fetch(`/api/exams?token=${encodeURIComponent(token)}`);
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           const found = json.data.find((e: any) => e.token === token);
@@ -71,6 +73,7 @@ export default function ExamConfirmationPage({
               const formattedOpen = new Date(found.openTime).toLocaleString(
                 "id-ID",
                 {
+                  timeZone: "Asia/Jakarta",
                   day: "numeric",
                   month: "short",
                   year: "numeric",
@@ -82,10 +85,11 @@ export default function ExamConfirmationPage({
                 `Ujian belum dibuka. Jadwal buka: ${formattedOpen}`,
               );
             }
-            if (found.closeTime && new Date(found.closeTime) < now) {
+            if (found.closeTime && new Date(found.closeTime) <= now) {
               const formattedClose = new Date(found.closeTime).toLocaleString(
                 "id-ID",
                 {
+                  timeZone: "Asia/Jakarta",
                   day: "numeric",
                   month: "short",
                   year: "numeric",
@@ -114,9 +118,14 @@ export default function ExamConfirmationPage({
   }, [token]);
 
   const handleStartExam = async () => {
-    if (!studentData?.studentName || !studentData?.studentSchool) {
+    if (
+      !studentData?.studentName ||
+      !studentData?.studentSchool ||
+      !studentData?.studentWhatsapp ||
+      !studentData?.studentPassword
+    ) {
       setErrorMessage(
-        "Data identitas peserta tidak lengkap. Silakan kembali ke halaman utama untuk melengkapi data.",
+        "Data identitas peserta tidak lengkap. Silakan kembali ke halaman utama untuk melengkapi Nama, No. HP, dan PIN ujian.",
       );
       return;
     }
@@ -141,7 +150,8 @@ export default function ExamConfirmationPage({
           token,
           studentName: studentData.studentName,
           studentSchool: studentData.studentSchool,
-          studentWhatsapp: studentData.studentWhatsapp || null,
+          studentWhatsapp: studentData.studentWhatsapp,
+          studentPassword: studentData.studentPassword,
         }),
       });
 
@@ -187,8 +197,8 @@ export default function ExamConfirmationPage({
               Identitas Peserta Belum Diisi
             </h2>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Silakan kembali ke halaman utama untuk mengisi Nama Lengkap dan
-              Asal Sekolah Anda terlebih dahulu sebelum memulai ujian.
+              Silakan kembali ke halaman utama untuk mengisi Nama Lengkap, No. HP,
+              dan PIN Ujian Anda terlebih dahulu sebelum memulai ujian.
             </p>
           </div>
           <Link
@@ -384,7 +394,12 @@ export default function ExamConfirmationPage({
               <button
                 type="button"
                 onClick={handleStartExam}
-                disabled={starting || !studentData?.studentName}
+                disabled={
+                  starting ||
+                  !studentData?.studentName ||
+                  !studentData?.studentWhatsapp ||
+                  !studentData?.studentPassword
+                }
                 className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {starting ? (

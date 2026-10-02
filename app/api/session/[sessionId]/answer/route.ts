@@ -20,6 +20,7 @@ export async function POST(
     // Pastikan sesi masih berlangsung
     const session = await prisma.examSession.findUnique({
       where: { id: sessionId },
+      include: { exam: { select: { id: true, isActive: true, isLocked: true, closeTime: true, subtests: { select: { id: true } } } } },
     });
 
     if (!session) {
@@ -34,6 +35,30 @@ export async function POST(
         { success: false, message: 'Sesi ujian ini telah selesai dan tidak dapat diubah lagi.' },
         { status: 400 }
       );
+    }
+
+    if (!session.exam.isActive || session.exam.isLocked) {
+      return NextResponse.json(
+        { success: false, message: "Ujian telah dikunci oleh panitia. Jawaban tidak dapat diubah." },
+        { status: 403 },
+      );
+    }
+
+    const now = new Date();
+    if (session.exam.closeTime && now >= session.exam.closeTime) {
+      return NextResponse.json(
+        { success: false, message: "Waktu ujian telah berakhir. Jawaban tidak dapat diubah." },
+        { status: 403 },
+      );
+    }
+
+    const allowedExamIds = [session.exam.id, ...session.exam.subtests.map((subtest) => subtest.id)];
+    const question = await prisma.question.findFirst({
+      where: { id: questionId, examId: { in: allowedExamIds } },
+      select: { id: true },
+    });
+    if (!question) {
+      return NextResponse.json({ success: false, message: "Soal tidak termasuk dalam paket tryout ini." }, { status: 400 });
     }
 
     // Upsert submission
@@ -70,4 +95,3 @@ export async function POST(
     );
   }
 }
-
