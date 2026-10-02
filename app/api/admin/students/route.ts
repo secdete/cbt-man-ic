@@ -48,6 +48,7 @@ export async function GET(req: NextRequest) {
         registrationTimestamp: true,
         password: true,
         createdAt: true,
+        _count: { select: { sessions: true } },
       },
     });
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
     }
 
     const nisn = nisnRaw || generateIdentifier(name, phone ?? undefined);
-    const username = sanitize(body?.username) || generateIdentifier(name, phone ?? undefined);
+    const usernameFromClient = sanitize(body?.username);
     const password = passwordFromBody || generatePassword(name, phone ?? undefined, nisn);
     const salt = crypto.randomBytes(16).toString("hex");
 
@@ -106,6 +107,25 @@ export async function POST(req: NextRequest) {
           },
           { status: 409 },
         );
+      }
+    }
+
+    // Username hasil turunan nama bisa bentrok saat dua peserta punya nama serupa,
+    // jadi beri akhiran angka sampai benar-benar unik.
+    let username = usernameFromClient;
+    if (username) {
+      const owner = await prisma.student.findUnique({ where: { username } });
+      if (owner) {
+        return NextResponse.json(
+          { success: false, message: `Username "${username}" sudah dipakai peserta lain.` },
+          { status: 409 },
+        );
+      }
+    } else {
+      const base = generateIdentifier(name, phone ?? undefined);
+      username = base;
+      for (let suffix = 1; await prisma.student.findUnique({ where: { username } }); suffix++) {
+        username = `${base.slice(0, 10)}${suffix}`;
       }
     }
 
@@ -145,6 +165,66 @@ export async function POST(req: NextRequest) {
     console.error("Create student failed:", error);
     return NextResponse.json(
       { success: false, message: "Gagal membuat peserta baru." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const denied = await requireAdmin(req);
+    if (denied) return denied;
+
+    const body = await req.json().catch(() => null);
+    const rawIds: unknown[] = Array.isArray(body?.ids) ? body.ids : [];
+    const ids = [
+      ...new Set(
+        rawIds
+          .map((id) => String(id ?? "").trim())
+          .filter((id) => id.length > 0),
+      ),
+    ];
+
+    if (ids.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Tidak ada peserta yang dipilih untuk dihapus." },
+        { status: 400 },
+      );
+    }
+
+    const targets = await prisma.student.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true, _count: { select: { sessions: true } } },
+    });
+
+    if (targets.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Peserta yang dipilih tidak ditemukan." },
+        { status: 404 },
+      );
+    }
+
+    // Riwayat ujian sengaja TIDAK ikut dihapus: relasi ExamSession.studentId memakai
+    // onDelete: SetNull, sehingga nilai & laporan hasil tetap bisa dibuka panitia.
+    const sessionCount = targets.reduce((sum, s) => sum + s._count.sessions, 0);
+    await prisma.student.deleteMany({ where: { id: { in: targets.map((s) => s.id) } } });
+
+    const label = targets.length === 1 ? `"${targets[0].name}"` : `${targets.length} peserta`;
+    const history =
+      sessionCount > 0
+        ? ` ${sessionCount} riwayat ujian tetap tersimpan di laporan hasil.`
+        : "";
+
+    return NextResponse.json({
+      success: true,
+      deletedCount: targets.length,
+      sessionCount,
+      message: `${label} dihapus.${history}`,
+    });
+  } catch (error) {
+    console.error("Delete student failed:", error);
+    return NextResponse.json(
+      { success: false, message: "Gagal menghapus peserta." },
       { status: 500 },
     );
   }

@@ -122,6 +122,9 @@ async function main() {
   const cardNoAuth = await call("GET", "/api/admin/students/card-pdf");
   check("GET kartu peserta PDF ditolak tanpa login", cardNoAuth.status === 401, `status=${cardNoAuth.status}`);
 
+  const deleteNoAuth = await call("DELETE", "/api/admin/students", { body: { ids: ["x"] } });
+  check("DELETE peserta ditolak tanpa login", deleteNoAuth.status === 401, `status=${deleteNoAuth.status}`);
+
   const badLogin = await call("POST", "/api/admin/auth/login", { body: { username: "admin", password: "salah" } });
   check("Login admin dengan password salah ditolak", badLogin.status === 401, `status=${badLogin.status}`);
 
@@ -448,6 +451,63 @@ async function main() {
 
   const adminOk = await fetch(`${BASE}/admin`, { redirect: "manual", headers: { cookie: adminCookie } });
   check("Halaman /admin terbuka setelah login", adminOk.status === 200, `status=${adminOk.status} loc=${adminOk.headers.get("location")}`);
+
+  // --- Hapus peserta oleh panitia (tombol Hapus di dashboard) ---
+  const deleteEmpty = await call("DELETE", "/api/admin/students", { cookie: adminCookie, body: { ids: [] } });
+  check(
+    "Hapus tanpa peserta terpilih ditolak",
+    deleteEmpty.status === 400,
+    `status=${deleteEmpty.status} msg=${deleteEmpty.json?.message}`,
+  );
+
+  const delSuffix = String(STAMP).slice(-8);
+  const delOne = await call("POST", "/api/admin/students", {
+    cookie: adminCookie,
+    body: { name: "Peserta Hapus Uji 1", school: "MTsN Uji", phone: `0813${delSuffix}`, nisn: `DEL1-${STAMP}`, password: "DEL-PW-1234" },
+  });
+  const delTwo = await call("POST", "/api/admin/students", {
+    cookie: adminCookie,
+    body: { name: "Peserta Hapus Uji 2", school: "MTsN Uji", phone: `0814${delSuffix}`, nisn: `DEL2-${STAMP}`, password: "DEL-PW-1234" },
+  });
+  check("Membuat 2 peserta uji hapus", delOne.status === 200 && delTwo.status === 200, `${delOne.status}/${delTwo.status}`);
+
+  const delIds = [delOne.json?.data?.id, delTwo.json?.data?.id].filter(Boolean);
+  const bulkDelete = await call("DELETE", "/api/admin/students", { cookie: adminCookie, body: { ids: delIds } });
+  check(
+    "Panitia menghapus beberapa peserta sekaligus",
+    bulkDelete.status === 200 && bulkDelete.json?.deletedCount === 2 && bulkDelete.json?.sessionCount === 0,
+    `status=${bulkDelete.status} json=${JSON.stringify(bulkDelete.json)}`,
+  );
+
+  const listAfterDelete = await call("GET", "/api/admin/students", { cookie: adminCookie });
+  const stillThere = (listAfterDelete.json?.data || []).filter((s) => delIds.includes(s.id));
+  check(
+    "Peserta terhapus hilang dari daftar",
+    listAfterDelete.status === 200 && stillThere.length === 0,
+    `sisa=${stillThere.length} total=${(listAfterDelete.json?.data || []).length}`,
+  );
+  check(
+    "Daftar peserta menyertakan jumlah sesi ujian per orang",
+    Array.isArray(listAfterDelete.json?.data) &&
+      (listAfterDelete.json.data.length === 0 || "sessions" in (listAfterDelete.json.data[0]?._count || {})),
+    JSON.stringify(listAfterDelete.json?.data?.[0]?._count),
+  );
+
+  const deleteMissing = await call("DELETE", "/api/admin/students", { cookie: adminCookie, body: { ids: ["tidak-ada-uji"] } });
+  check("Hapus peserta yang tidak ada ditolak", deleteMissing.status === 404, `status=${deleteMissing.status}`);
+
+  const deleteWithHistory = await call("DELETE", "/api/admin/students", {
+    cookie: adminCookie,
+    body: { ids: [createStudent.json?.data?.id] },
+  });
+  check(
+    "Hapus peserta yang sudah ujian memberi tahu riwayat tetap tersimpan",
+    deleteWithHistory.status === 200 &&
+      deleteWithHistory.json?.deletedCount === 1 &&
+      deleteWithHistory.json?.sessionCount >= 1 &&
+      /riwayat/i.test(deleteWithHistory.json?.message || ""),
+    `status=${deleteWithHistory.status} json=${JSON.stringify(deleteWithHistory.json)}`,
+  );
 
   console.log(`\nRINGKASAN: ${passed} lulus, ${failed} gagal`);
   if (failures.length) {

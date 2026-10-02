@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -62,6 +62,19 @@ interface ExamKeyQuestion {
   explanation?: string | null;
 }
 
+interface StudentRow {
+  id: string;
+  name: string;
+  nisn: string | null;
+  username: string | null;
+  email: string | null;
+  school: string | null;
+  phone: string | null;
+  password: string;
+  createdAt: string;
+  _count?: { sessions: number };
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
@@ -116,7 +129,7 @@ export default function AdminDashboardPage() {
     );
   };
 
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<StudentRow[]>([]);
   const [studentMessage, setStudentMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -132,17 +145,92 @@ export default function AdminDashboardPage() {
   const [uploadingStudents, setUploadingStudents] = useState(false);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
+  // Status & dialog hapus peserta
+  const [loadingStudents, setLoadingStudents] = useState(true);
+  const [studentLoadError, setStudentLoadError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    ids: string[];
+    names: string[];
+    sessionCount: number;
+  } | null>(null);
+  const [deletingStudent, setDeletingStudent] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteCancelRef = useRef<HTMLButtonElement>(null);
+
   const loadStudents = async () => {
+    setLoadingStudents(true);
+    setStudentLoadError(null);
     try {
       const res = await fetch("/api/admin/students");
       const json = await res.json();
-      if (json.success) {
+      if (res.ok && json.success) {
         setStudents(json.data || []);
+      } else {
+        setStudentLoadError(json.message || "Daftar peserta gagal dimuat.");
       }
     } catch (error) {
       console.error("Load students failed", error);
+      setStudentLoadError("Server tidak terjangkau. Periksa koneksi lalu muat ulang.");
+    } finally {
+      setLoadingStudents(false);
     }
   };
+
+  const openStudentDelete = (ids: string[]) => {
+    const targets = students.filter((s) => ids.includes(s.id));
+    if (targets.length === 0) return;
+    setDeleteError(null);
+    setDeleteTarget({
+      ids: targets.map((s) => s.id),
+      names: targets.map((s) => s.name),
+      sessionCount: targets.reduce((sum, s) => sum + (s._count?.sessions || 0), 0),
+    });
+  };
+
+  const handleDeleteStudents = async () => {
+    if (!deleteTarget) return;
+    setDeletingStudent(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch("/api/admin/students", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: deleteTarget.ids }),
+      });
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.success) {
+        const removed = new Set(deleteTarget.ids);
+        setStudents((prev) => prev.filter((s) => !removed.has(s.id)));
+        setSelectedStudentIds((prev) => prev.filter((id) => !removed.has(id)));
+        setStudentMessage({ type: "success", text: json.message || "Peserta dihapus." });
+        setDeleteTarget(null);
+      } else {
+        setDeleteError(json?.message || "Peserta gagal dihapus.");
+      }
+    } catch (error) {
+      console.error("Delete students failed", error);
+      setDeleteError("Koneksi terputus saat menghapus. Coba lagi.");
+    } finally {
+      setDeletingStudent(false);
+    }
+  };
+
+  // Esc menutup dialog yang sedang terbuka, termasuk modal jadwal & kunci jawaban.
+  useEffect(() => {
+    if (!deleteTarget && !editingExam && !keyModalExam) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (deleteTarget) setDeleteTarget(null);
+      else if (keyModalExam) setKeyModalExam(null);
+      else setEditingExam(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [deleteTarget, editingExam, keyModalExam]);
+
+  useEffect(() => {
+    if (deleteTarget) deleteCancelRef.current?.focus();
+  }, [deleteTarget]);
 
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -601,36 +689,47 @@ export default function AdminDashboardPage() {
             <div>
               <h2 className="text-lg font-bold text-slate-900">Kelola Peserta Ujian</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Buat peserta baru, impor data dari Excel, dan unduh kartu peserta ke PDF A4.
+                Buat peserta baru, impor dari Excel, unduh kartu peserta ke PDF
+                A4, atau hapus peserta yang keliru.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="inline-flex min-h-11 items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-1 md:min-h-0">
                 <UploadIcon />
                 <span>{uploadingStudents ? "Mengimpor..." : "Import Excel"}</span>
                 <input
                   type="file"
                   accept=".xlsx,.xls,.csv"
                   onChange={handleStudentExcelImport}
-                  className="hidden"
+                  className="sr-only"
                 />
               </label>
-              
+
               <button
                 type="button"
                 onClick={handleDownloadStudentTemplate}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                className="inline-flex min-h-11 items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors md:min-h-0"
               >
                 Template Excel
               </button>
               <button
                 type="button"
                 onClick={handleDownloadCards}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-medium hover:bg-blue-800 transition-colors"
+                className="inline-flex min-h-11 items-center gap-2 px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-medium hover:bg-blue-800 transition-colors md:min-h-0"
               >
                 <FileText className="w-3.5 h-3.5" />
                 Download Kartu PDF
               </button>
+              {selectedStudentIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => openStudentDelete(selectedStudentIds)}
+                  className="inline-flex min-h-11 items-center gap-2 px-3 py-2 rounded-lg border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors md:min-h-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Hapus {selectedStudentIds.length} terpilih
+                </button>
+              )}
             </div>
           </div>
 
@@ -642,7 +741,7 @@ export default function AdminDashboardPage() {
                 value={studentForm.name}
                 onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
                 placeholder="Nama siswa"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-[16px] md:text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
               />
             </div>
             <div className="xl:col-span-2">
@@ -652,7 +751,7 @@ export default function AdminDashboardPage() {
                 value={studentForm.school}
                 onChange={(e) => setStudentForm({ ...studentForm, school: e.target.value })}
                 placeholder="MAN / SMK / dll"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-[16px] md:text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
               />
             </div>
             <div>
@@ -662,7 +761,7 @@ export default function AdminDashboardPage() {
                 value={studentForm.phone}
                 onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
                 placeholder="08xxxx"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-[16px] md:text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
               />
             </div>
             <div>
@@ -672,14 +771,14 @@ export default function AdminDashboardPage() {
                 value={studentForm.password}
                 onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })}
                 placeholder="kosong = otomatis"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-[16px] md:text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
               />
             </div>
             <div className="xl:col-span-6 flex justify-end">
               <button
                 type="submit"
                 disabled={savingStudent}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 disabled:opacity-60"
+                className="inline-flex min-h-11 items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors disabled:opacity-60 md:min-h-0"
               >
                 {savingStudent ? "Menyimpan..." : "Tambah Peserta"}
               </button>
@@ -700,51 +799,112 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
+          <table className="w-full min-w-[760px] text-left text-sm text-slate-600">
             <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
               <tr>
-                <th className="py-3 px-4 w-10">
-                  <input
-                    type="checkbox"
-                    checked={students.length > 0 && selectedStudentIds.length === students.length}
-                    onChange={() =>
-                      setSelectedStudentIds(
-                        selectedStudentIds.length === students.length ? [] : students.map((s) => s.id),
-                      )
-                    }
-                    className="h-4 w-4 rounded border-slate-300"
-                  />
+                <th className="py-3 px-4">
+                  <label className="inline-flex h-11 w-11 items-center justify-center cursor-pointer sm:h-6 sm:w-6">
+                    <input
+                      type="checkbox"
+                      aria-label="Pilih semua peserta"
+                      checked={students.length > 0 && selectedStudentIds.length === students.length}
+                      onChange={() =>
+                        setSelectedStudentIds(
+                          selectedStudentIds.length === students.length ? [] : students.map((s) => s.id),
+                        )
+                      }
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                  </label>
                 </th>
                 <th className="py-3 px-4">Nama</th>
                 <th className="py-3 px-4">NISN / Nomor</th>
                 <th className="py-3 px-4">Sekolah</th>
                 <th className="py-3 px-4">WhatsApp</th>
                 <th className="py-3 px-4">Password</th>
+                <th className="py-3 px-4">Riwayat Ujian</th>
+                <th className="py-3 px-4 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {students.length === 0 ? (
+              {loadingStudents ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm text-slate-500">
-                    Belum ada peserta yang dibuat atau diimpor.
+                  <td colSpan={8} className="py-10 text-center text-sm text-slate-500">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                      Memuat daftar peserta...
+                    </span>
+                  </td>
+                </tr>
+              ) : studentLoadError ? (
+                <tr>
+                  <td colSpan={8} className="py-10 text-center">
+                    <p className="text-sm font-semibold text-rose-700">
+                      Daftar peserta tidak bisa dimuat.
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">{studentLoadError}</p>
+                    <button
+                      type="button"
+                      onClick={loadStudents}
+                      className="mt-3 inline-flex min-h-11 items-center px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors md:min-h-0"
+                    >
+                      Coba lagi
+                    </button>
+                  </td>
+                </tr>
+              ) : students.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-10 text-center px-6">
+                    <p className="text-sm font-semibold text-slate-700">
+                      Belum ada peserta terdaftar.
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Isi form di atas untuk satu peserta, atau impor sekaligus
+                      dari file Excel panitia.
+                    </p>
                   </td>
                 </tr>
               ) : (
                 students.map((student) => (
                   <tr key={student.id} className="hover:bg-slate-50">
                     <td className="py-3 px-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedStudentIds.includes(student.id)}
-                        onChange={() => toggleSelectedStudent(student.id)}
-                        className="h-4 w-4 rounded border-slate-300"
-                      />
+                      <label className="inline-flex h-11 w-11 items-center justify-center cursor-pointer sm:h-6 sm:w-6">
+                        <input
+                          type="checkbox"
+                          aria-label={`Pilih ${student.name}`}
+                          checked={selectedStudentIds.includes(student.id)}
+                          onChange={() => toggleSelectedStudent(student.id)}
+                          className="h-4 w-4 rounded border-slate-300"
+                        />
+                      </label>
                     </td>
                     <td className="py-3 px-4 font-medium text-slate-800">{student.name}</td>
                     <td className="py-3 px-4">{student.nisn || "-"}</td>
                     <td className="py-3 px-4">{student.school || "-"}</td>
                     <td className="py-3 px-4">{student.phone || "-"}</td>
                     <td className="py-3 px-4 font-mono text-xs">{student.password || "-"}</td>
+                    <td className="py-3 px-4">
+                      {student._count?.sessions ? (
+                        <span className="inline-flex items-center whitespace-nowrap text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                          {student._count.sessions} sesi tercatat
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-500 whitespace-nowrap">
+                          Belum ujian
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        type="button"
+                        onClick={() => openStudentDelete([student.id])}
+                        aria-label={`Hapus peserta ${student.name}`}
+                        className="inline-flex min-h-11 items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-rose-200 bg-white text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors sm:min-h-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Hapus
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -771,7 +931,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {loading ? (
-          <div className="py-16 text-center text-slate-400 text-sm">
+          <div className="py-16 text-center text-slate-500 text-sm">
             Memuat daftar ujian...
           </div>
         ) : exams.length === 0 ? (
@@ -780,7 +940,7 @@ export default function AdminDashboardPage() {
             <p className="text-sm font-semibold text-slate-700">
               Belum ada paket ujian yang dibuat.
             </p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               Klik tombol "Upload PDF / Buat Tryout" di atas untuk memulai.
             </p>
           </div>
@@ -904,7 +1064,7 @@ export default function AdminDashboardPage() {
                             )}
                           </>
                         ) : (
-                          <span className="text-slate-400 italic">
+                          <span className="text-slate-500 italic">
                             24 Jam (Manual)
                           </span>
                         )}
@@ -1002,9 +1162,9 @@ export default function AdminDashboardPage() {
                   type="datetime-local"
                   value={schedOpenTime}
                   onChange={(e) => setSchedOpenTime(e.target.value)}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600"
+                  className="w-full p-2.5 rounded-lg border border-slate-300 text-[16px] md:text-xs text-slate-800 focus:outline-none focus:border-blue-600"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">
+                <p className="text-[10px] text-slate-500 mt-1">
                   Kosongkan jika ingin dibuka secara manual via tombol status
                 </p>
               </div>
@@ -1017,7 +1177,7 @@ export default function AdminDashboardPage() {
                   type="datetime-local"
                   value={schedCloseTime}
                   onChange={(e) => setSchedCloseTime(e.target.value)}
-                  className="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600"
+                  className="w-full p-2.5 rounded-lg border border-slate-300 text-[16px] md:text-xs text-slate-800 focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -1092,7 +1252,7 @@ export default function AdminDashboardPage() {
                       className={`px-2 py-0.5 rounded font-bold text-xs ${
                         count > 0
                           ? "bg-blue-100 text-blue-900 border border-blue-200"
-                          : "bg-slate-100 text-slate-400 border border-slate-200"
+                          : "bg-slate-100 text-slate-600 border border-slate-200"
                       }`}
                     >
                       {letter}: {count}
@@ -1140,7 +1300,7 @@ export default function AdminDashboardPage() {
               /* TAB 1: GRID VIEW */
               <div className="flex-1 overflow-y-auto max-h-[50vh] pr-1 space-y-2.5">
                 {keyQuestions.length === 0 ? (
-                  <p className="py-12 text-center text-xs text-slate-400">
+                  <p className="py-12 text-center text-xs text-slate-500">
                     Tidak ada butir soal pada paket ini.
                   </p>
                 ) : (
@@ -1233,7 +1393,7 @@ export default function AdminDashboardPage() {
                               value={q.explanation || ""}
                               onChange={(e) => handleUpdateExplanation(q.id, e.target.value)}
                               placeholder="Tuliskan langkah penyelesaian rinci, rumus cepat, atau trik eliminasi pilihan untuk soal ini..."
-                              className="w-full p-2.5 rounded-lg border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-slate-50/50"
+                              className="w-full p-2.5 rounded-lg border border-slate-300 text-[16px] md:text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-slate-50/50"
                             />
                           </div>
                         )}
@@ -1344,6 +1504,121 @@ export default function AdminDashboardPage() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Dialog konfirmasi hapus peserta */}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-3 sm:p-4"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setDeleteTarget(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="hapus-peserta-judul"
+            onKeyDown={(event) => {
+              if (event.key !== "Tab") return;
+              const nodes = Array.from(
+                event.currentTarget.querySelectorAll<HTMLElement>(
+                  'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+                ),
+              ).filter((node) => !node.hasAttribute("disabled"));
+              if (nodes.length === 0) return;
+              const first = nodes[0];
+              const last = nodes[nodes.length - 1];
+              if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+              } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+              }
+            }}
+            className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-start gap-2.5">
+                <span className="p-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-100 flex-shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </span>
+                <div>
+                  <h3
+                    id="hapus-peserta-judul"
+                    className="font-bold text-sm text-slate-900"
+                  >
+                    {deleteTarget.ids.length === 1
+                      ? "Hapus peserta ini?"
+                      : `Hapus ${deleteTarget.ids.length} peserta?`}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Tindakan ini tidak bisa dibatalkan.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                aria-label="Tutup dialog hapus peserta"
+                className="p-2 rounded text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <ul className="space-y-1 text-xs text-slate-700 max-h-32 overflow-y-auto pr-1">
+              {deleteTarget.names.slice(0, 6).map((name, index) => (
+                <li key={`${name}-${index}`} className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 flex-shrink-0" />
+                  <span className="truncate">{name}</span>
+                </li>
+              ))}
+              {deleteTarget.names.length > 6 && (
+                <li className="text-slate-500 pl-3.5">
+                  + {deleteTarget.names.length - 6} nama lainnya
+                </li>
+              )}
+            </ul>
+
+            <div className="text-xs text-slate-600 space-y-2 leading-relaxed">
+              <p>
+                Akun dan kata sandinya dihapus permanen, sehingga peserta{" "}
+                <b>tidak bisa login lagi</b> sampai panitia membuat akun baru.
+              </p>
+              {deleteTarget.sessionCount > 0 && (
+                <p className="p-2.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-900">
+                  <b>{deleteTarget.sessionCount} sesi ujian</b> sudah tercatat atas
+                  nama ini. Nilai, sertifikat, dan analisa tetap tersimpan di
+                  laporan hasil.
+                </p>
+              )}
+              {deleteError && (
+                <p className="p-2.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-700">
+                  {deleteError}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <button
+                ref={deleteCancelRef}
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 min-h-11 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors md:min-h-0"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteStudents}
+                disabled={deletingStudent}
+                className="px-4 py-2 min-h-11 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold transition-colors disabled:opacity-60 md:min-h-0"
+              >
+                {deletingStudent ? "Menghapus..." : "Hapus permanen"}
+              </button>
             </div>
           </div>
         </div>

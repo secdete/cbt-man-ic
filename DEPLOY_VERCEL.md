@@ -170,8 +170,15 @@ Panel `/admin` punya menu peserta yang terhubung ke tabel `Student`:
 | Impor Excel | `POST /api/admin/students/import` | Kolom: Nama Siswa, Asal Sekolah, WA Siswa, WA Orang Tua, password, NISN |
 | Ekspor Excel | `GET /api/admin/students/export` | `?template=1` hanya mengunduh template kosong |
 | Cetak kartu peserta | `GET /api/admin/students/card-pdf` | 6 kartu per halaman, memuat username & password |
+| Hapus peserta | `DELETE /api/admin/students` body `{ ids: [...] }` | Bisa satu baris atau banyak sekaligus. **Riwayat ujian tidak ikut dihapus** (relasi `ExamSession.studentId` memakai `onDelete: SetNull`) sehingga nilai, sertifikat, dan analisa tetap ada di laporan hasil |
 
 **Semua endpoint di atas wajib cookie admin** (dulu terbuka tanpa login — sudah ditutup).
+
+Tombol **Hapus** ada di setiap baris tabel peserta dan, begitu ada centang, muncul tombol **Hapus N terpilih**
+di toolbar. Keduanya membuka dialog konfirmasi yang menyebut nama peserta, jumlah sesi ujian yang sudah
+tercatat, dan dampaknya (akun tidak bisa login lagi sampai dibuat ulang). Dialog bisa dibatalkan dengan
+Escape, klik area latar, atau tombol Batal; nama peserta yang dibuat lewat panel otomatis mendapat username
+unik sehingga dua peserta bernama sama tidak lagi membuat error 500.
 
 No. HP disimpan seragam format `628xx` supaya peserta yang diimpor dari Excel bisa langsung **login dan masuk
 ujian** (memakai password dari Excel) dan tercatat sebagai **satu baris yang sama**.
@@ -205,7 +212,7 @@ Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_
 ```bash
 npm run build                      # build harus hijau
 npm start                          # jalankan server
-node scripts/_e2e.mjs              # 86 pemeriksaan ujung-ke-ujung (alur login peserta, jadwal, 1x ujian)
+node scripts/_e2e.mjs              # 94 pemeriksaan ujung-ke-ujung (alur login peserta, jadwal, 1x ujian, hapus peserta)
 npx tsx scripts/_pdf-check.ts      # 13 pemeriksaan PDF sertifikat & analisa
 ```
 
