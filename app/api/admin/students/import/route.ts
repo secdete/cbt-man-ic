@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
           nisn: finalNisn,
           username: finalUsername,
           school: school || null,
-          phone: phone || null,
+          phone: finalPhone,
           password: finalPassword,
         });
       } catch (error) {

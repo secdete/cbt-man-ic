@@ -200,6 +200,79 @@ async function main() {
   const phoneLogin = await call("POST", "/api/admin/auth/login", { body: { username: rosterPhone, password: rosterPassword } });
   check("Login peserta bisa memakai No. HP", phoneLogin.status === 200 && phoneLogin.json?.role === "student", `status=${phoneLogin.status} msg=${phoneLogin.json?.message}`);
 
+  // --- Impor Excel, ekspor, dan kartu peserta diuji dengan data sungguhan ---
+  const XLSX = await import("xlsx");
+  const importPhone = `0816${String(STAMP).slice(-8)}`;
+  const importRows = [
+    {
+      "Nama Siswa": `${TEST_NAME} Impor`,
+      "Asal Sekolah": "MTsN Uji",
+      "Nomor Whatsapp Aktif Siswa": importPhone,
+      password: "IMP-PW-1234",
+      NISN: `E2E-XLS-${STAMP}`,
+    },
+    {
+      "Nama Siswa": `${TEST_NAME} Impor Kembar`,
+      "Asal Sekolah": "MTsN Uji",
+      "Nomor Whatsapp Aktif Siswa": importPhone,
+      password: "IMP-PW-1234",
+      NISN: `E2E-XLS-KEMBAR-${STAMP}`,
+    },
+  ];
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(importRows), "Peserta");
+  const workbookBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+  const importForm = new FormData();
+  importForm.append(
+    "file",
+    new File([workbookBuffer], "peserta.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+  );
+  const importRes = await fetch(`${BASE}/api/admin/students/import`, {
+    method: "POST",
+    headers: { cookie: adminCookie },
+    body: importForm,
+  });
+  const importJson = await importRes.json().catch(() => null);
+  check(
+    "Impor Excel peserta sukses (1 baris masuk, 1 baris kembar ditolak)",
+    importRes.status === 200 && importJson?.createdCount === 1 && (importJson?.errors?.length || 0) === 1,
+    `status=${importRes.status} created=${importJson?.createdCount} errors=${JSON.stringify(importJson?.errors)}`,
+  );
+  check(
+    "No. HP hasil impor diseragamkan format 628xx",
+    importJson?.data?.[0]?.phone === `62816${String(STAMP).slice(-8)}`,
+    `phone=${importJson?.data?.[0]?.phone}`,
+  );
+
+  const importedLogin = await call("POST", "/api/admin/auth/login", {
+    body: { username: importPhone, password: "IMP-PW-1234" },
+  });
+  check(
+    "Peserta hasil impor Excel bisa login dengan No. HP + password dari Excel",
+    importedLogin.status === 200 && importedLogin.json?.role === "student",
+    `status=${importedLogin.status} msg=${importedLogin.json?.message}`,
+  );
+
+  const exportRes = await fetch(`${BASE}/api/admin/students/export`, { headers: { cookie: adminCookie } });
+  check(
+    "Ekspor Excel peserta sukses",
+    exportRes.status === 200 && (exportRes.headers.get("content-type") || "").includes("spreadsheet"),
+    `status=${exportRes.status} type=${exportRes.headers.get("content-type")}`,
+  );
+
+  const cardRes = await fetch(`${BASE}/api/admin/students/card-pdf?ids=${createStudent.json?.data?.id}`, {
+    headers: { cookie: adminCookie },
+  });
+  const cardBytes = new Uint8Array(await cardRes.arrayBuffer());
+  check(
+    "Kartu peserta PDF sukses (berformat PDF)",
+    cardRes.status === 200 && String.fromCharCode(...cardBytes.slice(0, 5)) === "%PDF-",
+    `status=${cardRes.status} awalan=${String.fromCharCode(...cardBytes.slice(0, 5))}`,
+  );
+
   // --- Pengujian jadwal oleh admin ---
   const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
   const setSchedule = await call("PATCH", `/api/exams/${pkg.id}`, { cookie: adminCookie, body: { openTime: future, closeTime: null } });

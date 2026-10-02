@@ -190,7 +190,7 @@ Default bila env tidak diset: user `admin` / password `admin123`, `ADMIN_SECRET_
 ```bash
 npm run build                      # build harus hijau
 npm start                          # jalankan server
-node scripts/_e2e.mjs              # 72 pemeriksaan ujung-ke-ujung
+node scripts/_e2e.mjs              # 77 pemeriksaan ujung-ke-ujung
 npx tsx scripts/_pdf-check.ts      # 13 pemeriksaan PDF sertifikat & analisa
 ```
 
