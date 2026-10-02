@@ -46,15 +46,22 @@ model Question {
 }
 
 model Student {
-  id           String        @id @default(uuid())
-  name         String
-  nisn         String        @unique
-  school       String?
-  passwordHash String
-  salt         String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  sessions     ExamSession[]
+  id                    String        @id @default(uuid())
+  name                  String
+  nisn                  String        @unique
+  username              String?       @unique
+  email                 String?
+  school                String?
+  phone                 String?
+  parentWhatsapp        String?
+  dreamCity             String?
+  registrationTimestamp String?
+  password              String        @default("")
+  passwordHash          String?
+  salt                  String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  sessions              ExamSession[]
 }
 
 model ExamSession {

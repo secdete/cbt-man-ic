@@ -16,6 +16,8 @@ import {
   BarChart2,
   FileText,
   AlertCircle,
+  Upload as UploadIcon,
+  Download,
   LogOut,
   Calendar,
   Lock,
@@ -83,6 +85,133 @@ export default function AdminDashboardPage() {
     text: string;
   } | null>(null);
   const [keySuccessToast, setKeySuccessToast] = useState<string | null>(null);
+
+  const [students, setStudents] = useState<any[]>([]);
+  const [studentMessage, setStudentMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [studentForm, setStudentForm] = useState({
+    name: "",
+    nisn: "",
+    school: "",
+    phone: "",
+    password: "",
+  });
+  const [savingStudent, setSavingStudent] = useState(false);
+  const [uploadingStudents, setUploadingStudents] = useState(false);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+
+  const loadStudents = async () => {
+    try {
+      const res = await fetch("/api/admin/students");
+      const json = await res.json();
+      if (json.success) {
+        setStudents(json.data || []);
+      }
+    } catch (error) {
+      console.error("Load students failed", error);
+    }
+  };
+
+  const handleCreateStudent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStudentMessage(null);
+    setSavingStudent(true);
+
+    try {
+      const payload = {
+        name: studentForm.name.trim(),
+        nisn: studentForm.nisn.trim(),
+        school: studentForm.school.trim(),
+        phone: studentForm.phone.trim(),
+        password: studentForm.password.trim(),
+      };
+
+      const res = await fetch("/api/admin/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setStudentForm({ name: "", nisn: "", school: "", phone: "", password: "" });
+        setStudentMessage({
+          type: "success",
+          text: json.message || "Peserta berhasil dibuat.",
+        });
+        await loadStudents();
+      } else {
+        setStudentMessage({ type: "error", text: json.message || "Gagal membuat peserta." });
+      }
+    } catch (error) {
+      setStudentMessage({ type: "error", text: "Terjadi kesalahan saat membuat peserta." });
+    } finally {
+      setSavingStudent(false);
+    }
+  };
+
+  const handleStudentExcelImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingStudents(true);
+    setStudentMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/admin/students/import", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setStudentMessage({
+          type: "success",
+          text: `${json.message || "Import selesai."} (${json.createdCount || 0} peserta)`,
+        });
+        await loadStudents();
+      } else {
+        setStudentMessage({ type: "error", text: json.message || "Import gagal." });
+      }
+    } catch (error) {
+      setStudentMessage({ type: "error", text: "Gagal mengimpor file Excel peserta." });
+    } finally {
+      setUploadingStudents(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleDownloadCards = () => {
+    const ids = selectedStudentIds.length ? selectedStudentIds.join(",") : students.map((s) => s.id).join(",");
+    if (!ids) {
+      setStudentMessage({ type: "error", text: "Belum ada peserta yang bisa diunduh." });
+      return;
+    }
+
+    window.open(`/api/admin/students/card-pdf?ids=${encodeURIComponent(ids)}`, "_blank");
+  };
+
+  const handleDownloadStudentExcel = () => {
+    const query = selectedStudentIds.length
+      ? `?ids=${encodeURIComponent(selectedStudentIds.join(","))}`
+      : "";
+    window.location.assign(`/api/admin/students/export${query}`);
+  };
+
+  const handleDownloadStudentTemplate = () => {
+    window.location.assign("/api/admin/students/export?template=1");
+  };
+
+  const toggleSelectedStudent = (id: string) => {
+    setSelectedStudentIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
 
   const openAnswerKeyModal = async (exam: Exam) => {
     setKeyModalExam(exam);
@@ -239,6 +368,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     loadExams();
+    loadStudents();
   }, []);
 
   const handleCopyToken = (token: string) => {
@@ -438,6 +568,164 @@ export default function AdminDashboardPage() {
           <p className="text-2xl font-bold tracking-tight text-slate-900 font-mono">
             {totalSessions}
           </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Kelola Peserta Ujian</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Buat peserta baru, impor data dari Excel, dan unduh kartu peserta ke PDF A4.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer">
+                <UploadIcon />
+                <span>{uploadingStudents ? "Mengimpor..." : "Import Excel"}</span>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleStudentExcelImport}
+                  className="hidden"
+                />
+              </label>
+              
+              <button
+                type="button"
+                onClick={handleDownloadStudentTemplate}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Template Excel
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadCards}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-700 text-white text-xs font-medium hover:bg-blue-800 transition-colors"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Download Kartu PDF
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleCreateStudent} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-3">
+            <div className="xl:col-span-2">
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Nama Peserta</label>
+              <input
+                type="text"
+                value={studentForm.name}
+                onChange={(e) => setStudentForm({ ...studentForm, name: e.target.value })}
+                placeholder="Nama siswa"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              />
+            </div>
+            <div className="xl:col-span-2">
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Asal Sekolah</label>
+              <input
+                type="text"
+                value={studentForm.school}
+                onChange={(e) => setStudentForm({ ...studentForm, school: e.target.value })}
+                placeholder="MAN / SMK / dll"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">No WhatsApp</label>
+              <input
+                type="tel"
+                value={studentForm.phone}
+                onChange={(e) => setStudentForm({ ...studentForm, phone: e.target.value })}
+                placeholder="08xxxx"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Password</label>
+              <input
+                type="text"
+                value={studentForm.password}
+                onChange={(e) => setStudentForm({ ...studentForm, password: e.target.value })}
+                placeholder="kosong = otomatis"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              />
+            </div>
+            <div className="xl:col-span-6 flex justify-end">
+              <button
+                type="submit"
+                disabled={savingStudent}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 disabled:opacity-60"
+              >
+                {savingStudent ? "Menyimpan..." : "Tambah Peserta"}
+              </button>
+            </div>
+          </form>
+
+          {studentMessage && (
+            <div
+              className={`rounded-lg border px-3 py-2 text-xs ${
+                studentMessage.type === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-rose-200 bg-rose-50 text-rose-700"
+              }`}
+            >
+              {studentMessage.text}
+            </div>
+          )}
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-slate-600">
+            <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <tr>
+                <th className="py-3 px-4 w-10">
+                  <input
+                    type="checkbox"
+                    checked={students.length > 0 && selectedStudentIds.length === students.length}
+                    onChange={() =>
+                      setSelectedStudentIds(
+                        selectedStudentIds.length === students.length ? [] : students.map((s) => s.id),
+                      )
+                    }
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                </th>
+                <th className="py-3 px-4">Nama</th>
+                <th className="py-3 px-4">NISN / Nomor</th>
+                <th className="py-3 px-4">Sekolah</th>
+                <th className="py-3 px-4">WhatsApp</th>
+                <th className="py-3 px-4">Password</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {students.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-sm text-slate-500">
+                    Belum ada peserta yang dibuat atau diimpor.
+                  </td>
+                </tr>
+              ) : (
+                students.map((student) => (
+                  <tr key={student.id} className="hover:bg-slate-50">
+                    <td className="py-3 px-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedStudentIds.includes(student.id)}
+                        onChange={() => toggleSelectedStudent(student.id)}
+                        className="h-4 w-4 rounded border-slate-300"
+                      />
+                    </td>
+                    <td className="py-3 px-4 font-medium text-slate-800">{student.name}</td>
+                    <td className="py-3 px-4">{student.nisn || "-"}</td>
+                    <td className="py-3 px-4">{student.school || "-"}</td>
+                    <td className="py-3 px-4">{student.phone || "-"}</td>
+                    <td className="py-3 px-4 font-mono text-xs">{student.password || "-"}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
