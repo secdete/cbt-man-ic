@@ -400,6 +400,44 @@ async function main() {
       result.json.data.questions.every((q) => "correctAnswer" in q && "studentAnswer" in q && "isCorrect" in q && "subject" in q),
     JSON.stringify(Object.keys(result.json?.data?.questions?.[0] || {})));
 
+  // --- Dashboard hasil peserta (nilai, sertifikat, pembahasan) ---
+  const resultsNoAuth = await call("GET", "/api/student/results");
+  check(
+    "Dashboard hasil ditolak tanpa login",
+    resultsNoAuth.status === 401,
+    `status=${resultsNoAuth.status}`,
+  );
+
+  const myResults = await call("GET", "/api/student/results", { cookie: studentCookie });
+  const mine = (myResults.json?.data?.results || []).find((r) => r.id === sessionId);
+  check(
+    "Dashboard hasil memuat sesi milik peserta yang login",
+    myResults.status === 200 && Boolean(mine),
+    `status=${myResults.status} jumlah=${myResults.json?.data?.results?.length} ada=${Boolean(mine)}`,
+  );
+  check(
+    "Dashboard hasil menyertakan nilai & batas kelulusan",
+    Boolean(mine) &&
+      typeof mine.totalScore === "number" &&
+      mine.maxPossibleScore > 0 &&
+      typeof mine.isPassed === "boolean" &&
+      Boolean(mine.exam?.token),
+    JSON.stringify(mine)?.slice(0, 200),
+  );
+
+  const ownResult = await call("GET", `/api/session/${sessionId}/result`, { cookie: studentCookie });
+  check("Peserta bisa membuka hasil miliknya sendiri", ownResult.status === 200, `status=${ownResult.status}`);
+
+  const foreignResult = await call("GET", `/api/session/${sessionId}/result`, { cookie: importedCookie });
+  check(
+    "Peserta lain DILARANG membuka hasil orang lain",
+    foreignResult.status === 403,
+    `status=${foreignResult.status}`,
+  );
+
+  const hasilPage = await fetch(`${BASE}/hasil`);
+  check("Halaman dashboard hasil terbuka", hasilPage.status === 200, `status=${hasilPage.status}`);
+
   // --- Halaman hasil (tempat unduh sertifikat & analisa PDF otomatis) ---
   const resultPage = await fetch(`${BASE}/exam/IC-PAKET-UTUH/result?sessionId=${sessionId}`);
   check("Halaman hasil terbuka", resultPage.status === 200, `status=${resultPage.status}`);
