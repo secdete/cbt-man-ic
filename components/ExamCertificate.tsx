@@ -3,6 +3,7 @@
 import React from "react";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
 import { Award, Printer, CheckCircle, X } from "lucide-react";
+import { CERTIFICATE_SIGNATORIES } from "@/lib/certificate-signatories";
 
 interface CertificateProps {
   studentName: string;
@@ -39,8 +40,8 @@ export default function ExamCertificate({
   completedDate,
   certificateNumber,
   verificationHash,
-  proctorName = "Fahrul Rozi, S.Pd.",
-  headmasterName = "Dr. H. M. Zainul Muttaqin, M.Ed.",
+  proctorName = CERTIFICATE_SIGNATORIES.proctor.name,
+  headmasterName = CERTIFICATE_SIGNATORIES.headmaster.name,
   onClose,
 }: CertificateProps) {
   const isPassed = totalScore >= passingScore;
@@ -231,15 +232,15 @@ export default function ExamCertificate({
                 {/* Left: Proctor Signature */}
                 <div className="text-center space-y-1">
                   <p className="text-[10px] text-slate-500 mb-10">
-                    Pengawas Ujian CBT,
+                    {CERTIFICATE_SIGNATORIES.proctor.role}
                   </p>
                   <div className="h-8 flex items-center justify-center">
-                    <span className="font-serif italic font-bold text-slate-900 text-xs tracking-wider border-b border-slate-700 px-3">
+                    <span className="font-serif italic font-bold text-slate-900 text-[11px] tracking-normal whitespace-nowrap border-b border-slate-700 px-3">
                       {proctorName}
                     </span>
                   </div>
                   <p className="text-[9px] text-slate-400 font-mono">
-                    ID: P-CBT-2026.041
+                    {CERTIFICATE_SIGNATORIES.proctor.meta}
                   </p>
                 </div>
 
@@ -261,15 +262,15 @@ export default function ExamCertificate({
                 {/* Right: Headmaster Signature */}
                 <div className="text-center space-y-1">
                   <p className="text-[10px] text-slate-500 mb-10">
-                    Kepala Lembaga Pelaksana CBT,
+                    {CERTIFICATE_SIGNATORIES.headmaster.role}
                   </p>
                   <div className="h-8 flex items-center justify-center">
-                    <span className="font-serif italic font-bold text-blue-950 text-xs tracking-wider border-b border-slate-700 px-3">
+                    <span className="font-serif italic font-bold text-blue-950 text-[11px] tracking-normal whitespace-nowrap border-b border-slate-700 px-3">
                       {headmasterName}
                     </span>
                   </div>
                   <p className="text-[9px] text-slate-400 font-mono">
-                    NIP. 19780514 200312 1 002
+                    {CERTIFICATE_SIGNATORIES.headmaster.meta}
                   </p>
                 </div>
               </div>

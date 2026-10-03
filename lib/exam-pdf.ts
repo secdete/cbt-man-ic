@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { CERTIFICATE_SIGNATORIES } from "./certificate-signatories";
 
 type ExamReportData = {
   session: {
@@ -116,10 +117,23 @@ export async function downloadExamCertificatePdf(data: ExamReportData) {
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const navy = rgb(0.08, 0.16, 0.28);
   const gold = rgb(0.72, 0.54, 0.2);
+  const muted = rgb(0.42, 0.45, 0.5);
   const center = (text: string, y: number, size: number, font = regular, color = navy) => {
     const safe = safePdfText(text);
     const width = font.widthOfTextAtSize(safe, size);
     page.drawText(safe, { x: (841.89 - width) / 2, y, size, font, color });
+  };
+  const centerAt = (
+    text: string,
+    cx: number,
+    y: number,
+    size: number,
+    font = regular,
+    color = navy,
+  ) => {
+    const safe = safePdfText(text);
+    const width = font.widthOfTextAtSize(safe, size);
+    page.drawText(safe, { x: cx - width / 2, y, size, font, color });
   };
 
   page.drawRectangle({ x: 25, y: 25, width: 791.89, height: 545.28, borderColor: gold, borderWidth: 2 });
@@ -134,7 +148,22 @@ export async function downloadExamCertificatePdf(data: ExamReportData) {
   center(data.session.isPassed ? "Memenuhi nilai ambang tryout" : "Telah menyelesaikan tryout", 252, 11);
   center(`Nomor sertifikat: ${data.session.certificateNumber || `CERT-${data.session.id.slice(-8).toUpperCase()}`}`, 198, 10);
   center(`Tanggal: ${new Date(data.session.endTime || data.session.startTime).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "long", year: "numeric" })}`, 178, 10);
-  center("CBT Tryout MAN IC", 105, 12, bold);
+  center("CBT Tryout MAN IC", 145, 12, bold);
+
+  // Blok tanda tangan — nama disamakan dengan sertifikat di layar.
+  const signBlock = (cx: number, signer: { role: string; name: string; meta: string }) => {
+    centerAt(signer.role, cx, 112, 9, regular, muted);
+    centerAt(signer.name, cx, 78, 11, bold, navy);
+    page.drawLine({
+      start: { x: cx - 78, y: 70 },
+      end: { x: cx + 78, y: 70 },
+      thickness: 0.8,
+      color: navy,
+    });
+    centerAt(signer.meta, cx, 56, 8, regular, muted);
+  };
+  signBlock(210, CERTIFICATE_SIGNATORIES.proctor);
+  signBlock(632, CERTIFICATE_SIGNATORIES.headmaster);
 
   const fileTag = safePdfText(
     (data.session.studentWhatsapp || data.session.studentNisn || data.session.id).replace(/[^\w-]/g, ""),

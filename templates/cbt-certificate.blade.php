@@ -333,7 +333,7 @@
                         <div class="signature-title">
                             Pengawas Ujian CBT,
                         </div>
-                        <div class="signee-name">{{ $proctor_name ?? 'Fahrul Rozi, S.Pd.' }}</div>
+                        <div class="signee-name">{{ $proctor_name ?? 'Naufal Luthfi S.Kom' }}</div>
                         <div class="signee-nip">ID Pengawas: {{ $proctor_id ?? 'P-CBT-2026.041' }}</div>
                     </td>
 
@@ -353,7 +353,7 @@
                             Ditetapkan di Jakarta, {{ $exam_date }}<br>
                             Kepala Lembaga Pelaksana CBT,
                         </div>
-                        <div class="signee-name">{{ $headmaster_name ?? 'Dr. H. M. Zainul Muttaqin, M.Ed.' }}</div>
+                        <div class="signee-name">{{ $headmaster_name ?? 'Citarani Anggraeni, S.Pd., M.Pd' }}</div>
                         <div class="signee-nip">NIP. {{ $headmaster_nip ?? '19780514 200312 1 002' }}</div>
                     </td>
                 </tr>
