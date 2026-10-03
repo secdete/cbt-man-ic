@@ -74,6 +74,34 @@ interface StudentRow {
   password: string;
   createdAt: string;
   _count?: { sessions: number };
+  sessions?: { status: string }[];
+}
+
+function StudentExamStatus({ student }: { student: StudentRow }) {
+  const sessions = student.sessions ?? [];
+  const total = sessions.length || student._count?.sessions || 0;
+  const running = sessions.filter((s) => s.status === "IN_PROGRESS").length;
+
+  if (running > 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
+        Sedang mengerjakan
+      </span>
+    );
+  }
+
+  if (total > 0) {
+    return (
+      <span className="inline-flex items-center whitespace-nowrap text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+        Selesai · {total} sesi
+      </span>
+    );
+  }
+
+  return (
+    <span className="text-xs text-slate-500 whitespace-nowrap">Belum ujian</span>
+  );
 }
 
 export default function AdminDashboardPage() {
@@ -158,22 +186,28 @@ export default function AdminDashboardPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const deleteCancelRef = useRef<HTMLButtonElement>(null);
 
-  const loadStudents = async () => {
-    setLoadingStudents(true);
-    setStudentLoadError(null);
+  const loadStudents = async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      setLoadingStudents(true);
+      setStudentLoadError(null);
+    }
     try {
-      const res = await fetch("/api/admin/students");
+      const res = await fetch("/api/admin/students", { cache: "no-store" });
       const json = await res.json();
       if (res.ok && json.success) {
         setStudents(json.data || []);
-      } else {
+        setStudentLoadError(null);
+      } else if (!silent) {
         setStudentLoadError(json.message || "Daftar peserta gagal dimuat.");
       }
     } catch (error) {
       console.error("Load students failed", error);
-      setStudentLoadError("Server tidak terjangkau. Periksa koneksi lalu muat ulang.");
+      if (!silent) {
+        setStudentLoadError("Server tidak terjangkau. Periksa koneksi lalu muat ulang.");
+      }
     } finally {
-      setLoadingStudents(false);
+      if (!silent) setLoadingStudents(false);
     }
   };
 
@@ -489,6 +523,15 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     loadExams();
     loadStudents();
+  }, []);
+
+  // Selama ujian berjalan, status peserta harus ikut berubah tanpa refresh manual.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadStudents({ silent: true });
+      loadExams();
+    }, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleCopyToken = (token: string) => {
@@ -848,7 +891,7 @@ export default function AdminDashboardPage() {
                     <p className="text-xs text-slate-500 mt-1">{studentLoadError}</p>
                     <button
                       type="button"
-                      onClick={loadStudents}
+                      onClick={() => loadStudents()}
                       className="mt-3 inline-flex min-h-11 items-center px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors md:min-h-0"
                     >
                       Coba lagi
@@ -887,15 +930,7 @@ export default function AdminDashboardPage() {
                     <td className="py-3 px-4">{student.phone || "-"}</td>
                     <td className="py-3 px-4 font-mono text-xs">{student.password || "-"}</td>
                     <td className="py-3 px-4">
-                      {student._count?.sessions ? (
-                        <span className="inline-flex items-center whitespace-nowrap text-[11px] font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
-                          {student._count.sessions} sesi tercatat
-                        </span>
-                      ) : (
-                        <span className="text-xs text-slate-500 whitespace-nowrap">
-                          Belum ujian
-                        </span>
-                      )}
+                      <StudentExamStatus student={student} />
                     </td>
                     <td className="py-3 px-4 text-right">
                       <button

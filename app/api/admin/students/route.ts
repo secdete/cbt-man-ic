@@ -49,6 +49,10 @@ export async function GET(req: NextRequest) {
         password: true,
         createdAt: true,
         _count: { select: { sessions: true } },
+        sessions: {
+          select: { status: true },
+          orderBy: { createdAt: "desc" },
+        },
       },
     });
 
