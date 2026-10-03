@@ -821,13 +821,29 @@ function parseSingleQuestionBlock(
     // Potong teks pertanyaan dari awal hingga opsi pertama ditemukan
     questionText = mainText.slice(0, optMatches[0].index).trim();
 
+    const sudahAda = new Set<string>();
     for (let j = 0; j < optMatches.length; j++) {
       const cur = optMatches[j];
       const nextIndex =
         j + 1 < optMatches.length ? optMatches[j + 1].index : mainText.length;
-      const optContent = mainText
+      let optContent = mainText
         .slice(cur.index + cur.matchLength, nextIndex)
         .trim();
+
+      // Judul seksi berformat huruf di luar A–E ("G. Kalor dan Perubahan
+      // Wujud") bukan pilihan jawaban — kalau dibiarkan ia menempel di opsi
+      // terakhir dan menutupi isinya.
+      optContent = optContent
+        .split("\n")
+        .filter((l) => !/^\s*[F-Z][.)]\s/.test(l))
+        .join("\n")
+        .trim();
+
+      // Label yang sama dua kali artinya yang kedua itu judul seksi yang ikut
+      // ke blok soal ("D. Fikih dan Kehidupan Sosial" setelah opsi D asli).
+      // Ambil yang pertama supaya teks opsi asli tidak tertimpa.
+      if (sudahAda.has(cur.letter)) continue;
+      sudahAda.add(cur.letter);
 
       switch (cur.letter) {
         case "A":
