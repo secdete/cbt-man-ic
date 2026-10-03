@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { normalizeAnswers, questionIdsInPackage, upsertAnswers } from "@/lib/session-answers";
 
 export async function POST(
   req: NextRequest,
@@ -7,6 +8,9 @@ export async function POST(
 ) {
   try {
     const { sessionId } = await params;
+    // Lembar jawaban ikut dikirim ulang saat dikumpulkan: jaring pengaman bila
+    // autosave sempat gagal, jawaban di layar tetap tersimpan sebelum nilai dihitung.
+    const body = await req.json().catch(() => ({}));
 
     const session = await prisma.examSession.findUnique({
       where: { id: sessionId },
@@ -40,8 +44,29 @@ export async function POST(
       ...session.exam.questions,
       ...session.exam.subtests.flatMap((subtest) => subtest.questions),
     ];
+
+    // 1) Simpan dulu jawaban yang dikirim klien — autosave boleh saja sempat gagal
+    //    (jaringan lemah / ujian dikunci sementara), nilai harus tetap dari layar.
+    const incoming = normalizeAnswers(
+      body && typeof body === "object" && "answers" in body ? (body as any).answers : body,
+    );
+    let savedFromClient = 0;
+    if (incoming.length) {
+      try {
+        const allowedIds = await questionIdsInPackage(session.exam.id);
+        savedFromClient = await upsertAnswers(sessionId, incoming, allowedIds);
+      } catch (saveError) {
+        console.error("Persist client answers before grading failed:", saveError);
+      }
+    }
+
+    // 2) Hitung nilai dari data terbaru di database, bukan snapshot saat sesi dibuka.
+    const freshSubmissions = await prisma.answerSubmission.findMany({
+      where: { sessionId },
+      select: { questionId: true, selectedOption: true },
+    });
     const submissionMap = new Map<string, string | null>();
-    session.submissions.forEach((sub) => {
+    freshSubmissions.forEach((sub) => {
       submissionMap.set(sub.questionId, sub.selectedOption);
     });
 
@@ -133,6 +158,7 @@ export async function POST(
         correctCount,
         incorrectCount,
         unansweredCount,
+        savedFromClient,
       },
     });
   } catch (error: any) {

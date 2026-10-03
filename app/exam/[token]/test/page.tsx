@@ -55,6 +55,90 @@ export default function CBTTestInterfacePage({
   const [answers, setAnswers] = useState<Record<string, SavedAnswer>>({});
   const [remainingSeconds, setRemainingSeconds] = useState(0);
 
+  // Status penyimpanan jawaban — siswa & panitia harus tahu kalau autosave gagal,
+  // jangan senyap seperti sebelumnya (jawaban hilang tanpa peringatan).
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "pending" | "error">("saved");
+  const pendingRef = useRef<Record<string, SavedAnswer>>({});
+  const flushingRef = useRef(false);
+
+  // --- Penyimpanan jawaban yang tahan gagal ----------------------------------
+  // 1. Selalu tulis ke localStorage lebih dulu (jawaban tidak pernah hilang di layar).
+  // 2. Kirim ke server; kalau gagal, masuk antrean dan dicoba ulang otomatis.
+  const persistAnswersLocal = (sessionId: string, next: Record<string, SavedAnswer>) => {
+    try {
+      localStorage.setItem(`cbt_answers_${sessionId}`, JSON.stringify(next));
+    } catch (err) {
+      console.warn("Gagal menulis jawaban ke penyimpanan lokal:", err);
+    }
+  };
+
+  const pushAnswers = useCallback(
+    async (sessionId: string, entries: Array<{ questionId: string } & SavedAnswer>) => {
+      if (!entries.length) return true;
+      let lastError: unknown = null;
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const res = await fetch(`/api/session/${sessionId}/answers`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ answers: entries }),
+          });
+          const json = await res.json().catch(() => null);
+          if (res.ok && json?.success) return true;
+          lastError = new Error(json?.message || `HTTP ${res.status}`);
+          // 4xx (sesi dikunci/selesai) tidak akan berubah dengan mengulang.
+          if (res.status >= 400 && res.status < 500 && res.status !== 429) break;
+        } catch (err) {
+          lastError = err;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 700 * 2 ** attempt));
+      }
+
+      console.error("Gagal mengirim jawaban ke server:", lastError);
+      return false;
+    },
+    [],
+  );
+
+  const flushPending = useCallback(async () => {
+    const sessionId = sessionData?.id;
+    if (!sessionId || flushingRef.current) return;
+    const ids = Object.keys(pendingRef.current);
+    if (!ids.length) {
+      setSaveStatus("saved");
+      return;
+    }
+
+    flushingRef.current = true;
+    setSaveStatus("saving");
+    try {
+      const entries = ids.map((questionId) => ({
+        questionId,
+        ...pendingRef.current[questionId],
+      }));
+      const ok = await pushAnswers(sessionId, entries);
+      if (ok) ids.forEach((id) => delete pendingRef.current[id]);
+      setSaveStatus(Object.keys(pendingRef.current).length ? "error" : ok ? "saved" : "error");
+    } finally {
+      flushingRef.current = false;
+    }
+  }, [sessionData?.id, pushAnswers]);
+
+  const updateAnswers = useCallback(
+    (sessionId: string, next: Record<string, SavedAnswer>, dirtyIds: string[]) => {
+      setAnswers(next);
+      persistAnswersLocal(sessionId, next);
+      dirtyIds.forEach((id) => {
+        pendingRef.current[id] = next[id];
+      });
+      setSaveStatus("pending");
+      void flushPending();
+    },
+    [flushPending],
+  );
+
+
   // UI States
   const [fontSize, setFontSize] = useState<"normal" | "large" | "xlarge">(
     "normal",
@@ -119,23 +203,96 @@ export default function CBTTestInterfacePage({
           ? Math.floor((new Date(statusJson.data.exam.closeTime).getTime() - now) / 1000)
           : durationRemaining;
         const serverRemaining = Math.max(0, Math.min(durationRemaining, scheduleRemaining));
+        // Muat jawaban tersimpan: dari server, lalu dilengkapi salinan lokal perangkat.
+        const sessionId: string = active.session.id;
+        let serverAnswers: Record<string, SavedAnswer> = {};
+        try {
+          const answerResponse = await fetch(`/api/session/${sessionId}/answers`, { cache: "no-store" });
+          const answerJson = await answerResponse.json();
+          if (answerJson?.success && answerJson.data) serverAnswers = answerJson.data;
+        } catch (err) {
+          console.warn("Gagal memuat jawaban tersimpan:", err);
+        }
+
+        let localAnswers: Record<string, SavedAnswer> = {};
+        try {
+          localAnswers = JSON.parse(localStorage.getItem(`cbt_answers_${sessionId}`) || "{}");
+        } catch {
+          localAnswers = {};
+        }
+
+        // Server jadi dasar; jawaban lokal yang memilih opsi tetap dipertahankan
+        // karena autosave bisa saja sempat gagal ketika itu dibuat.
+        const merged: Record<string, SavedAnswer> = { ...serverAnswers };
+        for (const [questionId, local] of Object.entries(localAnswers)) {
+          if (!local) continue;
+          const remote = merged[questionId];
+          if (!remote) {
+            merged[questionId] = {
+              selectedOption: local.selectedOption ?? null,
+              isDoubtful: Boolean(local.isDoubtful),
+            };
+          } else if (local.selectedOption) {
+            merged[questionId] = {
+              selectedOption: local.selectedOption,
+              isDoubtful: Boolean(local.isDoubtful),
+            };
+          } else if (local.isDoubtful && !remote.isDoubtful) {
+            merged[questionId] = { ...remote, isDoubtful: true };
+          }
+        }
+
         if (serverRemaining <= 0) {
-          const submitResponse = await fetch(`/api/session/${active.session.id}/submit`, { method: "POST" });
+          // Waktu habis: bawa seluruh jawaban layar saat dikumpulkan.
+          const payload = Object.entries(merged).map(([questionId, value]) => ({
+            questionId,
+            ...value,
+          }));
+          const submitResponse = await fetch(`/api/session/${sessionId}/submit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ answers: payload }),
+          });
           const submitJson = await submitResponse.json();
           if (submitJson.success) {
             localStorage.removeItem("cbt_active_session");
-            router.replace(`/exam/${encodeURIComponent(token)}/result?sessionId=${active.session.id}`);
+            localStorage.removeItem(`cbt_answers_${sessionId}`);
+            router.replace(`/exam/${encodeURIComponent(token)}/result?sessionId=${sessionId}`);
             return;
           }
         }
 
         setSessionData(active.session);
         setQuestions(active.questions || []);
-        setAnswers(active.savedAnswers || {});
+        setAnswers(merged);
+        persistAnswersLocal(sessionId, merged);
         setRemainingSeconds(
           serverRemaining,
         );
         setTabSwitchCount(statusJson.data.tabSwitchCount || 0);
+
+        // Selisih antara layar dan server dikirim ulang (pemulihan autosave yang gagal).
+        const dirty: Array<{ questionId: string } & SavedAnswer> = [];
+        for (const [questionId, value] of Object.entries(merged)) {
+          const remote = serverAnswers[questionId];
+          if (
+            !remote ||
+            remote.selectedOption !== value.selectedOption ||
+            remote.isDoubtful !== value.isDoubtful
+          ) {
+            dirty.push({ questionId, ...value });
+          }
+        }
+        if (dirty.length) {
+          dirty.forEach(({ questionId, selectedOption, isDoubtful }) => {
+            pendingRef.current[questionId] = { selectedOption, isDoubtful };
+          });
+          setSaveStatus("saving");
+          void pushAnswers(sessionId, dirty).then((ok) => {
+            if (ok) dirty.forEach(({ questionId }) => delete pendingRef.current[questionId]);
+            setSaveStatus(Object.keys(pendingRef.current).length ? "error" : ok ? "saved" : "error");
+          });
+        }
 
         // Sinkronisasi soal naskah terbaru dari server
         if (active.exam?.id) {
@@ -182,19 +339,47 @@ export default function CBTTestInterfacePage({
     return () => clearInterval(timer);
   }, [loading, remainingSeconds]);
 
+  // Kirim ulang antrean jawaban yang gagal tersimpan: tiap 5 detik dan saat
+  // koneksi kembali. Jawaban tidak boleh hilang hanya karena sesi autosave gagal.
+  useEffect(() => {
+    if (loading || !sessionData?.id) return;
+    const retry = () => {
+      if (Object.keys(pendingRef.current).length) void flushPending();
+    };
+    const interval = setInterval(retry, 5000);
+    window.addEventListener("online", retry);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("online", retry);
+    };
+  }, [loading, sessionData?.id, flushPending]);
+
   // Submit Handler
   const handleConfirmSubmit = useCallback(async () => {
     if (!sessionData?.id) return;
     setSubmitting(true);
 
     try {
+      // Kumpulkan antrean yang belum tersimpan dulu, lalu bawa seluruh jawaban
+      // layar dalam kiriman submit sebagai jaring pengaman terakhir.
+      await flushPending();
+      const payload = Object.entries(answers).map(([questionId, value]) => ({
+        questionId,
+        selectedOption: value.selectedOption,
+        isDoubtful: value.isDoubtful,
+      }));
+
       const res = await fetch(`/api/session/${sessionData.id}/submit`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: payload }),
       });
       const json = await res.json();
 
       if (json.success) {
         localStorage.removeItem("cbt_active_session");
+        localStorage.removeItem(`cbt_answers_${sessionData.id}`);
+        pendingRef.current = {};
         router.push(
           `/exam/${encodeURIComponent(token)}/result?sessionId=${sessionData.id}`,
         );
@@ -206,7 +391,7 @@ export default function CBTTestInterfacePage({
       alert("Terjadi kendala jaringan saat mengumpulkan lembar jawaban.");
       setSubmitting(false);
     }
-  }, [sessionData?.id, token, router]);
+  }, [sessionData?.id, token, router, answers, flushPending]);
 
   const handleAutoSubmit = useCallback(() => {
     handleConfirmSubmit();
@@ -326,30 +511,9 @@ export default function CBTTestInterfacePage({
     };
   }, [loading, sessionData?.id, showSubmitModal, triggerViolation]);
 
-  // Auto-save Jawaban ke Server
-  const saveAnswerToServer = useCallback(
-    async (qId: string, option: string | null, doubtful: boolean) => {
-      if (!sessionData?.id) return;
-      try {
-        await fetch(`/api/session/${sessionData.id}/answer`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            questionId: qId,
-            selectedOption: option,
-            isDoubtful: doubtful,
-          }),
-        });
-      } catch (err) {
-        console.error("Failed to auto-save answer:", err);
-      }
-    },
-    [sessionData?.id],
-  );
-
   const handleSelectOption = (optionLetter: string) => {
     const currentQ = questions[currentIndex];
-    if (!currentQ) return;
+    if (!currentQ || !sessionData?.id) return;
 
     const existing = answers[currentQ.id] || {
       selectedOption: null,
@@ -366,13 +530,12 @@ export default function CBTTestInterfacePage({
       },
     };
 
-    setAnswers(updated);
-    saveAnswerToServer(currentQ.id, newSelected, existing.isDoubtful);
+    updateAnswers(sessionData.id, updated, [currentQ.id]);
   };
 
   const handleToggleDoubtful = () => {
     const currentQ = questions[currentIndex];
-    if (!currentQ) return;
+    if (!currentQ || !sessionData?.id) return;
 
     const existing = answers[currentQ.id] || {
       selectedOption: null,
@@ -388,8 +551,7 @@ export default function CBTTestInterfacePage({
       },
     };
 
-    setAnswers(updated);
-    saveAnswerToServer(currentQ.id, existing.selectedOption, newDoubtful);
+    updateAnswers(sessionData.id, updated, [currentQ.id]);
   };
 
   // Keyboard Navigation Shortcuts
@@ -480,6 +642,36 @@ export default function CBTTestInterfacePage({
 
           {/* Anti-cheat Violation Counter, Network Status & Timer */}
           <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
+            {/* Status penyimpanan jawaban */}
+            <div
+              role="status"
+              aria-live="polite"
+              className={`items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                saveStatus === "error"
+                  ? "inline-flex bg-rose-950/80 text-rose-300 border-rose-700 animate-pulse"
+                  : saveStatus === "saved"
+                    ? "hidden sm:inline-flex bg-emerald-950/80 text-emerald-300 border-emerald-800"
+                    : "hidden sm:inline-flex bg-amber-950/80 text-amber-300 border-amber-700"
+              }`}
+            >
+              {saveStatus === "saved" ? (
+                <>
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  <span>Jawaban Tersimpan</span>
+                </>
+              ) : saveStatus === "error" ? (
+                <>
+                  <AlertTriangle className="w-3 h-3 text-rose-400" />
+                  <span>Belum tersimpan — mencoba ulang</span>
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span>Menyimpan...</span>
+                </>
+              )}
+            </div>
+
             {/* Network Indicator Badge */}
             <div
               className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${

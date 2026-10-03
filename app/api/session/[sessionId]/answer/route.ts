@@ -37,7 +37,10 @@ export async function POST(
       );
     }
 
-    if (!session.exam.isActive || session.exam.isLocked) {
+    // Penguncian manual (isLocked) tetap memblokir. Status nonaktif (isActive)
+    // TIDAK: toggle status oleh panitia pernah diam-diam membuang semua jawaban
+    // peserta yang sedang berjalan — sesi yang sudah berjalan tetap boleh menyimpan.
+    if (session.exam.isLocked) {
       return NextResponse.json(
         { success: false, message: "Ujian telah dikunci oleh panitia. Jawaban tidak dapat diubah." },
         { status: 403 },
