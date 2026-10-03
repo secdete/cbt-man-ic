@@ -369,6 +369,58 @@ async function main() {
   });
   check("Setelah submit, peserta TIDAK BISA mengerjakan lagi (1x pengerjaan)", restart.status === 403, `status=${restart.status} msg=${restart.json?.message}`);
 
+  // --- Tombol admin "Izinkan Masuk": buka sesi kembali tanpa menghapus jawaban ---
+  const reentry = await call("POST", `/api/admin/exams/${pkg.id}/monitoring`, {
+    cookie: adminCookie,
+    body: { action: "ALLOW_REENTRY", sessionId },
+  });
+  check(
+    "Admin membuka kembali sesi (ALLOW_REENTRY) sukses",
+    reentry.status === 200 && reentry.json?.success,
+    JSON.stringify(reentry.json)?.slice(0, 240),
+  );
+
+  const reentered = await call("POST", "/api/session/start", {
+    cookie: studentCookie,
+    body: { token: "IC-PAKET-UTUH" },
+  });
+  check(
+    "Peserta bisa masuk kembali setelah izin admin",
+    reentered.status === 200 && reentered.json?.success,
+    `status=${reentered.status} msg=${reentered.json?.message}`,
+  );
+  check(
+    "Masuk kembali memakai sesi yang sama (bukan sesi baru)",
+    reentered.json?.data?.session?.id === sessionId,
+    `sessionId=${reentered.json?.data?.session?.id} vs ${sessionId}`,
+  );
+  check(
+    "Jawaban lama tetap utuh saat masuk kembali",
+    reentered.json?.data?.savedAnswers?.[questionId]?.selectedOption === "A",
+    JSON.stringify(reentered.json?.data?.savedAnswers)?.slice(0, 200),
+  );
+  check(
+    "Sisa waktu terisi kembali setelah izin admin",
+    typeof reentered.json?.data?.remainingSeconds === "number" && reentered.json.data.remainingSeconds > 0,
+    `remaining=${reentered.json?.data?.remainingSeconds}`,
+  );
+
+  const resubmit = await call("POST", `/api/session/${sessionId}/submit`);
+  check(
+    "Submit ulang setelah izin admin sukses",
+    resubmit.status === 200 && resubmit.json?.success,
+    JSON.stringify(resubmit.json)?.slice(0, 200),
+  );
+  const lockAgain = await call("POST", "/api/session/start", {
+    cookie: studentCookie,
+    body: { token: "IC-PAKET-UTUH" },
+  });
+  check(
+    "Sesi terkunci kembali (1x pengerjaan) setelah submit ulang",
+    lockAgain.status === 403,
+    `status=${lockAgain.status} msg=${lockAgain.json?.message}`,
+  );
+
   // --- Peserta hasil impor Excel bisa memulai ujian dengan akunnya sendiri ---
   const importedStart = await call("POST", "/api/session/start", {
     cookie: importedCookie,

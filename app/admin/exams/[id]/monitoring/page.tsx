@@ -14,6 +14,7 @@ import {
   RefreshCw,
   CheckCircle2,
   MessageCircle,
+  LogIn,
 } from "lucide-react";
 
 interface MonitoringSession {
@@ -80,7 +81,7 @@ export default function AdminLiveMonitoringPage({
 
   const [actionTarget, setActionTarget] = useState<{
     session: MonitoringSession;
-    type: "FORCE_SUBMIT" | "RESET_VIOLATIONS" | "RESET_SESSION";
+    type: "FORCE_SUBMIT" | "RESET_VIOLATIONS" | "RESET_SESSION" | "ALLOW_REENTRY";
   } | null>(null);
   const [executingAction, setExecutingAction] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -593,6 +594,22 @@ export default function AdminLiveMonitoringPage({
 
                       <td className="py-3.5 px-4 sm:px-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {(session.status !== "IN_PROGRESS" || session.isTimeUp) && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActionTarget({
+                                  session,
+                                  type: "ALLOW_REENTRY",
+                                })
+                              }
+                              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] transition-colors cursor-pointer shadow-2xs"
+                              title="Izinkan siswa masuk kembali tanpa menghapus jawaban tersimpan"
+                            >
+                              Izinkan Masuk
+                            </button>
+                          )}
+
                           {session.status === "IN_PROGRESS" && (
                             <button
                               type="button"
@@ -659,16 +676,23 @@ export default function AdminLiveMonitoringPage({
                     ? "bg-amber-100 text-amber-800"
                     : actionTarget.type === "RESET_SESSION"
                       ? "bg-rose-100 text-rose-800"
-                      : "bg-blue-100 text-blue-800"
+                      : actionTarget.type === "ALLOW_REENTRY"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : "bg-blue-100 text-blue-800"
                 }`}
               >
-                <AlertTriangle className="w-6 h-6" />
+                {actionTarget.type === "ALLOW_REENTRY" ? (
+                  <LogIn className="w-6 h-6" />
+                ) : (
+                  <AlertTriangle className="w-6 h-6" />
+                )}
               </div>
               <div>
                 <h3 className="font-bold text-sm sm:text-base text-slate-900">
                   {actionTarget.type === "FORCE_SUBMIT" && "Paksa Kumpulkan Jawaban Siswa?"}
                   {actionTarget.type === "RESET_VIOLATIONS" && "Reset Pelanggaran Tab Siswa?"}
                   {actionTarget.type === "RESET_SESSION" && "Reset Total Sesi Ujian Siswa?"}
+                  {actionTarget.type === "ALLOW_REENTRY" && "Izinkan Siswa Masuk Kembali?"}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
                   Peserta: <b>{actionTarget.session.studentName}</b> ({actionTarget.session.studentSchool})
@@ -692,6 +716,17 @@ export default function AdminLiveMonitoringPage({
                   Seluruh lembar jawaban dan sesi saat ini akan <b>dihapus bersih</b>. Siswa dapat memasukkan token ujian kembali dan mengerjakan soal dari butir awal.
                 </span>
               )}
+              {actionTarget.type === "ALLOW_REENTRY" && (
+                <span>
+                  Sesi dibuka kembali menjadi aktif <b>tanpa menghapus jawaban</b> ({actionTarget.session.answeredCount} jawaban tersimpan tetap utuh) dan nilai lama dihitung ulang saat siswa mengumpulkan. Waktu pengerjaan dihitung dari sekarang (maksimal {data?.exam.durationMinutes} menit).
+                  {data && (
+                    <>
+                      {" "}
+                      Bila jadwal ujian sudah ditutup atau ujian sedang nonaktif/terkunci, sistem akan membukanya kembali agar siswa bisa masuk.
+                    </>
+                  )}
+                </span>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
@@ -712,13 +747,19 @@ export default function AdminLiveMonitoringPage({
                     ? "bg-rose-600 hover:bg-rose-700"
                     : actionTarget.type === "FORCE_SUBMIT"
                       ? "bg-amber-600 hover:bg-amber-700"
-                      : "bg-blue-600 hover:bg-blue-700"
+                      : actionTarget.type === "ALLOW_REENTRY"
+                        ? "bg-emerald-600 hover:bg-emerald-700"
+                        : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
                 {executingAction ? (
                   <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <span>Konfirmasi &amp; Eksekusi</span>
+                  <span>
+                    {actionTarget.type === "ALLOW_REENTRY"
+                      ? "Ya, Izinkan Masuk"
+                      : "Konfirmasi & Eksekusi"}
+                  </span>
                 )}
               </button>
             </div>

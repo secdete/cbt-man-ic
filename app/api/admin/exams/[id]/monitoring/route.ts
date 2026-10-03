@@ -287,6 +287,104 @@ export async function POST(
       });
     }
 
+    if (action === "ALLOW_REENTRY") {
+      const session = await prisma.examSession.findUnique({
+        where: { id: sessionId },
+        include: { exam: true },
+      });
+
+      if (!session) {
+        return NextResponse.json(
+          { success: false, message: "Sesi ujian tidak ditemukan." },
+          { status: 404 },
+        );
+      }
+
+      if (session.examId !== examId) {
+        return NextResponse.json(
+          { success: false, message: "Sesi tersebut bukan bagian dari ujian ini." },
+          { status: 400 },
+        );
+      }
+
+      // Sesi dibuka lagi TANPA menyentuh AnswerSubmission: lembar jawaban lama
+      // tetap terhubung ke session id yang sama dan kembali terbaca saat masuk.
+      const now = new Date();
+      const durationMs = session.exam.durationMinutes * 60_000;
+      const hasTimeLeft = now.getTime() - session.startTime.getTime() < durationMs;
+      const newStartTime = hasTimeLeft ? session.startTime : now;
+      const remainingMinutes = Math.max(
+        0,
+        Math.ceil((durationMs - (now.getTime() - newStartTime.getTime())) / 60_000),
+      );
+
+      const notes: string[] = [];
+      const examData: { isActive?: boolean; isLocked?: boolean; closeTime?: Date } = {};
+      if (!session.exam.isActive) {
+        examData.isActive = true;
+        notes.push("ujian yang sedang nonaktif ikut dibuka");
+      }
+      if (session.exam.isLocked) {
+        examData.isLocked = false;
+        notes.push("kunci ujian ikut dibuka");
+      }
+      if (session.exam.closeTime && session.exam.closeTime.getTime() <= now.getTime()) {
+        const extended = new Date(now.getTime() + durationMs);
+        examData.closeTime = extended;
+        notes.push(
+          `jadwal ujian diperpanjang sampai ${extended.toLocaleString("id-ID", {
+            timeZone: "Asia/Jakarta",
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          })} WIB`,
+        );
+      }
+
+      const savedCount = await prisma.answerSubmission.count({ where: { sessionId } });
+
+      await prisma.$transaction([
+        prisma.examSession.update({
+          where: { id: sessionId },
+          data: {
+            status: "IN_PROGRESS",
+            startTime: newStartTime,
+            endTime: null,
+            totalScore: 0,
+            accuracy: 0,
+            correctCount: 0,
+            incorrectCount: 0,
+            unansweredCount: 0,
+            tabSwitchCount: 0,
+          },
+        }),
+        // penilaian lama dibersihkan; nilai baru dihitung ulang saat submit
+        prisma.answerSubmission.updateMany({
+          where: { sessionId },
+          data: { isCorrect: null },
+        }),
+      ]);
+
+      if (Object.keys(examData).length) {
+        await prisma.exam.update({ where: { id: session.examId }, data: examData });
+        if (examData.closeTime) {
+          await prisma.exam.updateMany({
+            where: { parentExamId: session.examId },
+            data: { closeTime: examData.closeTime },
+          });
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message:
+          `Sesi ${session.studentName} kembali berjalan. ${savedCount} jawaban tersimpan tetap utuh, ` +
+          `sisa waktu ${remainingMinutes} menit.` +
+          (notes.length ? ` Catatan: ${notes.join("; ")}.` : ""),
+      });
+    }
+
     return NextResponse.json(
       { success: false, message: `Aksi '${action}' tidak dikenali.` },
       { status: 400 },
