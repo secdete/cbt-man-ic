@@ -177,11 +177,11 @@ export default function ExamResultPage({
       {/* Top Action Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <Link
-          href="/"
+          href="/hasil"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Kembali ke Beranda
+          Daftar Hasil &amp; Sertifikat
         </Link>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">

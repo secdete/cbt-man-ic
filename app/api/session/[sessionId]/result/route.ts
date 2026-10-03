@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { STUDENT_SESSION_COOKIE, verifyStudentSession } from '@/lib/student-auth';
+import { ADMIN_SESSION_COOKIE, verifyAdminSession } from '@/lib/admin-auth';
 
 export async function GET(
   req: NextRequest,
@@ -7,6 +9,11 @@ export async function GET(
 ) {
   try {
     const { sessionId } = await params;
+
+    // Hasil hanya boleh dibuka oleh pemilik sesi, panitia, atau tautan unduhan
+    // yang dibuka tanpa cookie peserta (mis. setelah submit di perangkat lain).
+    const viewerStudentId = verifyStudentSession(req.cookies.get(STUDENT_SESSION_COOKIE)?.value);
+    const viewerIsAdmin = Boolean(await verifyAdminSession(req.cookies.get(ADMIN_SESSION_COOKIE)?.value));
 
     const session = await prisma.examSession.findUnique({
       where: { id: sessionId },
@@ -30,6 +37,19 @@ export async function GET(
       return NextResponse.json(
         { success: false, message: 'Sesi ujian tidak ditemukan.' },
         { status: 404 }
+      );
+    }
+
+    // Peserta hanya boleh membuka hasil miliknya sendiri.
+    if (
+      viewerStudentId &&
+      !viewerIsAdmin &&
+      session.studentId &&
+      session.studentId !== viewerStudentId
+    ) {
+      return NextResponse.json(
+        { success: false, message: 'Anda tidak punya akses ke hasil ujian ini.' },
+        { status: 403 }
       );
     }
 

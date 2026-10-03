@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, LogIn, LogOut } from "lucide-react";
+import { Award, ChevronDown, LogIn, LogOut } from "lucide-react";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
 
 interface StudentProfile {
@@ -208,6 +208,17 @@ export default function SiteLayoutWrapper({
                           </p>
                         )}
                       </div>
+
+                      {student && (
+                        <Link
+                          href="/hasil"
+                          onClick={() => setMenuOpen(false)}
+                          className="w-full py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                        >
+                          <Award className="w-3.5 h-3.5" />
+                          Hasil, Sertifikat &amp; Pembahasan
+                        </Link>
+                      )}
 
                       {!student && (
                         <Link

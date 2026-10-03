@@ -13,6 +13,7 @@ import {
   Sparkles,
   Lock,
   LogIn,
+  Award,
 } from "lucide-react";
 import Link from "next/link";
 import CakrawalaLogo from "@/components/CakrawalaLogo";
@@ -353,6 +354,32 @@ export default function StudentHomePage() {
 
           {/* Right Column: Tata Tertib & Tata Cara Pelaksanaan Ujian (5 cols) */}
           <div className="lg:col-span-5 space-y-4 sm:space-y-5">
+            {/* Cek Hasil Peserta */}
+            <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="p-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-100 flex-shrink-0">
+                  <Award className="w-5 h-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    Hasil, Sertifikat &amp; Pembahasan
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    {student
+                      ? `Halo ${student.name.split(" ")[0]}, lihat nilai, unduh sertifikat, dan pembahasan setiap soal di dashboard hasil Anda.`
+                      : "Login untuk membuka nilai, sertifikat resmi, dan pembahasan lengkap setiap soal."}
+                  </p>
+                  <Link
+                    href="/hasil"
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-colors"
+                  >
+                    Buka Dashboard Hasil
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+
             {/* Tata Tertib & Tata Cara Pelaksanaan Ujian */}
             <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-4 sm:p-5 space-y-4">
               <div className="pb-3 border-b border-slate-100">
