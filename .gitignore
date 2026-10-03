@@ -52,4 +52,5 @@ __pycache__/
 
 
 tmp-pdf-check/
+tmp-ui*/
 scripts/_e2e.log

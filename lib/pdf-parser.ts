@@ -326,6 +326,14 @@ const HEADER_LINE_RE =
 // "(A) teks" / "A. teks" / "A) teks" di awal baris
 const OPTION_LINE_RE = /^\s*(\()?([A-Ea-e])\s*([.)])\s*/;
 
+/**
+ * Nomor soal yang siap memulai butir baru: "2. teks", "2) teks", "Soal 3. teks".
+ * Berbeda dari HEADER_LINE_RE, baris angka polos ("24") sengaja ditolak karena
+ * angka polos itu nilai opsi, bukan penomoran soal.
+ */
+const NEXT_QUESTION_LINE_RE =
+  /^(?:soal\s*(?:nomor|no)?\.?\s*)?\d{1,3}\s*[.)\-–]\s*(?!\d)/i;
+
 // Baris yang hanya berisi satu markdown gambar
 const IMAGE_LINE_RE = /^!\[[^\]]*\]\([^)]*\)$/;
 
@@ -334,12 +342,20 @@ const IMAGE_LINE_RE = /^!\[[^\]]*\]\([^)]*\)$/;
  * itu sendiri (bacaan/gambar ilustrasi), bukan pelengkap soal sebelumnya.
  * Dalam aliran teks PDF gambar semacam ini selalu muncul sebelum angka soalnya,
  * sehingga tanpa dipindah ia jatuh ke opsi terakhir butir sebelumnya.
+ *
+ * Pengecualian penting: soal bergambar menulis label opsi di baris tersendiri
+ * ("(D)") dan gambar opsi di baris setelahnya. Label semacam itu selalu
+ * kosong isinya — kalau gambar setelahnya ikut dipindah, opsi D jadi kosong
+ * dan gambarnya bocor ke kepala soal berikutnya.
  */
 function hoistImagesAboveHeaders(lines: string[]): string[] {
   const out = lines.slice();
   for (let i = out.length - 2; i >= 0; i--) {
     if (!IMAGE_LINE_RE.test(out[i])) continue;
     if (!HEADER_LINE_RE.test(out[i + 1] || "")) continue;
+    const prev = out[i - 1] || "";
+    const prevOpt = prev.match(OPTION_LINE_RE);
+    if (prevOpt && prev.slice(prevOpt[0].length).trim() === "") continue;
     const [image] = out.splice(i, 1);
     out.splice(i + 1, 0, image);
   }
@@ -566,14 +582,29 @@ function parseByOptionGroups(
   }
 
   const anchorLineSet = new Set(anchors.map((a) => a.line));
+
+  // Batas akhir tiap grup opsi dihitung dulu, lalu stem soal berikutnya mulai
+  // tepat dari situ — tidak ada baris yang hilang dan tidak ada yang dobel.
+  const optEnds = clusters.map((cluster) => {
+    const last = cluster[cluster.length - 1];
+    // Nomor soal berikutnya ("2. Banyaknya…") hampir selalu menempel di belakang
+    // opsi terakhir; kalau ikut terseret, teks soal berikutnya bocor ke opsi D dan
+    // hilang dari stem soal itu sendiri.
+    // Sengaja wajib ada tanda pemisah: baris angka polos ("24") justru sering
+    // jadi nilai opsi terakhir, jadi tidak boleh dipotong.
+    if (NEXT_QUESTION_LINE_RE.test(lines[last + 1] || "")) return last + 1;
+    // Baris tambahan berupa gambar/lanjutan opsi tetap boleh masuk.
+    return Math.min(last + 2, lines.length);
+  });
+
   const out: ParsedQuestion[] = [];
   for (let k = 0; k < clusters.length; k++) {
     const cluster = clusters[k];
     const start = cluster[0];
     const last = cluster[cluster.length - 1];
-    const optEnd = Math.min(last + 2, lines.length);
+    const optEnd = optEnds[k];
     const stemEnd = start;
-    const stemStart = k === 0 ? 0 : (clusters[k - 1][clusters[k - 1].length - 1] + 2);
+    const stemStart = k === 0 ? 0 : optEnds[k - 1];
     const stemLines = lines.slice(Math.min(stemStart, stemEnd), stemEnd);
     const optLines = lines.slice(start, optEnd).filter((_, idx) => {
       const lineIdx = start + idx;
@@ -763,7 +794,10 @@ function parseSingleQuestionBlock(
 
   // Deteksi letak opsi A, B, C, D, E
   // Pola: baris baru atau spasi diikuti "A. ", "B. ", "C. ", "D. ", "E. " atau "(A)", "(B)", dll.
-  const optionRegex = /(?:^|\n|\s{2,})(?:\(?([A-Ea-e])\s*[\.\)\:\-]\s*)/g;
+  // Tanda akhir sengaja hanya spasi/tab: kalau "\s*", baris baru setelah label
+  // ikut tertelan dan label berikutnya yang menempel ("(A)\n(B)") tak pernah
+  // terdeteksi — soal bergambar menulis tiap label di barisnya sendiri.
+  const optionRegex = /(?:^|\n|\s{2,})(?:\(?([A-Ea-e])\s*[\.\)\:\-][ \t]*)/g;
   const optMatches: { index: number; letter: string; matchLength: number }[] =
     [];
 
