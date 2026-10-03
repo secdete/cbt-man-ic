@@ -349,7 +349,7 @@ export default function CreateExamPage() {
         <div>
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 mb-2 transition-colors"
+            className="inline-flex items-center gap-1.5 min-h-10 py-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 mb-2 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Kembali ke Panel Admin
@@ -413,7 +413,7 @@ export default function CreateExamPage() {
                 <button
                   type="button"
                   onClick={generateRandomToken}
-                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 inline-flex items-center gap-1 min-h-9 px-1 py-1.5 cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3" />
                   Acak Token

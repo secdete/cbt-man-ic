@@ -104,6 +104,192 @@ function StudentExamStatus({ student }: { student: StudentRow }) {
   );
 }
 
+/** Tombol salin token — dipakai tabel (desktop) dan kartu paket (mobile). */
+function CopyTokenButton({
+  token,
+  copied,
+  onCopy,
+  block,
+}: {
+  token: string;
+  copied: boolean;
+  onCopy: (token: string) => void;
+  block?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onCopy(token)}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-9 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-800 font-mono text-xs cursor-pointer transition-colors border border-slate-200 ${
+        block ? "w-full justify-center" : ""
+      }`}
+      title="Klik untuk salin token dan bagikan ke siswa"
+    >
+      <span>{token}</span>
+      {copied ? (
+        <span className="text-[#346538] flex items-center gap-0.5 text-[10px]">
+          <Check className="w-3 h-3" /> Tersalin
+        </span>
+      ) : (
+        <Copy className="w-3 h-3 text-slate-400" />
+      )}
+    </button>
+  );
+}
+
+/** Sakelar status akses ujian (DIBUKA / DITUTUP) untuk dibuka-tutup panitia. */
+function ExamStatusToggle({
+  exam,
+  onToggle,
+}: {
+  exam: Exam;
+  onToggle: (exam: Exam) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(exam)}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 min-h-9 rounded-full text-xs font-semibold transition-colors cursor-pointer border ${
+        exam.isActive
+          ? "bg-[#EDF3EC] text-[#346538] border-[#D5E3D4] hover:bg-[#E3EBE2]"
+          : "bg-[#FDEBEC] text-[#9F2F2D] border-[#F5CDCF] hover:bg-[#F9DCDD]"
+      }`}
+      title="Klik untuk Buka atau Tutup akses ujian"
+    >
+      {exam.isActive ? (
+        <>
+          <Unlock className="w-3 h-3 text-[#346538]" />
+          <span>DIBUKA</span>
+        </>
+      ) : (
+        <>
+          <Lock className="w-3 h-3 text-[#9F2F2D]" />
+          <span>DITUTUP</span>
+        </>
+      )}
+    </button>
+  );
+}
+
+/** Jadwal buka/tutup ujian beserta pintasan mengaturnya. */
+function ExamSchedule({
+  exam,
+  onEdit,
+}: {
+  exam: Exam;
+  onEdit: (exam: Exam) => void;
+}) {
+  return (
+    <div className="text-xs space-y-0.5">
+      {exam.openTime || exam.closeTime ? (
+        <>
+          {exam.openTime && (
+            <p className="text-slate-700">
+              Buka:{" "}
+              <b>
+                {new Date(exam.openTime).toLocaleDateString("id-ID", {
+                  timeZone: "Asia/Jakarta",
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </b>
+            </p>
+          )}
+          {exam.closeTime && (
+            <p className="text-slate-700">
+              Tutup:{" "}
+              <b>
+                {new Date(exam.closeTime).toLocaleDateString("id-ID", {
+                  timeZone: "Asia/Jakarta",
+                  day: "numeric",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </b>
+            </p>
+          )}
+        </>
+      ) : (
+        <span className="text-slate-500 italic">24 Jam (Manual)</span>
+      )}
+      <button
+        type="button"
+        onClick={() => onEdit(exam)}
+        className="text-[11px] font-medium text-slate-600 hover:text-slate-900 underline cursor-pointer flex items-center gap-1 pt-0.5 min-h-8"
+      >
+        <Calendar className="w-3 h-3 text-slate-400" />
+        <span>Atur Jadwal</span>
+      </button>
+    </div>
+  );
+}
+
+/** Tombol aksi per paket ujian — dipakai tabel (desktop) dan kartu (mobile). */
+function ExamActionButtons({
+  exam,
+  onAnswerKey,
+  onDelete,
+  block,
+}: {
+  exam: Exam;
+  onAnswerKey: (exam: Exam) => void;
+  onDelete: (id: string, title: string) => void;
+  block?: boolean;
+}) {
+  const btnBase = `inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-medium text-xs transition-colors cursor-pointer whitespace-nowrap ${
+    block ? "min-h-11" : "min-h-10 md:min-h-0"
+  }`;
+
+  return (
+    <div
+      className={
+        block ? "grid grid-cols-2 gap-2" : "flex flex-wrap items-center gap-2 justify-end"
+      }
+    >
+      <button
+        type="button"
+        onClick={() => onAnswerKey(exam)}
+        className={`${btnBase} bg-white hover:bg-slate-50 text-slate-700 border border-slate-200`}
+        title="Kelola Kunci Jawaban Soal"
+      >
+        <KeyRound className="w-3.5 h-3.5 text-slate-500" />
+        <span>Kunci Jawaban</span>
+      </button>
+
+      <Link
+        href={`/admin/exams/${exam.id}/monitoring`}
+        className={`${btnBase} bg-emerald-700 hover:bg-emerald-800 text-white shadow-2xs`}
+        title="Pantau Peserta Ujian Real-Time (Live Proctoring)"
+      >
+        <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+        <span>Live Monitor</span>
+      </Link>
+
+      <Link
+        href={`/admin/exams/${exam.id}/results`}
+        className={`${btnBase} bg-slate-900 hover:bg-slate-800 text-white`}
+      >
+        <BarChart2 className="w-3.5 h-3.5 text-slate-400" />
+        <span>Rekap Nilai</span>
+      </Link>
+
+      <button
+        type="button"
+        onClick={() => onDelete(exam.id, exam.title)}
+        className={`inline-flex items-center justify-center p-2.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer ${
+          block ? "min-h-10 border border-slate-200" : "min-h-10 md:min-h-0"
+        }`}
+        title="Hapus Ujian"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [exams, setExams] = useState<Exam[]>([]);
@@ -844,7 +1030,91 @@ export default function AdminDashboardPage() {
           )}
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Kartu peserta untuk layar HP — tabel 8 kolom tidak muat di ponsel */}
+        <div className="lg:hidden">
+          {loadingStudents ? (
+            <div className="py-10 text-center text-sm text-slate-500">
+              <span className="inline-flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                Memuat daftar peserta...
+              </span>
+            </div>
+          ) : studentLoadError ? (
+            <div className="py-10 text-center px-6">
+              <p className="text-sm font-semibold text-rose-700">
+                Daftar peserta tidak bisa dimuat.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">{studentLoadError}</p>
+              <button
+                type="button"
+                onClick={() => loadStudents()}
+                className="mt-3 inline-flex min-h-11 items-center px-4 py-2 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Coba lagi
+              </button>
+            </div>
+          ) : students.length === 0 ? (
+            <div className="py-10 text-center px-6">
+              <p className="text-sm font-semibold text-slate-700">
+                Belum ada peserta terdaftar.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Isi form di atas untuk satu peserta, atau impor sekaligus dari
+                file Excel panitia.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {students.map((student) => (
+                <div key={student.id} className="p-4 space-y-2.5">
+                  <div className="flex items-start gap-3">
+                    <label className="inline-flex h-11 w-11 -ml-2 items-center justify-center cursor-pointer flex-shrink-0">
+                      <input
+                        type="checkbox"
+                        aria-label={`Pilih ${student.name}`}
+                        checked={selectedStudentIds.includes(student.id)}
+                        onChange={() => toggleSelectedStudent(student.id)}
+                        className="h-4 w-4 rounded border-slate-300"
+                      />
+                    </label>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-sm text-slate-800">
+                        {student.name}
+                      </p>
+                      <p className="text-[11px] text-slate-600 font-mono mt-0.5">
+                        {student.nisn || "-"} • {student.phone || "-"}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        {student.school || "-"}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        Password:{" "}
+                        <b className="font-mono text-slate-700">
+                          {student.password || "-"}
+                        </b>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3 pl-9">
+                    <StudentExamStatus student={student} />
+                    <button
+                      type="button"
+                      onClick={() => openStudentDelete([student.id])}
+                      aria-label={`Hapus peserta ${student.name}`}
+                      className="inline-flex min-h-10 items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-200 bg-white text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="overflow-x-auto hidden lg:block">
           <table className="w-full min-w-[760px] text-left text-sm text-slate-600">
             <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
               <tr>
@@ -968,6 +1238,66 @@ export default function AdminDashboardPage() {
           </span>
         </div>
 
+        {/* Kartu paket ujian untuk layar HP — tabel 6 kolom tidak muat di ponsel */}
+        {!loading && exams.length > 0 && (
+          <div className="lg:hidden divide-y divide-slate-100">
+            {exams.map((exam) => (
+              <div key={exam.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-bold text-sm text-slate-900">
+                      {exam.title}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
+                      <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        {exam.category}
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        {exam.durationMinutes} Menit •{" "}
+                        {exam._count?.questions || 0} Soal
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        {exam._count?.sessions || 0} Siswa
+                      </span>
+                    </div>
+                  </div>
+                  <ExamStatusToggle
+                    exam={exam}
+                    onToggle={handleToggleStatus}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Token (Salin ke Siswa)
+                    </p>
+                    <CopyTokenButton
+                      token={exam.token}
+                      copied={copiedToken === exam.token}
+                      onCopy={handleCopyToken}
+                      block
+                    />
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                      Jadwal Pelaksanaan
+                    </p>
+                    <ExamSchedule exam={exam} onEdit={openScheduleModal} />
+                  </div>
+                </div>
+
+                <ExamActionButtons
+                  exam={exam}
+                  onAnswerKey={openAnswerKeyModal}
+                  onDelete={handleDeleteExam}
+                  block
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="py-16 text-center text-slate-500 text-sm">
             Memuat daftar ujian...
@@ -983,7 +1313,7 @@ export default function AdminDashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto hidden lg:block">
             <table className="w-full text-left text-sm text-slate-600">
               <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
                 <tr>
@@ -1018,103 +1348,24 @@ export default function AdminDashboardPage() {
 
                     {/* Token Ujian Rahasia khusus admin */}
                     <td className="py-4 px-6">
-                      <button
-                        type="button"
-                        onClick={() => handleCopyToken(exam.token)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-800 font-mono text-xs cursor-pointer transition-colors border border-slate-200"
-                        title="Klik untuk salin token dan bagikan ke siswa"
-                      >
-                        <span>{exam.token}</span>
-                        {copiedToken === exam.token ? (
-                          <span className="text-[#346538] flex items-center gap-0.5 text-[10px]">
-                            <Check className="w-3 h-3" /> Tersalin
-                          </span>
-                        ) : (
-                          <Copy className="w-3 h-3 text-slate-400" />
-                        )}
-                      </button>
+                      <CopyTokenButton
+                        token={exam.token}
+                        copied={copiedToken === exam.token}
+                        onCopy={handleCopyToken}
+                      />
                     </td>
 
                     {/* Status Akses & Buka/Tutup Sakelar */}
                     <td className="py-4 px-6">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleStatus(exam)}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer border ${
-                          exam.isActive
-                            ? "bg-[#EDF3EC] text-[#346538] border-[#D5E3D4] hover:bg-[#E3EBE2]"
-                            : "bg-[#FDEBEC] text-[#9F2F2D] border-[#F5CDCF] hover:bg-[#F9DCDD]"
-                        }`}
-                        title="Klik untuk Buka atau Tutup akses ujian"
-                      >
-                        {exam.isActive ? (
-                          <>
-                            <Unlock className="w-3 h-3 text-[#346538]" />
-                            <span>DIBUKA</span>
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="w-3 h-3 text-[#9F2F2D]" />
-                            <span>DITUTUP</span>
-                          </>
-                        )}
-                      </button>
+                      <ExamStatusToggle
+                        exam={exam}
+                        onToggle={handleToggleStatus}
+                      />
                     </td>
 
                     {/* Jadwal Pelaksanaan */}
                     <td className="py-4 px-6">
-                      <div className="text-xs space-y-0.5">
-                        {exam.openTime || exam.closeTime ? (
-                          <>
-                            {exam.openTime && (
-                              <p className="text-slate-700">
-                                Buka:{" "}
-                                <b>
-                                  {new Date(exam.openTime).toLocaleDateString(
-                                    "id-ID",
-                                    {
-                                      timeZone: "Asia/Jakarta",
-                                      day: "numeric",
-                                      month: "short",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    },
-                                  )}
-                                </b>
-                              </p>
-                            )}
-                            {exam.closeTime && (
-                              <p className="text-slate-700">
-                                Tutup:{" "}
-                                <b>
-                                  {new Date(exam.closeTime).toLocaleDateString(
-                                    "id-ID",
-                                    {
-                                      timeZone: "Asia/Jakarta",
-                                      day: "numeric",
-                                      month: "short",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    },
-                                  )}
-                                </b>
-                              </p>
-                            )}
-                          </>
-                        ) : (
-                          <span className="text-slate-500 italic">
-                            24 Jam (Manual)
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => openScheduleModal(exam)}
-                          className="text-[11px] font-medium text-slate-600 hover:text-slate-900 underline cursor-pointer flex items-center gap-1 pt-0.5"
-                        >
-                          <Calendar className="w-3 h-3 text-slate-400" />
-                          <span>Atur Jadwal</span>
-                        </button>
-                      </div>
+                      <ExamSchedule exam={exam} onEdit={openScheduleModal} />
                     </td>
 
                     <td className="py-4 px-6 font-medium text-slate-700">
@@ -1122,43 +1373,11 @@ export default function AdminDashboardPage() {
                     </td>
 
                     <td className="py-4 px-6">
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openAnswerKeyModal(exam)}
-                          className="inline-flex min-h-11 md:min-h-0 items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium text-xs transition-colors cursor-pointer"
-                          title="Kelola Kunci Jawaban Soal"
-                        >
-                          <KeyRound className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Kunci Jawaban</span>
-                        </button>
-
-                        <Link
-                          href={`/admin/exams/${exam.id}/monitoring`}
-                          className="inline-flex min-h-11 md:min-h-0 items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs transition-colors shadow-2xs"
-                          title="Pantau Peserta Ujian Real-Time (Live Proctoring)"
-                        >
-                          <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-                          <span>Live Monitor</span>
-                        </Link>
-
-                        <Link
-                          href={`/admin/exams/${exam.id}/results`}
-                          className="inline-flex min-h-11 md:min-h-0 items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors"
-                        >
-                          <BarChart2 className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Rekap Nilai</span>
-                        </Link>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteExam(exam.id, exam.title)}
-                          className="inline-flex min-h-11 md:min-h-0 items-center justify-center p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="Hapus Ujian"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <ExamActionButtons
+                        exam={exam}
+                        onAnswerKey={openAnswerKeyModal}
+                        onDelete={handleDeleteExam}
+                      />
                     </td>
                   </tr>
                 ))}

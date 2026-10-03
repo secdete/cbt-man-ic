@@ -59,6 +59,249 @@ interface MonitoringData {
   serverTime: string;
 }
 
+/** Tombol pengawasan per peserta — dipakai tabel (desktop) dan kartu (mobile). */
+function SessionActions({
+  session,
+  onAction,
+  dense,
+}: {
+  session: MonitoringSession;
+  onAction: (
+    session: MonitoringSession,
+    type: "FORCE_SUBMIT" | "RESET_VIOLATIONS" | "RESET_SESSION" | "ALLOW_REENTRY",
+  ) => void;
+  dense?: boolean;
+}) {
+  const btn = dense
+    ? "px-2.5 py-1 rounded-md font-semibold text-[11px] transition-colors cursor-pointer shadow-2xs"
+    : "px-3 py-2.5 min-h-10 rounded-lg font-semibold text-xs transition-colors cursor-pointer shadow-2xs flex-1 sm:flex-none";
+
+  return (
+    <div
+      className={
+        dense
+          ? "flex items-center justify-end gap-1.5"
+          : "flex flex-wrap items-center gap-2"
+      }
+    >
+      {(session.status !== "IN_PROGRESS" || session.isTimeUp) && (
+        <button
+          type="button"
+          onClick={() => onAction(session, "ALLOW_REENTRY")}
+          className={`${btn} bg-emerald-600 hover:bg-emerald-700 text-white`}
+          title="Izinkan siswa masuk kembali tanpa menghapus jawaban tersimpan"
+        >
+          Izinkan Masuk
+        </button>
+      )}
+
+      {session.status === "IN_PROGRESS" && (
+        <button
+          type="button"
+          onClick={() => onAction(session, "FORCE_SUBMIT")}
+          className={`${btn} bg-amber-600 hover:bg-amber-700 text-white`}
+          title="Paksa kumpulkan lembar jawaban siswa sekarang"
+        >
+          Paksa Selesai
+        </button>
+      )}
+
+      {session.tabSwitchCount > 0 && (
+        <button
+          type="button"
+          onClick={() => onAction(session, "RESET_VIOLATIONS")}
+          className={`${dense ? "p-1" : "px-3 py-2.5 min-h-10"} rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200`}
+          title="Reset catatan pelanggaran pindah tab siswa menjadi 0"
+        >
+          <RotateCcw className={dense ? "w-3.5 h-3.5" : "w-4 h-4"} />
+        </button>
+      )}
+
+      <button
+        type="button"
+        onClick={() => onAction(session, "RESET_SESSION")}
+        className={`${btn} text-rose-700 hover:bg-rose-50 border border-rose-200`}
+        title="Reset sesi (Siswa mengulang dari awal)"
+      >
+        Reset Ulang
+      </button>
+    </div>
+  );
+}
+
+/** Kartu peserta untuk layar HP — informasi tabel yang sama tanpa scroll mendatar. */
+function SessionCard({
+  session,
+  examTitle,
+  onAction,
+}: {
+  session: MonitoringSession;
+  examTitle: string;
+  onAction: (
+    session: MonitoringSession,
+    type: "FORCE_SUBMIT" | "RESET_VIOLATIONS" | "RESET_SESSION" | "ALLOW_REENTRY",
+  ) => void;
+}) {
+  const isDanger = session.tabSwitchCount >= 3;
+  const cell = "rounded-lg border border-slate-200 bg-slate-50/70 p-2.5 min-w-0";
+  const label =
+    "text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1";
+
+  return (
+    <div
+      className={`p-4 space-y-3 ${
+        isDanger
+          ? "bg-rose-50/40"
+          : session.status === "IN_PROGRESS"
+            ? "bg-emerald-50/20"
+            : ""
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="font-bold text-sm text-slate-900">{session.studentName}</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            {session.studentNisn && `NISN: ${session.studentNisn} • `}
+            <span>{session.studentSchool}</span>
+          </p>
+          {session.studentWhatsapp && session.studentWhatsapp !== "-" && (
+            <a
+              href={`https://wa.me/${session.studentWhatsapp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                `Halo ${session.studentName}, kami dari Panitia CBT ${examTitle}.`,
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[11px] text-emerald-700 hover:text-emerald-900 font-semibold mt-1 min-h-8"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>{session.studentWhatsapp}</span>
+            </a>
+          )}
+        </div>
+
+        {session.status === "IN_PROGRESS" ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex-shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+            Mengerjakan
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200 flex-shrink-0">
+            <CheckCircle2 className="w-3 h-3 text-slate-500" />
+            Selesai
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className={cell}>
+          <p className={label}>Progress Soal</p>
+          <p className="text-xs font-bold text-slate-800">
+            {session.answeredCount} / {session.totalQuestions} Soal
+            <span className="text-slate-500 font-mono ml-1.5">
+              {session.progressPercent}%
+            </span>
+          </p>
+          <div className="mt-1.5 w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+            <div
+              className={`h-full transition-all duration-300 rounded-full ${
+                session.status === "COMPLETED"
+                  ? "bg-slate-700"
+                  : session.progressPercent > 70
+                    ? "bg-emerald-600"
+                    : "bg-blue-600"
+              }`}
+              style={{ width: `${session.progressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        <div className={cell}>
+          <p className={label}>Sisa Waktu</p>
+          {session.status === "IN_PROGRESS" ? (
+            <>
+              <p
+                className={`text-xs font-bold font-mono ${
+                  session.isTimeUp
+                    ? "text-rose-700"
+                    : session.remainingMinutes <= 10
+                      ? "text-amber-700"
+                      : "text-slate-900"
+                }`}
+              >
+                {session.isTimeUp
+                  ? "WAKTU HABIS"
+                  : `${session.remainingMinutes} Menit Tersisa`}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                Berjalan: {session.elapsedMinutes}m
+              </p>
+            </>
+          ) : (
+            <p className="text-xs font-mono text-slate-700">
+              {session.endTime
+                ? new Date(session.endTime).toLocaleTimeString("id-ID", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "-"}
+              <span className="text-[10px] text-slate-400 font-sans ml-1.5">
+                selesai
+              </span>
+            </p>
+          )}
+        </div>
+
+        <div className={cell}>
+          <p className={label}>Anti-Curang (Tab)</p>
+          {session.tabSwitchCount === 0 ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              Aman (0x)
+            </span>
+          ) : isDanger ? (
+            <>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                <ShieldAlert className="w-3 h-3" />
+                Bahaya ({session.tabSwitchCount}x Pindah)
+              </span>
+              <p className="text-[9px] text-rose-600 font-semibold mt-1">
+                Diduga membuka tab/aplikasi lain
+              </p>
+            </>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+              Peringatan ({session.tabSwitchCount}x)
+            </span>
+          )}
+        </div>
+
+        <div className={cell}>
+          <p className={label}>Status Pengerjaan</p>
+          {session.status === "IN_PROGRESS" ? (
+            <p className="text-xs text-slate-700">
+              {session.isLiveActive ? (
+                <span className="text-emerald-700 font-semibold">
+                  ● Aktif respon
+                </span>
+              ) : (
+                <span>Sedang berpikir</span>
+              )}
+            </p>
+          ) : (
+            <p className="text-xs text-slate-700">
+              Skor: <b className="text-slate-900">{session.totalScore}</b>
+              <span className="text-slate-500 font-mono ml-1">
+                ({session.accuracy}%)
+              </span>
+            </p>
+          )}
+        </div>
+      </div>
+
+      <SessionActions session={session} onAction={onAction} />
+    </div>
+  );
+}
+
 export default function AdminLiveMonitoringPage({
   params,
 }: {
@@ -121,6 +364,18 @@ export default function AdminLiveMonitoringPage({
 
     return () => clearInterval(timer);
   }, [autoRefreshInterval, fetchMonitoringData]);
+
+  const openAction = useCallback(
+    (
+      session: MonitoringSession,
+      type:
+        | "FORCE_SUBMIT"
+        | "RESET_VIOLATIONS"
+        | "RESET_SESSION"
+        | "ALLOW_REENTRY",
+    ) => setActionTarget({ session, type }),
+    [],
+  );
 
   const handleExecuteAction = async () => {
     if (!actionTarget) return;
@@ -245,7 +500,7 @@ export default function AdminLiveMonitoringPage({
             <select
               value={autoRefreshInterval}
               onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
-              className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer pr-1 text-xs"
+              className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer pr-1 text-xs min-h-8"
             >
               <option value={3000}>Refresh 3 Detik</option>
               <option value={5000}>Refresh 5 Detik</option>
@@ -366,11 +621,11 @@ export default function AdminLiveMonitoringPage({
       {/* Filter and Real-Time Table */}
       <div className="bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden space-y-4">
         <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg text-xs overflow-x-auto max-w-full">
+          <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 rounded-lg text-xs max-w-full">
             <button
               type="button"
               onClick={() => setStatusFilter("ALL")}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md cursor-pointer font-semibold transition-colors ${
+              className={`whitespace-nowrap px-3 py-2.5 sm:py-1.5 rounded-md cursor-pointer font-semibold transition-colors ${
                 statusFilter === "ALL"
                   ? "bg-white text-slate-900 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -381,7 +636,7 @@ export default function AdminLiveMonitoringPage({
             <button
               type="button"
               onClick={() => setStatusFilter("ACTIVE")}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md cursor-pointer font-semibold transition-colors flex items-center gap-1.5 ${
+              className={`whitespace-nowrap px-3 py-2.5 sm:py-1.5 rounded-md cursor-pointer font-semibold transition-colors flex items-center gap-1.5 ${
                 statusFilter === "ACTIVE"
                   ? "bg-white text-emerald-800 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -393,7 +648,7 @@ export default function AdminLiveMonitoringPage({
             <button
               type="button"
               onClick={() => setStatusFilter("VIOLATION")}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md cursor-pointer font-semibold transition-colors flex items-center gap-1.5 ${
+              className={`whitespace-nowrap px-3 py-2.5 sm:py-1.5 rounded-md cursor-pointer font-semibold transition-colors flex items-center gap-1.5 ${
                 statusFilter === "VIOLATION"
                   ? "bg-white text-rose-800 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -404,7 +659,7 @@ export default function AdminLiveMonitoringPage({
             <button
               type="button"
               onClick={() => setStatusFilter("COMPLETED")}
-              className={`whitespace-nowrap px-3 py-1.5 rounded-md cursor-pointer font-semibold transition-colors ${
+              className={`whitespace-nowrap px-3 py-2.5 sm:py-1.5 rounded-md cursor-pointer font-semibold transition-colors ${
                 statusFilter === "COMPLETED"
                   ? "bg-white text-slate-900 shadow-2xs"
                   : "text-slate-600 hover:text-slate-900"
@@ -421,13 +676,36 @@ export default function AdminLiveMonitoringPage({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari nama, no. HP, sekolah..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              className="w-full pl-9 pr-3 py-2.5 sm:py-1.5 rounded-lg border border-slate-200 text-[16px] sm:text-xs focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
             />
           </div>
         </div>
 
-        {/* Live Proctoring Table */}
-        <div className="overflow-x-auto">
+        {/* Kartu peserta — versi layar HP (tabel 6 kolom tidak muat di ponsel) */}
+        <div className="lg:hidden">
+          {filteredSessions.length === 0 ? (
+            <div className="py-16 text-center space-y-2">
+              <Users className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="text-xs font-semibold text-slate-600">
+                Tidak ada peserta pada filter ini.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {filteredSessions.map((session) => (
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  examTitle={exam.title}
+                  onAction={openAction}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Live Proctoring Table — layar lebar */}
+        <div className="overflow-x-auto hidden lg:block">
           {filteredSessions.length === 0 ? (
             <div className="py-16 text-center space-y-2">
               <Users className="w-8 h-8 text-slate-300 mx-auto" />
@@ -593,69 +871,11 @@ export default function AdminLiveMonitoringPage({
                       </td>
 
                       <td className="py-3.5 px-4 sm:px-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {(session.status !== "IN_PROGRESS" || session.isTimeUp) && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setActionTarget({
-                                  session,
-                                  type: "ALLOW_REENTRY",
-                                })
-                              }
-                              className="px-2.5 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] transition-colors cursor-pointer shadow-2xs"
-                              title="Izinkan siswa masuk kembali tanpa menghapus jawaban tersimpan"
-                            >
-                              Izinkan Masuk
-                            </button>
-                          )}
-
-                          {session.status === "IN_PROGRESS" && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setActionTarget({
-                                  session,
-                                  type: "FORCE_SUBMIT",
-                                })
-                              }
-                              className="px-2.5 py-1 rounded-md bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] transition-colors cursor-pointer shadow-2xs"
-                              title="Paksa kumpulkan lembar jawaban siswa sekarang"
-                            >
-                              Paksa Selesai
-                            </button>
-                          )}
-
-                          {session.tabSwitchCount > 0 && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setActionTarget({
-                                  session,
-                                  type: "RESET_VIOLATIONS",
-                                })
-                              }
-                              className="p-1 rounded-md text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
-                              title="Reset catatan pelanggaran pindah tab siswa menjadi 0"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setActionTarget({
-                                session,
-                                type: "RESET_SESSION",
-                              })
-                            }
-                            className="px-2 py-1 rounded-md text-rose-700 hover:bg-rose-50 border border-rose-200 font-semibold text-[11px] transition-colors cursor-pointer"
-                            title="Reset sesi (Siswa mengulang dari awal)"
-                          >
-                            Reset Ulang
-                          </button>
-                        </div>
+                        <SessionActions
+                          session={session}
+                          onAction={openAction}
+                          dense
+                        />
                       </td>
                     </tr>
                   );

@@ -222,7 +222,7 @@ export default function ExamConfirmationPage({
     <div className="flex-1 py-5 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-3xl mx-auto w-full">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 mb-4 sm:mb-5 transition-colors"
+        className="inline-flex items-center gap-1.5 min-h-10 py-1.5 text-xs font-semibold text-slate-500 hover:text-blue-700 mb-4 sm:mb-5 transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         Kembali ke Halaman Masuk
