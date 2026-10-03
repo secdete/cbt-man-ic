@@ -17,7 +17,7 @@ import { PrismaClient } from "@prisma/client";
 import { extractStructuredFromPDF } from "../lib/pdf-extract";
 import { parseQuestionsDetailed } from "../lib/pdf-parser";
 
-interface SourceSpec {
+export interface SourceSpec {
   file: string;
   subject: string;
   expected: number;
@@ -25,7 +25,7 @@ interface SourceSpec {
   take?: number;
 }
 
-interface PackageSpec {
+export interface PackageSpec {
   dir: string;
   title: string;
   description: string;
@@ -37,7 +37,7 @@ interface PackageSpec {
   sources: SourceSpec[];
 }
 
-const PACKAGES: PackageSpec[] = [
+export const PACKAGES: PackageSpec[] = [
   {
     dir: "modul/MANIC/TPB",
     title: "Tryout TPB MAN Insan Cendekia (50 Soal)",
@@ -158,7 +158,7 @@ function parseKeys(lines: string[]): Map<number, string> {
   return keys;
 }
 
-interface LoadedSource {
+export interface LoadedSource {
   subject: string;
   parsed: number;
   stemStyle: boolean;
@@ -188,7 +188,7 @@ function isPageTitle(line: string, kop: string, hit: Map<string, number>): boole
   return (hit.get(n) || 0) >= 2;
 }
 
-async function loadSource(spec: SourceSpec, dir: string): Promise<LoadedSource> {
+export async function loadSource(spec: SourceSpec, dir: string): Promise<LoadedSource> {
   const file = path.join(process.cwd(), dir, spec.file);
   const ext = await extractStructuredFromPDF(fs.readFileSync(file));
   const lines = toLines(ext.text);
@@ -329,7 +329,7 @@ function distribute(total: number, capacities: number[]): number[] {
 }
 
 /** Ambil k butir merata di sepanjang daftar (bukan cuma yang paling depan). */
-function pickEvenly<T>(arr: T[], k: number): T[] {
+export function pickEvenly<T>(arr: T[], k: number): T[] {
   if (k >= arr.length) return arr.slice();
   const out: T[] = [];
   for (let i = 0; i < k; i++) {
@@ -525,7 +525,11 @@ async function main() {
   }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// Jangan jalankan build saat modul ini diimpor (mis. oleh skrip laporan soal).
+const entry = (process.argv[1] || "").replace(/\\/g, "/");
+if (/build-manic\.[cm]?[jt]s$/.test(entry)) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
