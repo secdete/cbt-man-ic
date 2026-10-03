@@ -9,6 +9,8 @@ export const CERTIFICATE_SIGNATORIES = {
   headmaster: {
     role: "Kepala Lembaga Pelaksana CBT,",
     name: "Citarani Anggraeni, S.Pd., M.Pd",
-    meta: "NIP. 19780514 200312 1 002",
+    // NIP sengaja tidak dicetak: NIP lama sudah tidak berlaku dan belum ada
+    // data penggantinya. Isi `meta` lagi kalau NIP barunya sudah tersedia.
+    meta: null,
   },
 } as const;

@@ -151,7 +151,10 @@ export async function downloadExamCertificatePdf(data: ExamReportData) {
   center("CBT Tryout MAN IC", 145, 12, bold);
 
   // Blok tanda tangan — nama disamakan dengan sertifikat di layar.
-  const signBlock = (cx: number, signer: { role: string; name: string; meta: string }) => {
+  const signBlock = (
+    cx: number,
+    signer: { role: string; name: string; meta: string | null },
+  ) => {
     centerAt(signer.role, cx, 112, 9, regular, muted);
     centerAt(signer.name, cx, 78, 11, bold, navy);
     page.drawLine({
@@ -160,7 +163,7 @@ export async function downloadExamCertificatePdf(data: ExamReportData) {
       thickness: 0.8,
       color: navy,
     });
-    centerAt(signer.meta, cx, 56, 8, regular, muted);
+    if (signer.meta) centerAt(signer.meta, cx, 56, 8, regular, muted);
   };
   signBlock(210, CERTIFICATE_SIGNATORIES.proctor);
   signBlock(632, CERTIFICATE_SIGNATORIES.headmaster);

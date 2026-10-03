@@ -354,7 +354,7 @@
                             Kepala Lembaga Pelaksana CBT,
                         </div>
                         <div class="signee-name">{{ $headmaster_name ?? 'Citarani Anggraeni, S.Pd., M.Pd' }}</div>
-                        <div class="signee-nip">NIP. {{ $headmaster_nip ?? '19780514 200312 1 002' }}</div>
+                        <div class="signee-nip">{{ $headmaster_nip ? 'NIP. ' . $headmaster_nip : '' }}</div>
                     </td>
                 </tr>
             </table>

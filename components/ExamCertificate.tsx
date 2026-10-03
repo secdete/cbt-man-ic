@@ -270,7 +270,7 @@ export default function ExamCertificate({
                     </span>
                   </div>
                   <p className="text-[9px] text-slate-400 font-mono">
-                    {CERTIFICATE_SIGNATORIES.headmaster.meta}
+                    {CERTIFICATE_SIGNATORIES.headmaster.meta ?? "\u00A0"}
                   </p>
                 </div>
               </div>
