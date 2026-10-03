@@ -69,6 +69,10 @@ export default function ExamResultPage({
               origin: { y: 0.6 },
             });
           }
+          // Dibuka langsung dari tombol "Sertif ..." di dashboard hasil.
+          if (searchParams.get("open") === "sertifikat" && json.data.session.status !== "IN_PROGRESS") {
+            setShowCertificate(true);
+          }
         } else {
           setErrorMessage(json.message || "Gagal memuat hasil ujian.");
         }

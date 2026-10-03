@@ -320,7 +320,7 @@ export default function StudentResultsDashboardPage() {
                     </div>
 
                     {/* Aksi */}
-                    <div className="flex flex-col items-stretch lg:items-end gap-2 lg:w-56">
+                    <div className="flex flex-col items-stretch lg:items-end gap-2 lg:w-60">
                       {row.finished ? (
                         <>
                           <Link
@@ -328,7 +328,14 @@ export default function StudentResultsDashboardPage() {
                             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold transition-colors"
                           >
                             <FileText className="w-4 h-4" />
-                            Hasil, Sertifikat &amp; Pembahasan
+                            Hasil &amp; Pembahasan
+                          </Link>
+                          <Link
+                            href={`/exam/${encodeURIComponent(row.exam.token)}/result?sessionId=${encodeURIComponent(row.id)}&open=sertifikat`}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-colors"
+                          >
+                            <Award className="w-4 h-4" />
+                            Sertif {row.exam.token}
                           </Link>
                           {row.certificateNumber && (
                             <p className="text-[11px] text-slate-500 text-center lg:text-right font-mono">
@@ -366,9 +373,13 @@ export default function StudentResultsDashboardPage() {
             <div className="flex items-start gap-2.5 p-3.5 rounded-lg border border-blue-200 bg-blue-50/70 text-xs text-blue-900">
               <AlertCircle className="w-4 h-4 text-blue-700 flex-shrink-0 mt-0.5" />
               <p className="leading-relaxed">
-                Di halaman hasil Anda bisa mengunduh <b>Sertifikat PDF</b> dan{" "}
-                <b>Analisa PDF</b>, melihat nilai per subtes, serta membuka pembahasan
-                lengkap setiap soal beserta kunci jawabannya.
+                Setiap paket yang selesai menyimpan <b>nilai, sertifikat, dan
+                pembahasan miliknya sendiri</b> — tidak dihapus atau tertimpa saat
+                Anda mengerjakan paket lain. Pakai tombol <b>Hasil &amp;
+                Pembahasan</b> untuk melihat analisa soal, dan tombol{" "}
+                <b>Sertif (kode paket)</b> untuk langsung membuka sertifikat paket
+                tersebut beserta unduhan <b>Sertifikat PDF</b> dan{" "}
+                <b>Analisa PDF</b>.
               </p>
             </div>
           </>
